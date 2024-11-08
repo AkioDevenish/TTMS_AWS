@@ -1,0 +1,135 @@
+<template>
+    <table class="table-wrapper table-responsive theme-scrollbar">
+        <tbody>
+            <tr>
+                <td>
+                    <table class="table-responsive"
+                        :style="{ backgroundImage: 'url(' + require('@/assets/images/email-template/invoice-3/bg-0.png') + ')' }"
+                        style="width: 100%;  background-position: center; background-size:cover; background-repeat:no-repeat; border-radius: 10px;">
+                        <tbody>
+                            <tr>
+                                <td style="padding: 30px 0;"><img src="@/assets/images/logo/logo.png" alt="logo" class="for-light"><img src="@/assets/images/logo/logo_light.png" alt="logo" class="for-dark">
+                                    <address style="opacity: 0.8; width: 36%; margin-top: 10px; font-style:normal;"><span
+                                            style="font-size: 16px; line-height: 1.5; font-weight: 500;">
+                                            1982 Harvest Lane New York, NY12210
+                                            United State</span></address>
+                                </td>
+                                <td style="text-align:end; padding:30px 30px 30px 0;"><span
+                                        style="display:block; line-height: 1.5; font-size:16px; color: #fff; font-weight:700;">Invoice</span><span
+                                        style="display:block; line-height: 1.5; font-size:16px; color: #fff; font-weight:500;">Receipt
+                                        #1923195</span><span
+                                        style="display:block; line-height: 1.5; font-size:16px; color: #fff; font-weight:500;">May
+                                        02, 2024</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table class="table-responsives" style="width: 100%;">
+                        <tbody>
+                            <tr style="padding: 28px 0; display: flex; justify-content: space-between;">
+                                <td v-for="(item, index) in tableresponsive" :key="index"><span
+                                        style=" font-size: 16px; font-weight: 500; opacity: 0.8;">{{ item.title }}</span>
+                                    <h4
+                                        style="font-weight:600; margin: 12px 0 5px 0; font-size: 16px; color: rgba(122, 112, 186, 1);">
+                                        {{ item.name }}</h4><span :style="item.width"
+                                        style=" display:block; line-height: 1.5;  font-size: 16px; font-weight: 400;opacity: 0.8;">{{
+                                            item.add }}</span><span
+                                        style="line-height:2;  font-size: 16px; font-weight: 400;opacity: 0.8;">{{
+                                            item.number }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td> <span
+                        style="display:block; background: rgba(82, 82, 108, 0.3); height:1px; width: 100%; margin-bottom:20px;">
+                    </span></td>
+            </tr>
+            <tr>
+                <td>
+                    <table style="width: 100%;border-spacing:0;">
+                        <thead>
+                            <tr style="background: #7A70BA;">
+                                <th :style="item.style" v-for="(item, index) in invoiceheader1" :key="index"><span
+                                        style="color: #fff; font-size: 16px; font-weight: 600;">{{ item.title }}</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in invoicetable2" :key="index">
+                                <td
+                                    style="padding: 18px 15px 18px 0; display:flex; align-items: center; gap: 10px; border-bottom:1px solid #52526C4D;">
+                                    <span :style="item.style"></span>
+                                    <ul style="padding: 0; margin: 0; list-style: none;">
+                                        <li>
+                                            <h4 style="font-weight:600; margin:4px 0px; font-size: 16px; color: #7A70BA;">
+                                                {{ item.title }}</h4><span style=" opacity: 0.8; font-size: 16px;">{{
+                                                    item.subtitle }}</span>
+                                        </li>
+                                    </ul>
+                                </td>
+                                <td
+                                    style="padding: 18px 15px; width: 12%; text-align: center; border-bottom:1px solid #52526C4D;">
+                                    <span style=" opacity: 0.8;">{{ item.qty }}</span>
+                                </td>
+                                <td
+                                    style="padding: 18px 15px; width: 12%; text-align: center; border-bottom:1px solid #52526C4D;">
+                                    <span style=" opacity: 0.8;">{{ item.price }}</span>
+                                </td>
+                                <td
+                                    style="padding: 18px 15px; width: 12%; text-align: center; border-bottom:1px solid #52526C4D;">
+                                    <span style=" opacity: 0.8;">{{ item.total }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table style="width:100%;">
+                        <tbody>
+                            <tr style="display:flex; justify-content: space-between; margin:28px 0; align-items: center;">
+                                <td> <span style=" font-size: 16px; font-weight: 500; opacity: 0.8; font-weight: 600;">BANK
+                                        TRANSFER</span>
+                                    <h4 style="font-weight:600; margin: 12px 0 5px 0; font-size: 16px; color:#7A70BA;">
+                                        Leslie Alexander</h4><span
+                                        style=" display:block; line-height: 1.5;  font-size: 16px; font-weight: 400;">Bank
+                                        Account : 0981234098765</span><span
+                                        style="line-height:1.6;  font-size: 16px; font-weight: 400;">Code : LEF098756</span>
+                                </td>
+                                <td><span style=" font-size: 16px; font-weight: 500; opacity: 0.8; font-weight: 600;">TOTAL
+                                        AMOUNT</span>
+                                    <h4 style="font-weight:600; margin: 12px 0 5px 0; font-size: 26px; color:#7A70BA;">
+                                        $175.00</h4><span style=" font-size: 16px; font-weight: 400; line-height: 1.5;">All
+                                        Taxes included</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td> <span
+                        style="display:block;background: rgba(82, 82, 108, 0.3);height: 1px;width: 100%;margin-bottom:30px;"></span>
+                </td>
+            </tr>
+            <tr>
+                <td> <span style="display: flex; justify-content: end; gap: 15px;"><a
+                            style="background: rgba(122, 112, 186, 1); color:rgba(255, 255, 255, 1);border-radius: 10px;padding: 18px 27px;font-size: 16px;font-weight: 600;outline: 0;border: 0; text-decoration: none;"
+                            href="#!" onclick="window.print();">Print Invoice<i class="icon-arrow-right"
+                                style="font-size:13px;font-weight:bold; margin-left: 10px;"></i></a><a
+                            style="background: rgba(122, 112, 186, 0.1);color: rgba(122, 112, 186, 1);border-radius: 10px;padding: 18px 27px;font-size: 16px;font-weight: 600;outline: 0;border: 0; text-decoration: none;"
+                            href="" download="">Download<i class="icon-arrow-right"
+                                style="font-size:13px;font-weight:bold; margin-left: 10px;"></i></a></span></td>
+            </tr>
+        </tbody>
+    </table>
+</template>
+<script lang="ts" setup>
+import { tableresponsive, invoiceheader1, invoicetable2 } from "@/core/data/ecommerce"
+</script>

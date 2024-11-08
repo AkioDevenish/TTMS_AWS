@@ -1,0 +1,5 @@
+<template>
+    <div class="form-completed"><img src="@/assets/images/gif/dashboard-8/successful.gif" alt="successful">
+        <h6>Successfully Completed</h6>
+    </div>
+</template>

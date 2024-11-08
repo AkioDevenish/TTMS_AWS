@@ -1,0 +1,140 @@
+<template>
+    <Card1 colClass="col-xl-7 col-xl-100 proorder-md-6" dropdown="true" headerTitle="true" title="Client's activity of 2024"
+        cardhaderClass="card-no-border pb-0" cardbodyClass="pt-0 client-activity px-0">
+        <div class="table-responsive theme-scrollbar">
+            <div id="recent-order_wrapper" class="dataTables_wrapper no-footer">
+                <div id="recent-order_filter" class="dataTables_filter"><label>Search:<input type="search" placeholder=""
+                            v-model="filterQuery"></label></div>
+                <table class="table display dataTable" id="client-product" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="">
+                                    <label class="form-check-label"></label>
+                                </div>
+                            </th>
+                            <th>Project name</th>
+                            <th>timeline</th>
+                            <th>Project team </th>
+                            <th>Project Type</th>
+                            <th>Progress</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody v-if="!get_rows().length">
+                        <tr class="odd">
+                            <td valign="top" colspan="6" class="dataTables_empty">No matching records found</td>
+                        </tr>
+                    </tbody>
+                    <tbody v-if="get_rows().length">
+                        <tr v-for="(row, index) in get_rows()" :key="index">
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="">
+                                    <label class="form-check-label"></label>
+                                </div>
+                            </td>
+                            <td class="px-0">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0"><img :src="getImages(row.img)" alt=""></div>
+                                    <div class="flex-grow-1 ms-2"><router-link to="/ecommerce/details/1">
+                                            <h5>{{ row.name }}</h5>
+                                        </router-link>
+                                        <p>{{ row.by }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-0">{{ row.time }}</td>
+                            <td class="customers text-center social-group">
+                                <ul>
+                                    <li class="d-inline-block" v-for="(item, index) in row.social" :key="index"><img
+                                            class="img-30 rounded-circle" :src="getImages(item)" alt="">
+                                    </li>
+                                    <li class="d-inline-block" v-if="row.more">
+                                        <p class="bg-light rounded-circle">5+</p>
+                                    </li>
+                                </ul>
+                            </td>
+                            <td> {{ row.type }} </td>
+                            <td>
+                                <div class="progress-showcase">
+                                    <div class="progress sm-progress-bar " :class="'progress-border-' + row.color">
+                                        <div class="progress-bar" role="progressbar" :style="row.progress"
+                                            aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="dropdown icon-dropdown">
+                                    <button class="btn dropdown-toggle" id="userdropdown10" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false"><i
+                                            class="icon-more-alt"></i></button>
+                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userdropdown10"><a
+                                            class="dropdown-item" href="#">Weekly</a><a class="dropdown-item"
+                                            href="#">Monthly</a><a class="dropdown-item" href="#">Yearly</a></div>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <ul class="pagination mx-2 mt-2 justify-content-end">
+            <li class="page-item"><a class="page-link" @click="prev()">Previous</a></li>
+            <li class="page-item" v-for="i in num_pages()" :key="i" v-bind:class="[i == currentPage ? 'active' : '']"
+                v-on:click="change_page(i)">
+                <a class="page-link">{{ i }}</a>
+            </li>
+            <li class="page-item"><a class="page-link" @click="change()">Next</a></li>
+        </ul>
+    </Card1>
+</template>
+<script lang="ts" setup>
+import { ref, defineAsyncComponent, onMounted, watch } from 'vue'
+import { client } from "@/core/data/dashboards"
+import { getImages } from "@/composables/common/getImages"
+const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
+let elementsPerPage = ref<number>(4)
+let currentPage = ref<number>(1)
+let filterQuery = ref<string>("")
+let allData = ref<any>([])
+watch(filterQuery, (search: string) => {
+
+    var filteredData = client.filter((row) => {
+        return (
+            row.name.toLowerCase().includes(search.toLowerCase()) ||
+            row.by.toLowerCase().includes(search.toLowerCase()) ||
+            row.time.toLowerCase().includes(search.toLowerCase()) ||
+            row.type.toLowerCase().includes(search.toLowerCase())
+        );
+    });
+    search == "" ? allData.value = client : allData.value = filteredData
+})
+function get_rows() {
+    var start = (currentPage.value - 1) * elementsPerPage.value;
+    var end = start + elementsPerPage.value;
+    return allData.value.slice(start, end);
+}
+function num_pages() {
+    return Math.ceil(allData.value.length / elementsPerPage.value);
+}
+function change_page(page: number) {
+    currentPage.value = page;
+}
+function change() {
+    if (currentPage.value < Math.ceil(allData.value.length / elementsPerPage.value)) {
+        currentPage.value++;
+    }
+}
+function prev() {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+}
+
+onMounted(() => {
+    allData.value = client;
+})
+</script>

@@ -1,0 +1,27 @@
+====================
+----- 17/10/2024 ---
+====================
+
+Update:
+
+-- theme --
+- update vue version 
+- solved chat page issue
+- solved star active issue in letter-box page
+- solved apexchart issue
+
+-- stater-kit --
+- Update vue version
+
+-- documentation --
+- add detail of updated vue version
+
+
+====================
+----- 28/3/2024 ---
+====================
+
+Update:
+
+- solve group button Radio and group button checkbox issue in button group page
+- check design in mofi vue
