@@ -1,10 +1,10 @@
 <template>
-    <div class="form theme-form">
+    <div class="form theme-form h-100 ">
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label>Project Title</label>
-                    <input class="form-control" type="text" :class="inputclasses" placeholder="Project name *"
+                    <label>Device Name</label>
+                    <input class="form-control" type="text" :class="inputclasses" placeholder="Enter Device Name"
                         v-model="title" @input="validated($event.target.value)">
                 </div>
             </div>
@@ -12,22 +12,14 @@
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label>Client name</label>
+                    <label>Device  ID</label>
                     <input class="form-control" v-model="sites" @input="validated($event.target.value)"
-                        :class="inputclasses" type="text" placeholder="Name client or company name">
+                        :class="inputclasses" type="text" placeholder="Enter Device ID">
                 </div>
             </div>
         </div>
+        
         <projectRate />
-        <div class="row">
-            <div class="col">
-                <div class="mb-3">
-                    <label>Enter some Details</label>
-                    <textarea class="form-control" id="exampleFormControlTextarea4" rows="3" v-model="desc" @input="update($event.target.value)"></textarea>
-                </div>
-            </div>
-        </div>
-        <uploadProject />
         <div class="row">
             <div class="col">
                 <div class="text-end"><a class="btn btn-success me-3" target="_blank" @click="add()">Add</a><a
@@ -41,8 +33,8 @@ import { defineAsyncComponent, onMounted, ref } from 'vue'
 import { all } from "@/core/data/project"
 import { inputclasses, itemclasses } from "@/composables/createProject"
 import { useRouter } from 'vue-router'
-const projectRate = defineAsyncComponent(() => import("@/components/theme/project/createproject/ProjectRate.vue"))
-const uploadProject = defineAsyncComponent(() => import("@/components/theme/project/createproject/UploadProject.vue"))
+const projectRate = defineAsyncComponent(() => import("@/components/theme/dashboards/createproject/ProjectRate.vue"))
+const uploadProject = defineAsyncComponent(() => import("@/components/theme/dashboards/createproject/UploadProject.vue"))
 let formSubmitted = ref<boolean>(false)
 let titleError = ref<boolean>(false)
 let descError = ref<boolean>(false)

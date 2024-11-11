@@ -20,13 +20,13 @@
 <script lang="ts" setup>
 import { useMenuStore } from '@/store/menu'
 import { defineAsyncComponent } from 'vue';
-const CustomizerSetting = defineAsyncComponent(() => import("@/components/common/block/customizer/CustomizerSetting.vue"))
-const CustomizerSupport = defineAsyncComponent(() => import("@/components/common/block/customizer/CustomizerSupport.vue"))
-const DocumentSection = defineAsyncComponent(() => import("@/components/common/block/customizer/DocumentSection.vue"))
-const CheckFeatures = defineAsyncComponent(() => import("@/components/common/block/customizer/CheckFeatures.vue"))
-const ConfigurationView = defineAsyncComponent(() => import("@/components/common/block/customizer/ConfigurationView.vue"))
-const BuyNow = defineAsyncComponent(() => import("@/components/common/block/customizer/BuyNow.vue"))
-const CustomSetting = defineAsyncComponent(() => import("@/components/common/block/customizer/CustomSetting.vue"))
+//const CustomizerSetting = defineAsyncComponent(() => import("@/components/common/block/customizer/CustomizerSetting.vue"))
+//const CustomizerSupport = defineAsyncComponent(() => import("@/components/common/block/customizer/CustomizerSupport.vue"))
+//const DocumentSection = defineAsyncComponent(() => import("@/components/common/block/customizer/DocumentSection.vue"))
+//const CheckFeatures = defineAsyncComponent(() => import("@/components/common/block/customizer/CheckFeatures.vue"))
+//const ConfigurationView = defineAsyncComponent(() => import("@/components/common/block/customizer/ConfigurationView.vue"))
+//const BuyNow = defineAsyncComponent(() => import("@/components/common/block/customizer/BuyNow.vue"))
+//const CustomSetting = defineAsyncComponent(() => import("@/components/common/block/customizer/CustomSetting.vue"))
 const store = useMenuStore()
 store.customizer
 </script>

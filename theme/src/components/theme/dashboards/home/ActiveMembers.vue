@@ -1,13 +1,13 @@
 <template>
-    <Card1 colClass="col-xxl-4 col-xl-5 col-md-7 box-col-5 proorder-xl-10 proorder-md-4" dropdown="true" headerTitle="true"
-        title="Active Members " cardhaderClass="card-no-border pb-0" cardbodyClass="active-members px-0 pb-0">
+    <Card1 colClass="col-xl-7 col-md-6 box-col-5 proorder-xl-3 proorder-md-2" headerTitle="true"
+        title="Recent Memembers " cardhaderClass="card-no-border pb-0" cardbodyClass="active-members px-0 pb-0 ">
 
         <div class="table-responsive theme-scrollbar">
             <table class="table display" style="width:100%">
                 <thead>
                     <tr>
                         <th>Member Profile</th>
-                        <th>Today’s hrours </th>
+                        <th></th>
                         <th class="text-center">Status</th>
                     </tr>
                 </thead>
@@ -22,7 +22,7 @@
                                     </router-link><span>{{ item.desc }}</span></div>
                             </div>
                         </td>
-                        <td>{{ item.hours }}</td>
+                        <td></td>
                         <td>
                             <p class="members-box text-center " :class="item.statusclass">
                                 {{ item.status }}</p>

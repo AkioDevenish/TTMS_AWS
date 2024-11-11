@@ -1,5 +1,5 @@
 <template>
-    <div class="col-xl-6 col-md-12 proorder-md-1">
+    <div class="col-xl-6 col-md-12 proorder-md-3">
         <div class="row">
 
             <Card1 colClass="col-xl-6 col-sm-6" v-for="(item, index) in studentdata" :key="index"

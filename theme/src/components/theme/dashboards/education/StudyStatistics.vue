@@ -1,10 +1,11 @@
 <template>
-    <Card1 colClass="col-xl-6 col-md-6 proorder-md-2" dropdown="true" headerTitle="true" title="Study Statistics"
+    <Card1 colClass="col-xl-12 col-md-12 proorder-md-3"  dropdown="true" headerTitle="true" title="ATMOS z6-26732"
         cardhaderClass="card-no-border pb-0">
-        <div class="studay-statistics">
+        
+        <div class="studay-statistics ">
             <ul class="d-flex align-item-center gap-2">
-                <li> <span class="bg-primary"> </span>UX Design</li>
-                <li> <span class="bg-secondary"> </span>Illustrations</li>
+                <li> <span class="bg-primary"> </span>Rainfall</li>
+                <li> <span class="bg-secondary"> </span>AirTemperature</li>
             </ul>
         </div>
         <div id="study-statistics">

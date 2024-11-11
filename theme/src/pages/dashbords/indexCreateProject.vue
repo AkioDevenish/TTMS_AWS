@@ -10,6 +10,6 @@
 </template>
 <script lang="ts" setup>
 import { ref, defineAsyncComponent } from 'vue'
-const NewProject = defineAsyncComponent(() => import("@/components/theme/project/createproject/NewProject.vue"))
+const NewProject = defineAsyncComponent(() => import("@/components/theme/dashboards/createproject/NewProject.vue"))
 const Card3 = defineAsyncComponent(() => import("@/components/common/card/CardData3.vue"))
 </script>

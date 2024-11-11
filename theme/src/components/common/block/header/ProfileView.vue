@@ -1,8 +1,8 @@
 <template>
     <div class="d-flex profile-media align-items-center"><img class="img-30" src="@/assets/images/dashboard/profile.png"
             alt="">
-        <div class="flex-grow-1"><span>Alen Miller</span>
-            <p class="mb-0 font-outfit">UI Designer<i class="fa fa-angle-down"></i></p>
+        <div class="flex-grow-1"><span>Joshua Woo</span>
+            <p class="mb-0 font-outfit">Climate Data Scientist<i class="fa fa-angle-down"></i></p>
         </div>
     </div>
     <ul class="profile-dropdown onhover-show-div">

@@ -16,14 +16,15 @@
                         <HeaderSearch />
                     </li>
                     <li class="onhover-dropdown">
-                        <NotificationBox />
-                    </li>
-                    <li class="onhover-dropdown">
-                        <BookmarkSearch />
+                        <NotificationBox />  
                     </li>
                     <li>
                         <ModeView />
                     </li>
+               <!-- <li class="onhover-dropdown">
+                        <BookmarkSearch />
+                    </li> 
+                  
                     <li class="language-nav">
                         <LanguageView />
                     </li>
@@ -32,7 +33,7 @@
                     </li>
                     <li class="cart-nav onhover-dropdown">
                         <CartBox />
-                    </li>
+                    </li> --> 
                     <li class="profile-nav onhover-dropdown px-0 py-0">
                         <ProfileView />
                     </li>
@@ -55,9 +56,10 @@ const ModeView = defineAsyncComponent(() => import("@/components/common/block/he
 const MessageBox = defineAsyncComponent(() => import("@/components/common/block/header/MessageBox.vue"))
 const CartBox = defineAsyncComponent(() => import("@/components/common/block/header/CartBox.vue"))
 const ProfileView = defineAsyncComponent(() => import("@/components/common/block/header/ProfileView.vue"))
-const LanguageView = defineAsyncComponent(() => import("@/components/common/block/header/LanguageView.vue"))
 const SearchData = defineAsyncComponent(() => import("@/components/common/block/header/SearchData.vue"))
 const BreadCrumbs = defineAsyncComponent(() => import("@/layout/BreadCrumbs.vue"))
+const LanguageView = defineAsyncComponent(() => import("@/components/common/block/header/LanguageView.vue"))
+
 let store = useMenuStore();
 const emit = defineEmits(['click']);
 

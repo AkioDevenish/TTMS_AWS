@@ -1,28 +1,29 @@
 export const notification = [
     {
-        title: "New daily offer added",
-        desc: "New user-only offer added",
+        title: "Automatic Weather Station - Offline",
+        desc: "T10 Paramin, 3D-PAWS",
         img: "dashboard/icon/wallet.png",
         class: "bg-light-primary"
     },
     {
-        title: "Product Evaluation",
-        desc: "Changed to a new workflow",
+        title: "Automatic Weather Station - New",
+        desc: "Piarco, TT MeteoWind 2108LW028",
         img: "dashboard/icon/shield-dne.png",
         class: "bg-light-info"
     },
     {
-        title: "Return of a Product",
-        desc: "452 items were returned",
-        img: "dashboard/icon/graph.png",
-        class: "bg-light-warning"
-    },
-    {
-        title: "Recently Paid",
-        desc: "Mastercard payment of $343",
+        title: "Automatic Weather Station - Online",
+        desc: "ATMOS - z6-26732",
         img: "dashboard/icon/ticket-star.png",
         class: "bg-light-tertiary"
+    },
+    {
+        title: "Record High Detected",
+        desc: "Piarco, TT MeteoWind 2012LW006",
+        img: "dashboard/icon/graph.png",
+        class: "bg-light-warning"
     }
+
 ]
 export const messages = [
     {
@@ -85,16 +86,6 @@ export const profile = [
         icon: "user",
         title: "Account",
         path: "/users/profile"
-    },
-    {
-        icon: "mail",
-        title: "Inbox",
-        path: "/app/letter_box"
-    },
-    {
-        icon: "file-text",
-        title: "Taskboard",
-        path: "/app/task"
     },
     {
         icon: "settings",

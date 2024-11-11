@@ -6,7 +6,10 @@ export const series = [
         data: [22, 14, 23, 8, 14, 12, 2, 14, 18, 35, 18, 8, 24]
     }
 ]
-export const series1 = [30, 25, 35, 55]
+export const atmosseries = [89.2, 30, 90, 10]
+export const baraniseries = [63.2, 18, 1300, 15]
+export const pawsseries = [71.8, 18, 108, 8]
+export const pawsseries2 = [65.5, 30, 138, 1]
 export const series2 = [
     {
         type: 'bar',
@@ -428,7 +431,7 @@ export const chartOptions = {
             show: true
         },
         type: 'category',
-        categories: ['0', '', '10k', '', '20k', '', '30k', '', '40k', '', '50k', '', '60k', ''],
+        categories: ['27.2°', '', '23.6°', '', '28.2°', '', '30.0°', '', '31.0°', '', '26.0°', '', '22.0°', ''],
         tickAmount: 10,
         labels: {
             style: {
@@ -478,8 +481,9 @@ export const chartOptions = {
         }
     }
 }
-export const chartOptions1 = {
-    labels: ["Shoes", "Grocery", "other", "other"],
+
+export const AtmosOption = {
+    labels: ["Humidity", "Wind Speed", "Wind Direction", "Rainfall"],
     chart: {
         type: "donut",
         height: 200,
@@ -508,8 +512,184 @@ export const chartOptions1 = {
                         fontSize: "20px",
                         fontFamily: "Outfit', sans-serif",
                         fontWeight: 600,
-                        label: "$ 34,098",
-                        formatter: () => "Total Overviewt",
+                        label: "32ºC",
+                        formatter: () => "Temperature",
+                    },
+                },
+            },
+        },
+    },
+    states: {
+        normal: {
+            filter: {
+                type: "none",
+            },
+        },
+        hover: {
+            filter: {
+                type: "none",
+            },
+        },
+        active: {
+            allowMultipleDataPointsSelection: false,
+            filter: {
+                type: "none",
+            },
+        },
+    },
+    colors: ["#48A3D7", "#D77748", "#C95E9E", "#7A70BA"],
+}
+
+export const BaraniOption = {
+    labels: ["Humidity", "Dewpoint", "Irradiation", "Rainfall"],
+    chart: {
+        type: "donut",
+        height: 200,
+    },
+    dataLabels: {
+        enabled: false,
+    },
+    legend: {
+        show: false,
+    },
+    stroke: {
+        width: 6,
+    },
+    plotOptions: {
+        pie: {
+            expandOnClick: false,
+            donut: {
+                size: "83%",
+                labels: {
+                    show: true,
+                    name: {
+                        offsetY: 4,
+                    },
+                    total: {
+                        show: true,
+                        fontSize: "20px",
+                        fontFamily: "Outfit', sans-serif",
+                        fontWeight: 600,
+                        label: "23.7ºC",
+                        formatter: () => "Temperature",
+                    },
+                },
+            },
+        },
+    },
+    states: {
+        normal: {
+            filter: {
+                type: "none",
+            },
+        },
+        hover: {
+            filter: {
+                type: "none",
+            },
+        },
+        active: {
+            allowMultipleDataPointsSelection: false,
+            filter: {
+                type: "none",
+            },
+        },
+    },
+    colors: ["#48A3D7", "#D77748", "#C95E9E", "#7A70BA"],
+}
+
+
+export const pawsoption = {
+    labels: ["Humidity", "Wind Speed", "Wind Direction", "Rainfall"],
+    chart: {
+        type: "donut",
+        height: 200,
+    },
+    dataLabels: {
+        enabled: false,
+    },
+    legend: {
+        show: false,
+    },
+    stroke: {
+        width: 6,
+    },
+    plotOptions: {
+        pie: {
+            expandOnClick: false,
+            donut: {
+                size: "83%",
+                labels: {
+                    show: true,
+                    name: {
+                        offsetY: 4,
+                    },
+                    total: {
+                        show: true,
+                        fontSize: "20px",
+                        fontFamily: "Outfit', sans-serif",
+                        fontWeight: 600,
+                        label: "26.7ºC",
+                        formatter: () => "Temperature",
+                    },
+                },
+            },
+        },
+    },
+    states: {
+        normal: {
+            filter: {
+                type: "none",
+            },
+        },
+        hover: {
+            filter: {
+                type: "none",
+            },
+        },
+        active: {
+            allowMultipleDataPointsSelection: false,
+            filter: {
+                type: "none",
+            },
+        },
+    },
+    colors: ["#48A3D7", "#D77748", "#C95E9E", "#7A70BA"],
+}
+
+
+export const paws2option = {
+    labels: ["Humidity", "Wind Speed", "Wind Direction", "Rainfall"],
+    chart: {
+        type: "donut",
+        height: 200,
+    },
+    dataLabels: {
+        enabled: false,
+    },
+    legend: {
+        show: false,
+    },
+    stroke: {
+        width: 6,
+    },
+    plotOptions: {
+        pie: {
+            expandOnClick: false,
+            donut: {
+                size: "83%",
+                labels: {
+                    show: true,
+                    name: {
+                        offsetY: 4,
+                    },
+                    total: {
+                        show: true,
+                        fontSize: "20px",
+                        fontFamily: "Outfit', sans-serif",
+                        fontWeight: 600,
+                        label: "26.7ºC",
+                        formatter: () => "Temperature",
                     },
                 },
             },
@@ -1494,37 +1674,8 @@ export const chartOptions12 = {
             stops: [5, 100, 100, 100]
         },
     },
-    annotations: {
-        xaxis: [{
-            x: 312,
-            strokeDashArray: 5,
-            borderWidth: 3,
-            borderColor: primary,
-        },
-        ],
-        points: [{
-            x: 312,
-            y: 4.5,
-            marker: {
-                size: 8,
-                fillColor: primary,
-                strokeColor: "#ffffff",
-                strokeWidth: 4,
-                radius: 5,
-            },
-            label: {
-                borderWidth: 1,
-                offsetY: 0,
-                text: '7h a week on average in Apr',
-                style: {
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    fontFamily: 'Outfit, sans-serif',
-                }
-            }
-        }],
-    },
-    yaxis: {
+  
+    xaxis: {
         labels: {
             show: true,
             style: {
@@ -1538,7 +1689,7 @@ export const chartOptions12 = {
             },
         },
     },
-    xaxis: {
+    yaxis: {
         type: 'category',
         categories: [
             'Jan',
@@ -1588,6 +1739,7 @@ export const chartOptions12 = {
         },
     ],
 }
+
 export const chartOptions13 = {
     chart: {
         type: 'bar',

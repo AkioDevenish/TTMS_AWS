@@ -1,26 +1,96 @@
 import { series17, series18, series19, series20, chartOptions17, chartOptions18, chartOptions19, chartOptions20 } from "@/core/data/chart"
-export const overviews = [
+
+export const atmosoverview = [
     {
         bg: "bg-primary",
-        title: "New",
-        number: "86",
+        title: "Rainfall",
+        number: "10mm",
     },
     {
         bg: "bg-secondary",
-        title: "Waiting for approval",
-        number: "210"
+        title: "Humidity",
+        number: "89.2%"
     },
     {
         bg: "bg-warning",
-        title: "Assigned",
-        number: "95"
+        title: "Wind Speed",
+        number: "30m/s"
+       
+      
     },
     {
         bg: "bg-tertiary",
-        title: "Cancelled",
-        number: "37"
+        title: "Wind Direction",
+        number: "90º"
     }
 ]
+export const baranioverview = [
+    {
+        bg: "bg-primary",
+        title: "Rainfall",
+        number: "15mm",
+    },
+    {
+        bg: "bg-secondary",
+        title: "Humidity",
+        number: "63.2%"
+    },
+    {
+        bg: "bg-warning",
+        title: "Dewpoint",
+        number: "18°C"
+    },
+    {
+        bg: "bg-tertiary",
+        title: "Irradiation",
+        number: "1300W/m2"
+    }
+]
+export const pawsoverview = [
+    {
+        bg: "bg-primary",
+        title: "Rainfall",
+        number: "8mm",
+    },
+    {
+        bg: "bg-secondary",
+        title: "Humidity",
+        number: "71.8%"
+    },
+    {
+        bg: "bg-warning",
+        title: "Wind Speed",
+        number: "18m/s"
+    },
+    {
+        bg: "bg-tertiary",
+        title: "Wind Direction",
+        number: "108º"
+    }
+]
+export const paws2overview = [
+    {
+        bg: "bg-primary",
+        title: "Rainfall",
+        number: "1mm",
+    },
+    {
+        bg: "bg-secondary",
+        title: "Humidity",
+        number: "65.5%"
+    },
+    {
+        bg: "bg-warning",
+        title: "Wind Speed",
+        number: "30m/s"
+    },
+    {
+        bg: "bg-tertiary",
+        title: "Wind Direction",
+        number: "138º"
+    }
+]
+
 export const notificationbox = [
     {
         bgclass: "bg-light-primary",
@@ -81,35 +151,46 @@ export const membersbox = [
     {
         img: "dashboard/user/01.jpg",
         name: "Joshua Woo",
-        desc: "UI/UX Designer",
-        hours: "02 hours",
-        status: "Away",
+        desc: "Climate Data Scientist",
+        status: "Pending",
         statusclass: "background-light-primary b-light-primary font-primary"
     },
     {
         img: "dashboard/user/02.jpg",
         name: "Ashley Hart",
-        desc: "Website Design",
-        hours: "05 hours",
-        status: "Working",
-        statusclass: "background-light-secondary b-light-secondary font-secondary"
+        desc: "Meteorological Analyst",
+        status: "Pending",
+        statusclass: "background-light-primary b-light-primary font-primary"
     },
     {
         img: "dashboard/user/03.jpg",
         name: "Anna lverson",
-        desc: "UX Research",
-        hours: "10 hours",
-        status: "Working",
+        desc: "Atmospheric Researcher",
+        status: "Approved",
         statusclass: "background-light-secondary b-light-secondary font-secondary"
     },
     {
         img: "dashboard/user/04.jpg",
         name: "Ron Dayley",
-        desc: "234+ Online",
-        hours: "15 hours",
-        status: "Away",
+        desc: "Weather Systems Engineer",
+        status: "Approved",
+        statusclass: "background-light-secondary b-light-secondary font-secondary"
+    },
+    {
+        img: "dashboard/user/02.jpg",
+        name: "Sarah Chen",
+        desc: "Climate Data Modeler",
+        status: "Pending",
         statusclass: "background-light-primary b-light-primary font-primary"
-    }
+    },
+    {
+        img: "dashboard/user/03.jpg",
+        name: "Marcus Thompson",
+        desc: "Precipitation Analyst",
+        status: "Approved",
+        statusclass: "background-light-secondary b-light-secondary font-secondary"
+    },
+
 ]
 export const sale = [
     {
@@ -136,137 +217,151 @@ export const sale = [
 ]
 export const saleproduct = [
     {
-        img: "dashboard/product/1.png",
-        name: "Touch sensor Lamp",
-        amonunt: " $ 7.938",
-        sold: "52.93%",
-        progressclass: "progress-striped-primary",
-        width: "70%"
-    },
-    {
-        img: "dashboard/product/2.png",
-        name: "Bluetooth headphone",
-        amonunt: "$ 2.937",
-        sold: "12.52%",
+   
+        name: "ATMOS - z6-26732",
+        time: "0:28",
         progressclass: "progress-striped-secondary",
         width: "40%"
     },
     {
-        img: "dashboard/product/3.png",
-        name: "Apple watch series 8",
-        amonunt: "$ 1.923",
-        sold: "84.12%",
+
+        name: "BARANI - 2101LH028",
+        time: "0:40",
         progressclass: "progress-striped-warning",
         width: "60%"
     },
     {
-        img: "dashboard/product/4.png",
-        name: "Macbook Pro M1",
-        amonunt: "$ 5.538",
-        sold: "01.41%",
+   
+        name: "3D PAWS - T01 Rawin",
+        time: "0:56",
         progressclass: "progress-striped-tertiary",
         width: "80%"
     },
     {
-        img: "dashboard/product/5.png",
-        name: "iphone 12 Pro max",
-        amonunt: "$ 8.258",
-        sold: "14.34%",
+        name: "3D PAWS - T14 UTT",
+        time: "0:35",
         progressclass: "progress-striped-primary",
         width: "50%"
+    },
+    {
+        name: "3D PAWS - T01 Rawinsonde",
+        time: "0:35",
+        progressclass: "progress-striped-info",
+        width: "90%"
     }
 ]
 export const project = [
-    {
-        img: "dashboard/project/1.png",
-        title: "Rules Post on Dribble",
-        bgclass: "bg-primary",
-        file: "Document",
-        date: "12 Aug 2024",
-        size: "200 Kb",
-        author: "Monry Hasu"
-    },
-    {
-        img: "dashboard/project/2.png",
-        title: "Login & Sign Up Ui",
-        bgclass: "bg-secondary",
-        file: "Animation",
-        date: "19 Mar 2024",
-        size: "3,5 Mb",
-        author: "Alex Madus"
-    },
-    {
-        img: "dashboard/project/3.png",
-        title: "Nft website Pages",
-        bgclass: "bg-warning",
-        file: "Image",
-        date: "30 Jun 2024",
-        size: "800 Kb",
-        author: "Nomru Nalij"
-    },
-    {
-        img: "dashboard/project/4.png",
-        title: "Square Dashboard",
-        bgclass: "bg-tertiary",
-        file: "Document",
-        date: "24 Oct 2024",
-        size: "2,8 Mb",
-        author: "Willium sen"
-    },
-    {
-        img: "dashboard/project/4.png",
-        title: "Square Dashboard",
-        bgclass: "bg-tertiary",
-        file: "Document",
-        date: "24 Oct 2024",
-        size: "2,8 Mb",
-        author: "Willium sen"
-    },
-    {
-        img: "dashboard/project/1.png",
-        title: "Rules Post on Dribble",
-        bgclass: "bg-primary",
-        file: "Document",
-        date: "12 Aug 2024",
-        size: "200 Kb",
-        author: "Monry Hasu"
-    },
-    {
-        img: "dashboard/project/2.png",
-        title: "Login & Sign Up Ui",
-        bgclass: "bg-secondary",
-        file: "Animation",
-        date: "19 Mar 2024",
-        size: "3,5 Mb",
-        author: "Alex Madus"
-    },
-    {
-        img: "dashboard/project/4.png",
-        title: "Square Dashboard",
-        bgclass: "bg-tertiary",
-        file: "Document",
-        date: "24 Oct 2024",
-        size: "2,8 Mb",
-        author: "Willium sen"
-    },
-    {
-        img: "dashboard/project/3.png",
-        title: "Nft website Pages",
-        bgclass: "bg-warning",
-        file: "Image",
-        date: "30 Jun 2024",
-        size: "800 Kb",
-        author: "Nomru Nalij"
-    },
-    {
-        img: "dashboard/project/1.png",
-        title: "Rules Post on Dribble",
-        bgclass: "bg-primary",
-        file: "Document",
-        date: "12 Aug 2024",
-        size: "200 Kb",
-        author: "Monry Hasu"
-    }
+        {
+            title: "T01 Rawinsonde",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "13 Aug 2024",
+            unit: "ºC",
+            type: "Temperature",
+            value: "30.0"
+        },
+        {
+            title: "T10 Paramin",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "06 Jan 2024",
+            unit: "m/s",
+            type: "Wind Speed",
+            value: "4.2"
+        },
+        {
+            title: "T03 Centeno",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "27 Jun 2024",
+            unit: "mm",
+            type: "Rainfall",
+            value: "2.5"
+        },
+        {
+            title: "T04 Mayaro",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "28 Jul 2024",
+            unit: "%",
+            type: "Humidity",
+            value: "78.3"
+        },
+        {
+            title: "T06 Moruga",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "10 Mar 2024",
+            unit: "m/s",
+            type: "Wind Speed",
+            value: "3.8"
+        },
+        {
+            title: "T08 Penal",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "21 Feb 2024",
+            unit: "mm",
+            type: "Rainfall",
+            value: "1.8"
+        },
+        {
+            title: "T07 Wild Fowl Trust",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "22 Feb 2024",
+            unit: "ºC",
+            type: "Temperature",
+            value: "29.5"
+        },
+        {
+            title: "T11 UWI",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "02 Apr 2024",
+            unit: "m/s",
+            type: "Wind Speed",
+            value: "5.1"
+        },
+        {
+            title: "T09 Brigand Hill",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "04 May 2024",
+            unit: "mm",
+            type: "Rainfall",
+            value: "3.2"
+        },
+        {
+            title: "T12 Caroni",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "24 Oct 2024",
+            value: "75.6",
+            unit: "%",
+            type: "Humidity"
+       
+        },
+        {
+            title: "T15 ASJA",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "01 1Nov 2024",
+            value: "31.2",
+            unit: "ºC",
+            type: "Temperature"
+        
+        },
+        {
+            title: "T13 Matelot",
+            bgclass: "bg-primary",
+            file: "3D-Paws",
+            date: "02 May 2024",
+            value: "4.1",
+            unit: "mm",
+            type: "Rainfall"
+         
+        }
 ]
 export const projectstatus = [
     {
@@ -1012,79 +1107,42 @@ export const studentdata = [
         fontclass: "font-danger",
         total: "- 15.02",
         month: "than last 5 Month"
+    },
+    {
+        number: "984",
+        text: "Events",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 12.01",
+        month: "than last 8 Month"
+    },
+    {
+        number: "1,984",
+        text: "Invoice Status",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 15.02",
+        month: "than last 5 Month"
     }
 ]
 export const assignments = [
     {
-        no: "0542                                                       ",
-        img: "dashboard-4/user/1.png",
-        name: "Gary payi",
-        subject: "Accounts",
-        start: "12 May 2024",
-        end: "20 May 2024",
+     
+        name: "Z6-26732",
+        bgclass: "bg-primary",
+        type:"Atmos",
+        date: "12 May 2024",
+        time:"0:25",
         progressclass: "progress-border-primary",
         width: "80%"
     },
-    {
-        no: "9548",
-        img: "dashboard-4/user/2.png",
-        name: "Ralph Waters",
-        subject: "UI/UX Design",
-        start: "06 May 2024",
-        end: "16 May 2024",
-        progressclass: "progress-border-secondary",
-        width: "60%"
-    },
-    {
-        no: "2950",
-        img: "dashboard-4/user/3.png",
-        name: "Edwin Day",
-        subject: "Mathematics",
-        start: "25 Sep 2024",
-        end: "30 May 2024",
-        progressclass: "progress-border-warning",
-        width: " 50%"
-    },
-    {
-        no: "9605",
-        img: "dashboard-4/user/4.png",
-        name: "Aaron Hogan",
-        subject: "Computer App",
-        start: "23 May 2024 ",
-        end: "26 May 2024",
-        progressclass: "progress-border-tertiary",
-        width: "65%"
-    },
-    {
-        no: "1552",
-        img: "dashboard-4/user/2.png",
-        name: "Ralph Waters",
-        subject: "Accounts",
-        start: "15 May 2024",
-        end: "26 May 2024",
-        progressclass: "progress-border-success",
-        width: "40%"
-    },
-    {
-        no: "125",
-        img: "dashboard-4/user/3.png",
-        name: "Aaron Hogan",
-        subject: "Accounts",
-        start: "05 May 2024",
-        end: "19 May 2024 ",
-        progressclass: "progress-border-danger",
-        width: "70%"
-    },
-    {
-        no: "254",
-        img: "dashboard-4/user/1.png",
-        name: "Gary payi",
-        subject: "Accounts",
-        start: "22 May 2024",
-        end: "02 May 2024",
-        progressclass: "progress-border-info",
-        width: "25%"
-    }
+
 ]
 export const meting = [
     {
@@ -1205,15 +1263,16 @@ export const featured = [
 ]
 export const website = [
     {
-        number: "12",
-        title: "Issues"
+        number: "1",
+        title: "Offline"
     },
     {
-        number: "5",
+        number: "1",
         title: "Resolved"
     },
     {
-        number: "7",
-        title: "Comment"
-    }
+        number: "2",
+        title: "Disabled"
+    },
+
 ]

@@ -1,5 +1,5 @@
 <template>
-    <Card1 colClass="col-xl-8 col-md-12 proorder-md-4" dropdown="true" headerTitle="true" title="Assignments"
+    <Card1 colClass="col-xl-12 col-md-12 proorder-md-1" headerTitle="true" title="ATMOS Instance Monitor "
         cardhaderClass="card-no-border pb-0" cardbodyClass="pt-0 assignments-table px-0">
         <div class="table-responsive theme-scrollbar">
             <div id="recent-order_wrapper" class="dataTables_wrapper no-footer">
@@ -8,19 +8,11 @@
                 <table class="table display dataTable" id="assignments-table" style="width:100%">
                     <thead>
                         <tr>
-                            <th>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="">
-                                    <label class="form-check-label"></label>
-                                </div>
-                            </th>
-                            <th>Id no </th>
-                            <th>Teacher</th>
-                            <th>Subject </th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Progress</th>
-                            <th>Actions</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Progress Bar</th>
                         </tr>
                     </thead>
                     <tbody v-if="!get_rows().length">
@@ -31,24 +23,17 @@
                     <tbody>
                         <tr v-for="(item, index) in get_rows()" :key="index">
                             <td>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="">
-                                    <label class="form-check-label"></label>
-                                </div>
-                            </td>
-                            <td> <span>{{ item.no }}</span></td>
-                            <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0"><img :src="getImages(item.img)" alt=""></div>
-                                    <div class="flex-grow-1 ms-2"><router-link to="/ecommerce/details/1">
+                                <div class="d-flex align-items-center"><router-link to="/dashboards/dashboard_education">
                                             <h6>{{ item.name }}</h6>
                                         </router-link></div>
                                     <div class="active-status active-online"></div>
                                 </div>
                             </td>
-                            <td>{{ item.subject }}</td>
-                            <td>{{ item.start }} </td>
-                            <td>{{ item.end }}</td>
+                        
+                            <td>{{ item.type }}</td>
+                            <td>{{ item.date }} </td>
+                            <td>{{ item.time }} </td>
                             <td>
                                 <div class="progress-showcase">
                                     <div class="progress sm-progress-bar " :class="item.progressclass">
@@ -57,30 +42,12 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-center">
-                                <div class="dropdown icon-dropdown">
-                                    <button class="btn dropdown-toggle" id="userdropdown2" type="button"
-                                        data-bs-toggle="dropdown" aria-expanded="false"><i
-                                            class="icon-more-alt"></i></button>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userdropdown2"><a
-                                            class="dropdown-item" href="#">Weekly</a><a class="dropdown-item"
-                                            href="#">Monthly</a><a class="dropdown-item" href="#">Yearly</a></div>
-                                </div>
-                            </td>
                         </tr>
-
                     </tbody>
                 </table>
             </div>
         </div>
-        <ul class="pagination mx-2 mt-2 justify-content-end ">
-            <li class="page-item"><a class="page-link" @click="prev()">Previous</a></li>
-            <li class="page-item" v-for="i in num_pages()" :key="i" v-bind:class="[i == currentPage ? 'active' : '']"
-                v-on:click="change_page(i)">
-                <a class="page-link">{{ i }}</a>
-            </li>
-            <li class="page-item"><a class="page-link" @click="change()">Next</a></li>
-        </ul>
+      
     </Card1>
 </template>
 <script lang="ts" setup>
@@ -96,11 +63,9 @@ watch(filterQuery, (search: string) => {
 
     var filteredData = assignments.filter((row) => {
         return (
-            row.no.toLowerCase().includes(search.toLowerCase()) ||
             row.name.toLowerCase().includes(search.toLowerCase()) ||
-            row.subject.toLowerCase().includes(search.toLowerCase()) ||
-            row.start.toLowerCase().includes(search.toLowerCase()) ||
-            row.end.toLowerCase().includes(search.toLowerCase())
+            row.type.toLowerCase().includes(search.toLowerCase()) ||
+            row.date.toLowerCase().includes(search.toLowerCase()) 
         );
     });
     search == "" ? allData.value = assignments : allData.value = filteredData

@@ -2,14 +2,14 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import BodyView from "@/layout/BodyView.vue"
 import AuthView from "@/components/common/block/auth/AuthView.vue"
 import LoginPage from "@/components/common/block/auth/LoginPage.vue"
-import indexDefault from "@/pages/dashbords/indexDefault.vue"
+import indexHome from "@/pages/dashbords/indexHome.vue"
 import indexProject from "@/pages/dashbords/indexProject.vue"
 import indexEcommerce from "@/pages/dashbords/indexEcommerce.vue"
 import indexEducation from "@/pages/dashbords/indexEducation.vue"
 import indexGeneral from "@/pages/widgets/indexGeneral.vue"
 import indexChart from "@/pages/widgets/indexChart.vue"
 import indexProjectlist from "@/pages/project/indexProjectlist.vue"
-import indexCreateProject from "@/pages/project/indexCreateProject.vue"
+import indexCreateProject from "@/pages/dashbords/indexCreateProject.vue"
 import indexFileManeger from "@/pages/filemaneger/indexFileManeger.vue"
 import indexKanbanBoard from "@/pages/kanban/indexKanbanBoard.vue"
 import indexAddProduct from "@/pages/ecommerce/indexAddProduct.vue"
@@ -157,7 +157,7 @@ import indexRange from "@/pages/advance/indexRange.vue"
 const routes: Array<RouteRecordRaw> = [
   {
     path: "",
-    redirect: "/dashboards/dashboard_default"
+    redirect: "/dashboards/Main_Dashboard"
   },
   {
     path: '/',
@@ -170,7 +170,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         name: 'defaultRoot',
-        component: indexDefault,
+        component: indexHome,
         meta: {
           title: 'Mofi - Premium Vue Admin Template',
         }
@@ -196,9 +196,9 @@ const routes: Array<RouteRecordRaw> = [
     component: BodyView,
     children: [
       {
-        path: "dashboard_default",
-        name: "default",
-        component: indexDefault,
+        path: "Main_Dashboard",
+        name: "Main",
+        component: indexHome,
         meta: {
           title: 'Dashboards | Mofi - Premium Vue Admin Template',
         }
@@ -213,10 +213,18 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: "dashboard_ecommerce",
-        name: "ecpmmerce",
+        name: "ecommerce",
         component: indexEcommerce,
         meta: {
           title: 'Dashboards Ecommerce | Mofi - Premium Vue Admin Template',
+        }
+      },
+      {
+        path: "Create_New_AWS",
+        name: "createProject",
+        component: indexCreateProject,
+        meta: {
+          title: 'Create Project| Mofi - Premium Vue Admin Template',
         }
       },
       {
@@ -252,7 +260,7 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
-    path: "/project",
+    path: "/",
     component: BodyView,
     children: [
       {
@@ -263,14 +271,7 @@ const routes: Array<RouteRecordRaw> = [
           title: 'Project List| Mofi - Premium Vue Admin Template',
         }
       },
-      {
-        path: "project_create",
-        name: "createProject",
-        component: indexCreateProject,
-        meta: {
-          title: 'Create Project| Mofi - Premium Vue Admin Template',
-        }
-      }
+
     ]
   },
   {
