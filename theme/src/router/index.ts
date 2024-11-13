@@ -139,6 +139,7 @@ import simpleEditor from "@/pages/editor/simpleEditor.vue"
 import indexKnowledgebase from "@/pages/knowledgebase/indexKnowledgebase.vue"
 import indexAPI from "@/pages/api/indexAPI.vue"
 import indexUserManagement from "@/pages/users_management/indexUserManagement.vue"
+import indexCreateUser from "@/pages/createuser/indexCreateUser.vue"
 import indexScrollable from "@/pages/advance/indexScrollable.vue"
 import indexTree from "@/pages/advance/indexTree.vue"
 import indexToasts from "@/pages/advance/indexToasts.vue"
@@ -632,9 +633,18 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: 'Support | Mofi - Premium Vue Admin Template',
         }
+      },
+      {
+        path: "users_management/createuser",
+        name: "Create Users",
+        component: indexCreateUser,
+        meta: {
+          title: 'Support | Mofi - Premium Vue Admin Template',
+        }
       }
     ]
   },
+
   {
     path: "/form",
     component: BodyView,

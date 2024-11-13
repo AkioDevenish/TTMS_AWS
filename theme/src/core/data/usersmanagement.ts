@@ -9,6 +9,7 @@ interface item {
     username: string,
     organization:string,
     lastlogin:string,
+    packages:string,
     status:string,
 }
 export const ticket: tick[] = [
@@ -50,7 +51,8 @@ export const items: item[] = [
         img: "user/1.jpg",
         username: "Elana White",
         organization: "National Oceanic and Atmospheric Administration (NOAA)",
-        lastlogin: "2024-11-01",  // Example last login
+        lastlogin: "2024-11-01", 
+        packages: "Weekly",
         status: "Active"
     },
     {
@@ -59,6 +61,7 @@ export const items: item[] = [
         username: "Tiger Nixon",
         organization: "World Meteorological Organization (WMO)",
         lastlogin: "2024-10-28",
+        packages: "Yearly",
         status: "Inactive"
     },
     {
@@ -67,6 +70,7 @@ export const items: item[] = [
         username: "Genelia Winters",
         organization: "European Space Agency (ESA)",
         lastlogin: "2024-10-15",
+        packages: "Monthly",
         status: "Active"
     },
     {
@@ -75,6 +79,7 @@ export const items: item[] = [
         username: "Robbert Winters",
         organization: "UK Met Office",
         lastlogin: "2024-10-25",
+        packages: "Yearly",
         status: "Active"
     },
     {
@@ -83,6 +88,7 @@ export const items: item[] = [
         username: "Garrett Winters",
         organization: "National Weather Service (NWS)",
         lastlogin: "2024-10-18",
+        packages: "Weekly",
         status: "Inactive"
     },
     {
@@ -91,6 +97,7 @@ export const items: item[] = [
         username: "Ashton Cox",
         organization: "MeteoGroup",
         lastlogin: "2024-11-02",
+        packages: "Weekly",
         status: "Active"
     },
     {
@@ -99,6 +106,7 @@ export const items: item[] = [
         username: "Cedric Kelly",
         organization: "National Aeronautics and Space Administration (NASA)",
         lastlogin: "2024-10-20",
+        packages: "Monthly",
         status: "Active"
     },
     {
@@ -107,6 +115,7 @@ export const items: item[] = [
         username: "Helly Shah",
         organization: "CIMSS (Cooperative Institute for Meteorological Satellite Studies)",
         lastlogin: "2024-10-30",
+        packages: "Yearly",
         status: "Inactive"
     },
     {
@@ -115,6 +124,7 @@ export const items: item[] = [
         username: "Airi Satou",
         organization: "Japan Meteorological Agency (JMA)",
         lastlogin: "2024-10-29",
+        packages: "Weekly",
         status: "Active"
     },
     {
@@ -123,6 +133,7 @@ export const items: item[] = [
         username: "Hendri Feyol",
         organization: "Bureau of Meteorology (Australia)",
         lastlogin: "2024-09-25",
+        packages: "Monthly",
         status: "Inactive"
     },
     {
@@ -131,6 +142,7 @@ export const items: item[] = [
         username: "Herrod Chandler",
         organization: "India Meteorological Department (IMD)",
         lastlogin: "2024-11-01",
+        packages: "Monthly",
         status: "Active"
     },
     {
@@ -139,6 +151,7 @@ export const items: item[] = [
         username: "Rhona Davidson",
         organization: "Canadian Meteorological Centre (CMC)",
         lastlogin: "2024-10-18",
+        packages: "Yearly",
         status: "Active"
     },
     {
@@ -147,6 +160,7 @@ export const items: item[] = [
         username: "Colleen Hurst",
         organization: "National Center for Atmospheric Research (NCAR)",
         lastlogin: "2024-10-22",
+        packages: "Weekly",
         status: "Active"
     },
     {
@@ -155,6 +169,7 @@ export const items: item[] = [
         username: "Sonya Frost",
         organization: "Singapore Meteorological Service",
         lastlogin: "2024-10-10",
+        packages: "Monthly",
         status: "Inactive"
     },
     {
@@ -163,6 +178,7 @@ export const items: item[] = [
         username: "Jena Gaines",
         organization: "NOAA National Hurricane Center (NHC)",
         lastlogin: "2024-10-05",
+        packages: "Monthly",
         status: "Active"
     },
     {
@@ -171,6 +187,7 @@ export const items: item[] = [
         username: "Quinn Flynn",
         organization: "National Meteorological Service of Mexico (SMN)",
         lastlogin: "2024-09-30",
+        packages: "Yearly",
         status: "Inactive"
     },
     {
@@ -179,6 +196,7 @@ export const items: item[] = [
         username: "Charde Marshall",
         organization: "US Geological Survey (USGS)",
         lastlogin: "2024-10-12",
+        packages: "Weekly",
         status: "Active"
     },
     {
@@ -187,6 +205,7 @@ export const items: item[] = [
         username: "Haley Kennedy",
         organization: "Australian Bureau of Meteorology",
         lastlogin: "2024-11-05",
+        packages: "Monthly",
         status: "Active"
     },
     {
@@ -195,6 +214,7 @@ export const items: item[] = [
         username: "Tatyana Fitzpatrick",
         organization: "Swiss Meteorological Institute (MeteoSwiss)",
         lastlogin: "2024-09-15",
+        packages: "Weekly",
         status: "Inactive"
     },
     {
@@ -203,6 +223,7 @@ export const items: item[] = [
         username: "Michael Silva",
         organization: "Korean Meteorological Administration (KMA)",
         lastlogin: "2024-11-02",
+        packages: "Yearly",
         status: "Active"
     },
     {
@@ -211,6 +232,7 @@ export const items: item[] = [
         username: "Paul Byrd",
         organization: "South African Weather Service",
         lastlogin: "2024-10-01",
+        packages: "Montly",
         status: "Inactive"
     },
     {
@@ -219,6 +241,7 @@ export const items: item[] = [
         username: "Gloria Little",
         organization: "Meteorological Service of New Zealand (MetService)",
         lastlogin: "2024-10-17",
+        packages: "Weekly",
         status: "Active"
     },
     {
@@ -227,6 +250,7 @@ export const items: item[] = [
         username: "Bradley Greer",
         organization: "AccuWeather",
         lastlogin: "2024-09-30",
+        packages: "Monthly",
         status: "Inactive"
     },
     {
@@ -235,7 +259,9 @@ export const items: item[] = [
         username: "Dai Rios",
         organization: "China Meteorological Administration (CMA)",
         lastlogin: "2024-10-12",
+        packages: "Yearly",
         status: "Active"
+
     },
     {
         id: 25,
@@ -243,6 +269,7 @@ export const items: item[] = [
         username: "Jenette Caldwell",
         organization: "U.S. Forest Service (USFS)",
         lastlogin: "2024-10-28",
+        packages: "Monthly",
         status: "Inactive"
     },
     {
@@ -251,6 +278,7 @@ export const items: item[] = [
         username: "Yuri Berry",
         organization: "UK Met Office",
         lastlogin: "2024-10-25",
+        packages: "Monthly",
         status: "Active"
     },
     {
@@ -259,6 +287,7 @@ export const items: item[] = [
         username: "C. Vance",
         organization: "Météo-France",
         lastlogin: "2024-11-01",
+        packages: "Weekly",
         status: "Active"
     }
 ];
