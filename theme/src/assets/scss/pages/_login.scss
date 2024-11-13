@@ -2,168 +2,192 @@
     3.29 Login CSS Start
 ==========================**/
 
+/* Blurred Overlay */
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100vh;
+	background-color: rgba(255, 255, 255, 0.3);
+	backdrop-filter: blur(5px);
+	z-index: 1;
+}
+
 .login-card {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  background: url('../images/login/login_bg.jpg');
-  background-position: center;
-  padding: 30px 12px;
+	&>div {
+		position: relative;
+		z-index: 2;
+	}
 
-  .logo {
-    display: block;
-    margin-bottom: 30px;
-    text-align: center;
-  }
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto;
+	background: url('../images/login/login_bg.jpg');
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	padding: 30px 12px;
 
-  .btn-showcase {
-    .btn {
-      line-height: 1;
-      padding: 10px 15px;
-      margin: 0;
+	.logo {
+		display: block;
+		margin-bottom: 30px;
+		text-align: center;
+	}
 
-      &+.btn {
-        margin-left: 5px;
-      }
+	.btn-showcase {
+		.btn {
+			line-height: 1;
+			padding: 10px 15px;
+			margin: 0;
 
-      svg {
-        height: 16px;
-        vertical-align: bottom;
-        margin-right: 6px;
-      }
-      i {
-        vertical-align: -3px;
-      }
-    }
-  }
+			&+.btn {
+				margin-left: 5px;
+			}
 
-  .login-main {
-    width: 450px;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 0 37px rgba(8, 21, 66, 0.05);
-    margin: 0 auto;
-    background-color: $white;
+			svg {
+				height: 16px;
+				vertical-align: bottom;
+				margin-right: 6px;
+			}
 
-    .theme-form {
-      h4 {
-        margin-bottom: 5px;
-      }
+			i {
+				vertical-align: -3px;
+			}
+		}
+	}
 
-      label {
-        font-size: 15px;
-        letter-spacing: 0.4px;
-      }
+	.login-main {
+		width: 450px;
+		padding: 40px;
+		border-radius: 10px;
+		box-shadow: 0 0 37px rgba(8, 21, 66, 0.05);
+		margin: 0 auto;
+		background-color: $white;
 
-      .checkbox label::before {
-        background-color: $card-body-color;
-        border: 1px dashed #dfdfdf;
-      }
+		.theme-form {
+			h4 {
+				margin-bottom: 5px;
+			}
 
-      .or {
-        position: relative;
+			label {
+				font-size: 15px;
+				letter-spacing: 0.4px;
+			}
 
-        &:before {
-          content: "";
-          position: absolute;
-          width: 65%;
-          height: 2px;
-          background-color: #f3f3ff;
-          top: 9px;
-          z-index: 0;
-          right: 0;
-        }
-      }
-      input[type="password"]{
-        padding: 12px 55px 12px 12px;
-      }
-      input {
-        background-color: #f3f3ff;
-        transition: all 0.3s ease;
-        border-color: var(--theme-deafult) !important;
+			.checkbox label::before {
+				background-color: $card-body-color;
+				border: 1px dashed #dfdfdf;
+			}
 
-        &::-webkit-input-placeholder {
-          color: $light-text;
-        }
+			.or {
+				position: relative;
 
-        &:hover,
-        &:focus {
-          border: 1px dashed lighten($semi-dark, 35%);
-          box-shadow: none !important;
-          transition: all 0.3s ease;
-        }
-      }
+				&:before {
+					content: "";
+					position: absolute;
+					width: 65%;
+					height: 2px;
+					background-color: #f3f3ff;
+					top: 9px;
+					z-index: 0;
+					right: 0;
+				}
+			}
 
-      p {
-        margin-bottom: 25px;
-        font-size: 14px;
-        color: $dark-gray;
-      }
+			input[type="password"] {
+				padding: 12px 55px 12px 12px;
+			}
 
-      .form-group {
-        margin-bottom: 10px;
-        position: relative;
-      }
+			input {
+				background-color: #f3f3ff;
+				transition: all 0.3s ease;
+				border-color: var(--theme-deafult) !important;
 
-      .link {
-        position: absolute;
-        top: 10px;
-        right: 0;
-      }
-      .social{
-        .btn{
-          &:hover{
-            background-color: var(--theme-deafult);
-            border-color: var(--theme-deafult);
-            color: $white !important;
-            .feather{
-              color: $white !important;
-            }
-          }
-        }
-      }
-    }
-  }
+				&::-webkit-input-placeholder {
+					color: $light-text;
+				}
+
+				&:hover,
+				&:focus {
+					border: 1px dashed lighten($semi-dark, 35%);
+					box-shadow: none !important;
+					transition: all 0.3s ease;
+				}
+			}
+
+			p {
+				margin-bottom: 25px;
+				font-size: 14px;
+				color: $dark-gray;
+			}
+
+			.form-group {
+				margin-bottom: 10px;
+				position: relative;
+			}
+
+			.link {
+				position: absolute;
+				top: 10px;
+				right: 0;
+			}
+
+			.social {
+				.btn {
+					&:hover {
+						background-color: var(--theme-deafult);
+						border-color: var(--theme-deafult);
+						color: $white !important;
+
+						.feather {
+							color: $white !important;
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 .show-hide {
-  position: absolute;
-  top: 52px;
-  right: 20px;
-  transform: translateY(-50%);
+	position: absolute;
+	top: 52px;
+	right: 20px;
+	transform: translateY(-50%);
 
-  span {
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--theme-deafult);
+	span {
+		cursor: pointer;
+		font-size: 13px;
+		color: var(--theme-deafult);
 
-    &.show {
-      &:before {
-        content: "show";
-      }
-    }
+		&.show {
+			&:before {
+				content: "show";
+			}
+		}
 
-    &:before {
-      content: "hide";
-    }
-  }
+		&:before {
+			content: "hide";
+		}
+	}
 }
 
 .needs-validation {
-  .invalid-feedback {
-    color: $dark-gray;
-  }
+	.invalid-feedback {
+		color: $dark-gray;
+	}
 
-  .show-hide {
-    right: 30px;
-  }
+	.show-hide {
+		right: 30px;
+	}
 
-  .invalid-tooltip {
-    top: 10px;
-    right: 10px;
-  }
+	.invalid-tooltip {
+		top: 10px;
+		right: 10px;
+	}
 }
 
 /**=====================
