@@ -4,9 +4,7 @@
             <div class="row">
                 <div class="col-md-12 footer-copyright d-flex flex-wrap align-items-center justify-content-between">
                     <p class="mb-0 f-w-600">Copyright 2024 © Trinidad and Tobago Meterological Services Division</p>
-                        <svg class="footer-icon">
-                            <use href="@/assets/svg/icon-sprite.svg#footer-heart"> </use>
-                        </svg>
+           
                 </div>
             </div>
         </div>

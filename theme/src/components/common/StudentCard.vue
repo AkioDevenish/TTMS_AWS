@@ -2,7 +2,7 @@
     <div class="col-xl-6 col-md-12 proorder-md-3">
         <div class="row">
 
-            <Card1 colClass="col-xl-6 col-sm-6" v-for="(item, index) in studentdata" :key="index"
+            <Card1 colClass="col-xl-6 col-sm-6" v-for="(item, index) in baranidata" :key="index"
                 :cardbodyClass="item.cardclass">
                 <div class="d-flex gap-2 align-items-end">
                     <div class="flex-grow-1">
@@ -22,7 +22,7 @@
 </template>
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, onMounted } from 'vue'
-import { studentdata } from "@/core/data/dashboards"
+import { baranidata } from "@/core/data/dashboards"
 import { getImages } from "@/composables/common/getImages"
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 

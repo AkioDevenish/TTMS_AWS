@@ -1,18 +1,16 @@
 <template>
-    <Card1 colClass="col-xl-12 col-md-12 proorder-md-1" headerTitle="true" title="ATMOS Instance Monitor "
+    <Card1 colClass="col-xl-12 col-md-12 proorder-md-1" headerTitle="true" title="Sutron Monitor "
         cardhaderClass="card-no-border pb-0" cardbodyClass="pt-0 assignments-table px-0">
         <div class="table-responsive theme-scrollbar">
             <div id="recent-order_wrapper" class="dataTables_wrapper no-footer">
-                <div id="recent-order_filter" class="dataTables_filter"><label>Search:<input type="search" placeholder=""
-                            v-model="filterQuery"></label></div>
                 <table class="table display dataTable" id="assignments-table" style="width:100%">
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Type</th>
-                            <th>Date</th>
+                            <th>ID</th>
+                            <th>Last Updated</th>
                             <th>Time</th>
-                            <th>Progress Bar</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody v-if="!get_rows().length">
@@ -31,17 +29,10 @@
                                 </div>
                             </td>
                         
-                            <td>{{ item.type }}</td>
+                            <td>{{ item.id }}</td>
                             <td>{{ item.date }} </td>
                             <td>{{ item.time }} </td>
-                            <td>
-                                <div class="progress-showcase">
-                                    <div class="progress sm-progress-bar " :class="item.progressclass">
-                                        <div class="progress-bar" role="progressbar" :style="{ 'width': item.width }"
-                                            aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> </div>
-                                    </div>
-                                </div>
-                            </td>
+                            <td>{{ item.status }} </td>
                         </tr>
                     </tbody>
                 </table>
@@ -52,24 +43,12 @@
 </template>
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, onMounted, watch } from 'vue'
-import { assignments } from "@/core/data/dashboards"
-import { getImages } from "@/composables/common/getImages"
+import { sutronmonitor } from "@/core/data/dashboards"
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 let elementsPerPage = ref<number>(4)
 let currentPage = ref<number>(1)
-let filterQuery = ref<string>("")
 let allData = ref<any>([])
-watch(filterQuery, (search: string) => {
 
-    var filteredData = assignments.filter((row) => {
-        return (
-            row.name.toLowerCase().includes(search.toLowerCase()) ||
-            row.type.toLowerCase().includes(search.toLowerCase()) ||
-            row.date.toLowerCase().includes(search.toLowerCase()) 
-        );
-    });
-    search == "" ? allData.value = assignments : allData.value = filteredData
-})
 function get_rows() {
     var start = (currentPage.value - 1) * elementsPerPage.value;
     var end = start + elementsPerPage.value;
@@ -93,6 +72,6 @@ function prev() {
 }
 
 onMounted(() => {
-    allData.value = assignments;
+    allData.value = sutronmonitor;
 })
 </script>

@@ -1063,87 +1063,524 @@ export const seller = [
         earning: "15025"
     }
 ]
-export const studentdata = [
+
+// Barani data remains the same as it already had battery info
+export const baranidata = [
     {
-        number: "42,954",
-        text: " Total Students",
+        number: "24.5 °C",
+        text: "Air Temperature",
         iconclass: "bg-light-danger",
         icon: "icon-arrow-down font-danger",
         img: "dashboard-4/icon/student.png",
         cardclass: "student",
         fontclass: "font-danger",
-        total: "- 17.06",
-        month: "than last 6 Month"
+        total: "- 0.8",
+        month: "24:00PM"
     },
     {
-        number: "659",
-        text: "Total Teachers",
+        number: "0.5 mm",
+        text: "Rainfall",
         iconclass: "bg-light-success",
         icon: "icon-arrow-up font-success",
         img: "dashboard-4/icon/teacher.png",
         cardclass: "student-2",
         fontclass: "font-success",
-        total: "+27.02",
-        month: "than last 4 Month"
+        total: "+0.5",
+        month: "24:00PM"
     },
     {
-        number: "984",
-        text: "Events",
+        number: "65.8 %",
+        text: "Humidity",
         iconclass: "bg-light-success",
         icon: "icon-arrow-up font-success",
         img: "dashboard-4/icon/calendar.png",
         cardclass: "student-3",
         fontclass: "font-success",
-        total: "+ 12.01",
-        month: "than last 8 Month"
+        total: "+ 3.2",
+        month: "24:00PM"
     },
     {
-        number: "1,984",
-        text: "Invoice Status",
+        number: "3.2 m/s",
+        text: "Wind Speed",
         iconclass: "bg-light-danger",
         icon: "icon-arrow-down font-danger",
         img: "dashboard-4/icon/invoice.png",
         cardclass: "student-4",
         fontclass: "font-danger",
-        total: "- 15.02",
-        month: "than last 5 Month"
+        total: "- 0.5",
+        month: "24:00PM"
     },
     {
-        number: "984",
-        text: "Events",
+        number: "245.0 °",
+        text: "Wind Direction",
         iconclass: "bg-light-success",
         icon: "icon-arrow-up font-success",
         img: "dashboard-4/icon/calendar.png",
         cardclass: "student-3",
         fontclass: "font-success",
-        total: "+ 12.01",
-        month: "than last 8 Month"
+        total: "+ 15.0",
+        month: "24:00PM"
     },
     {
-        number: "1,984",
-        text: "Invoice Status",
+        number: "1013.2 hPa",
+        text: "Atmospheric Pressure",
         iconclass: "bg-light-danger",
         icon: "icon-arrow-down font-danger",
         img: "dashboard-4/icon/invoice.png",
         cardclass: "student-4",
         fontclass: "font-danger",
-        total: "- 15.02",
-        month: "than last 5 Month"
+        total: "- 0.3",
+        month: "24:00PM"
+    },
+    {
+        number: "85.2 %",
+        text: "Battery Percent",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "- 0.1",
+        month: "24:00PM"
+    },
+    {
+        number: "12.8 V",
+        text: "Battery Voltage",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.2",
+        month: "24:00PM"
+    }
+]
+
+export const sutronadata = [
+    {
+        number: "25.2 °C",
+        text: "Air Temperature",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/student.png",
+        cardclass: "student",
+        fontclass: "font-danger",
+        total: "- 0.5",
+        month: "24:00PM"
+    },
+    {
+        number: "0.8 mm",
+        text: "Rainfall",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/teacher.png",
+        cardclass: "student-2",
+        fontclass: "font-success",
+        total: "+0.8",
+        month: "24:00PM"
+    },
+    {
+        number: "64.5 %",
+        text: "Humidity",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 2.5",
+        month: "24:00PM"
+    },
+    {
+        number: "3.5 m/s",
+        text: "Wind Speed",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.3",
+        month: "24:00PM"
+    },
+    {
+        number: "240.0 °",
+        text: "Wind Direction",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 10.0",
+        month: "24:00PM"
+    },
+    {
+        number: "1012.8 hPa",
+        text: "Atmospheric Pressure",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.4",
+        month: "24:00PM"
+    },
+    {
+        number: "82.5 %",
+        text: "Battery Percent",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "- 0.2",
+        month: "24:00PM"
+    },
+    {
+        number: "12.6 V",
+        text: "Battery Voltage",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.1",
+        month: "24:00PM"
+    }
+]
+
+export const ott_hydromet_data = [
+    {
+        number: "24.8 °C",
+        text: "Air Temperature",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/student.png",
+        cardclass: "student",
+        fontclass: "font-danger",
+        total: "- 0.6",
+        month: "24:00PM"
+    },
+    {
+        number: "0.6 mm",
+        text: "Rainfall",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/teacher.png",
+        cardclass: "student-2",
+        fontclass: "font-success",
+        total: "+0.6",
+        month: "24:00PM"
+    },
+    {
+        number: "66.2 %",
+        text: "Humidity",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 2.8",
+        month: "24:00PM"
+    },
+    {
+        number: "3.8 m/s",
+        text: "Wind Speed",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.4",
+        month: "24:00PM"
+    },
+    {
+        number: "242.5 °",
+        text: "Wind Direction",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 12.5",
+        month: "24:00PM"
+    },
+    {
+        number: "1013.0 hPa",
+        text: "Atmospheric Pressure",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.2",
+        month: "24:00PM"
+    },
+    {
+        number: "88.5 %",
+        text: "Battery Percent",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "- 0.1",
+        month: "24:00PM"
+    },
+    {
+        number: "13.1 V",
+        text: "Battery Voltage",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.1",
+        month: "24:00PM"
+    }
+]
+
+export const paws_data = [
+    {
+        number: "25.0 °C",
+        text: "Air Temperature",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/student.png",
+        cardclass: "student",
+        fontclass: "font-danger",
+        total: "- 0.7",
+        month: "24:00PM"
+    },
+    {
+        number: "0.4 mm",
+        text: "Rainfall",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/teacher.png",
+        cardclass: "student-2",
+        fontclass: "font-success",
+        total: "+0.4",
+        month: "24:00PM"
+    },
+    {
+        number: "65.5 %",
+        text: "Humidity",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 2.6",
+        month: "24:00PM"
+    },
+    {
+        number: "3.4 m/s",
+        text: "Wind Speed",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.6",
+        month: "24:00PM"
+    },
+    {
+        number: "243.5 °",
+        text: "Wind Direction",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 13.5",
+        month: "24:00PM"
+    },
+    {
+        number: "1013.5 hPa",
+        text: "Atmospheric Pressure",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.5",
+        month: "24:00PM"
+    },
+    {
+        number: "86.8 %",
+        text: "Battery Percent",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "- 0.2",
+        month: "24:00PM"
+    },
+    {
+        number: "12.9 V",
+        text: "Battery Voltage",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.1",
+        month: "24:00PM"
+    }
+]
+
+export const zentradata = [
+    {
+        number: "24.6 °C",
+        text: "Air Temperature",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/student.png",
+        cardclass: "student",
+        fontclass: "font-danger",
+        total: "- 0.9",
+        month: "24:00PM"
+    },
+    {
+        number: "0.7 mm",
+        text: "Rainfall",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/teacher.png",
+        cardclass: "student-2",
+        fontclass: "font-success",
+        total: "+0.7",
+        month: "24:00PM"
+    },
+    {
+        number: "65.0 %",
+        text: "Humidity",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "+ 2.7",
+        month: "24:00PM"
+    },
+    {
+        number: "3.6 m/s",
+        text: "Wind Speed",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.4",
+        month: "24:00PM"
+    },
+    {
+        number: "244.0 °",
+        text: "Wind Direction",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.4",
+        month: "24:00PM"
+    },
+    {
+        number: "1032.2 hPa",
+        text: "Atmospheric Pressure",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.3",
+        month: "24:00PM"
+    },
+    {
+        number: "65.2 %",
+        text: "Battery Percent",
+        iconclass: "bg-light-success",
+        icon: "icon-arrow-up font-success",
+        img: "dashboard-4/icon/calendar.png",
+        cardclass: "student-3",
+        fontclass: "font-success",
+        total: "- 0.1",
+        month: "24:00PM"
+    },
+    {
+        number: "12.9 V",
+        text: "Battery Voltage",
+        iconclass: "bg-light-danger",
+        icon: "icon-arrow-down font-danger",
+        img: "dashboard-4/icon/invoice.png",
+        cardclass: "student-4",
+        fontclass: "font-danger",
+        total: "- 0.2",
+        month: "24:00PM"
     }
 ]
 export const assignments = [
     {
-     
-        name: "Z6-26732",
+        name: "Atmos",
         bgclass: "bg-primary",
-        type:"Atmos",
+        type:"Z6-26732",
         date: "12 May 2024",
         time:"0:25",
         progressclass: "progress-border-primary",
         width: "80%"
     },
-
 ]
+export const ott_hydromet_monitor = [
+    {
+        name: "Hydromet",
+        bgclass: "bg-primary",
+        id:"323-238-H",
+        date: "12 Nov 2024",
+        time:"9:10 AM",
+        status:"Sucessful"
+    },
+]
+export const paws_monitor = [
+    {
+        name: "3D_Paws",
+        bgclass: "bg-primary",
+        id:"T01 Rawin",
+        date: "12 Nov 2024",
+        time:"9:10 AM",
+        status:"Sucessful"
+    },
+]
+export const zentramonitor = [
+    {
+        name: "Atmos",
+        bgclass: "bg-primary",
+        id:"Z6-26732",
+        date: "12 Nov 2024",
+        time:"9:10 AM",
+        status:"Sucessful"
+    },
+]
+export const sutronmonitor = [
+    {
+        name: "Sutron",
+        bgclass: "bg-primary",
+        id:"323-238-H",
+        date: "12 Nov 2024",
+        time:"9:10 AM",
+        status:"Sucessful"
+    },
+]
+export const baranimonitor = [
+    {
+        name: "Barani",
+        bgclass: "bg-primary",
+        id:"2101LH028",
+        date: "12 Nov 2024",
+        time:"9:10 AM",
+        status:"Sucessful"
+    }, 
+]
+
 export const meting = [
     {
         img: "dashboard-4/metting/chart.png"

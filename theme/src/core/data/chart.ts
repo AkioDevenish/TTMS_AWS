@@ -168,17 +168,70 @@ export const series10 = [
         ],
     },
 ]
-export const series12 = [
+export const zentrastats = [
+    {
+        name: 'AirTemperature',
+        data: [23.3, 22.5, 22.7, 24.2, 23.3, 17.4, 20.5, 28.2, 23.4, 31.6, 29.8, 27.5, 
+               26.2, 25.8, 25.1, 24.7, 24.3, 23.9, 23.5, 23.1, 22.8, 22.4, 22.1, 21.8].map(v => v.toFixed(1) + 'º'),
+    },
+    {
+        name: 'Rainfall',
+        data: [1, 2, 3, 4, 5, 10, 8, 4, 5, 4, 3, 2, 
+               1, 0, 0, 0, 1, 2, 3, 4, 2, 1, 0, 0].map(v => v + 'mm'),
+    }
+];
 
+export const sutronstats = [
     {
-        name: 'series1',
-        data: [4.6, 3.6, 2, 3, 4, 2.4, 2.8, 4.3, 2, 1.6],
+        name: 'Humidity',
+        data: [80.3, 73.5, 72.7, 54.2, 84.3, 75.4, 63.5, 89.2, 56.4, 60.6, 65.8, 70.2,
+               75.5, 78.3, 82.1, 85.4, 87.2, 88.5, 86.3, 84.1, 82.4, 80.7, 78.9, 77.2].map(v => v.toFixed(1) + '%'),
     },
     {
-        name: 'series2',
-        data: [1.5, 2, 3.8, 3.5, 2.2, 3.5, 4, 3, 1.5, 3.8],
+        name: 'Rainfall',
+        data: [1, 2, 3, 4, 5, 10, 8, 4, 5, 4, 3, 2,
+               1, 0, 0, 1, 2, 3, 4, 3, 2, 1, 0, 0].map(v => v + 'mm'),
+    }
+];
+
+export const paws_stats = [
+    {
+        name: 'Humidity',
+        data: [75.8, 77.2, 78.5, 79.8, 81.2, 82.5, 83.8, 85.2, 86.5, 87.8, 86.5, 85.2,
+               83.8, 82.5, 81.2, 79.8, 78.5, 77.2, 75.8, 74.5, 73.2, 71.8, 70.5, 69.2].map(v => v.toFixed(1) + '%'),
     },
-]
+    {
+        name: 'Rainfall',
+        data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5,
+               4, 3, 2, 1, 0, 0, 1, 2, 3, 2, 1, 0].map(v => v + 'mm'),
+    }
+];
+
+export const ott_hydromet_stats = [
+    {
+        name: 'Humidity',
+        data: [65.4, 67.8, 70.2, 72.6, 75.0, 77.4, 79.8, 82.2, 84.6, 87.0, 85.6, 84.2,
+               82.8, 81.4, 80.0, 78.6, 77.2, 75.8, 74.4, 73.0, 71.6, 70.2, 68.8, 67.4].map(v => v.toFixed(1) + '%'),
+    },
+    {
+        name: 'Rainfall',
+        data: [2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7,
+               6, 5, 4, 3, 2, 1, 0, 1, 2, 1, 0, 0].map(v => v + 'mm'),
+    }
+];
+
+export const baranistats = [
+    {
+        name: 'AirTemperature',
+        data: [23.6, 25.7, 24.3, 20.3, 20.5, 27.8, 29.7, 28.2, 20.0, 23.0, 24.5, 26.0,
+               27.5, 28.8, 29.2, 28.5, 27.8, 26.4, 25.0, 23.8, 22.6, 21.4, 20.2, 19.8].map(v => v.toFixed(1) + 'º'),
+    },
+    {
+        name: 'Rainfall',
+        data: [10, 5, 15, 8, 3, 5, 3, 1, 0, 2, 4, 6,
+               8, 10, 12, 10, 8, 6, 4, 2, 0, 0, 1, 2].map(v => v + 'mm'),
+    }
+];
 export const series13 = [
     {
         name: 'PRODUCT A',
@@ -1651,12 +1704,12 @@ export const chartOptions12 = {
     colors: [primary, secondary],
 
     stroke: {
-        curve: 'smooth',
-        width: 2,
+        curve: 'straight',
+        width: 3,
     },
     grid: {
         show: true,
-        strokeDashArray: 5,
+        strokeDashArray: 4,
         position: 'back',
         xaxis: {
             lines: {
@@ -1685,25 +1738,25 @@ export const chartOptions12 = {
             },
 
             formatter: (value: string) => {
-                return `${value}h`;
+                return `${value}:00`;
             },
         },
     },
     yaxis: {
         type: 'category',
         categories: [
-            'Jan',
-            'Feb',
-            'Mar',
-            'Apr',
-            'May',
-            'Jun',
-            'Jul',
-            'Aug',
-            'Sep',
-            'Oct',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
         ],
-        tickAmount: 12,
+        tickAmount: 5,
         labels: {
             minHeight: undefined,
             maxHeight: 28,

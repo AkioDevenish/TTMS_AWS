@@ -56,31 +56,32 @@ export const menu: MenuItem[] = [
         isPinned: false,
         active: false,
         children: [
+      
             {
-                path: "/dashboards/dashboard_education",
-                title: "Atmos",
-                type: "link"
-            },
-            {
-                path: "/dashboards/dashboard_project",
+                path: "/stations/AWS_Barani",
                 title: "Barani",
                 type: "link"
             },
             {
-                path: "/dashboards/dashboard_ecommerce",
+                path: "/stations/AWS_3D_Paws",
                 title: "3D-Paws",
                 type: "link"
             },
             {
-                path: "/dashboards/dashboard_education",
+                path: "/stations/AWS_Sutron",
                 title: "Sutron",
                 type: "link"
             },
             {
-                path: "/dashboards/dashboard_education",
-                title: "OTT Hydromet",
+                path: "/stations/AWS_OTT_Hyrdomet",
+                title: "OTT-Hydromet",
                 type: "link"
-            }
+            },
+            {
+                path: "/stations/AWS_Zentra",
+                title: "Zentra",
+                type: "link"
+            },
   
         ]
     },
@@ -90,37 +91,24 @@ export const menu: MenuItem[] = [
         headTitle2: "Ready to use apps",
         type: "headtitle"
     },
-
-
-
-
     {
-        headTitle1: "Miscellaneous",
+        path: "/pages/api",
+        title: "API Key",
+        isPinned: false,
+        icon: "stroke-support-tickets",
+        icon1: "fill-support-tickets",
+        type: "link"
+    },
+    
+    {
+        headTitle1: "User Management",
         headTitle2: "Ready to use apps",
         type: "headtitle"
     },
 
-
     {
-        path: "/pages/faq",
-        title: "FAQ",
-        icon: "stroke-faq",
-        icon1: "fill-faq",
-        isPinned: false,
-        type: "link"
-    },
-
-    {
-        path: "/knowledgebase/knowledgebase",
-        title: "Knowledgebase",
-        type: "link",
-        isPinned: false,
-        icon: "stroke-knowledgebase",
-        icon1: "fill-knowledgebase"
-    },
-    {
-        path: "/pages/support",
-        title: "Support Ticket",
+        path: "/pages/users_management",
+        title: "User Management",
         isPinned: false,
         icon: "stroke-support-tickets",
         icon1: "fill-support-tickets",

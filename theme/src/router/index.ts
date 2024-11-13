@@ -5,7 +5,11 @@ import LoginPage from "@/components/common/block/auth/LoginPage.vue"
 import indexHome from "@/pages/dashbords/indexHome.vue"
 import indexProject from "@/pages/dashbords/indexProject.vue"
 import indexEcommerce from "@/pages/dashbords/indexEcommerce.vue"
-import indexEducation from "@/pages/dashbords/indexEducation.vue"
+import indexZentra from "@/pages/dashbords/indexZentra.vue"
+import indexBarani from "@/pages/dashbords/indexBarani.vue"
+import indexHydromet from "@/pages/dashbords/indexHydromet.vue"
+import indexSutron from "@/pages/dashbords/indexSutron.vue"
+import indexPaws from "@/pages/dashbords/indexPaws.vue"
 import indexGeneral from "@/pages/widgets/indexGeneral.vue"
 import indexChart from "@/pages/widgets/indexChart.vue"
 import indexProjectlist from "@/pages/project/indexProjectlist.vue"
@@ -133,7 +137,8 @@ import indexLeaflet from "@/pages/maps/indexLeaflet.vue"
 import indexCk from "@/pages/editor/indexCk.vue"
 import simpleEditor from "@/pages/editor/simpleEditor.vue"
 import indexKnowledgebase from "@/pages/knowledgebase/indexKnowledgebase.vue"
-import indexSupport from "@/pages/support/indexSupport.vue"
+import indexAPI from "@/pages/api/indexAPI.vue"
+import indexUserManagement from "@/pages/users_management/indexUserManagement.vue"
 import indexScrollable from "@/pages/advance/indexScrollable.vue"
 import indexTree from "@/pages/advance/indexTree.vue"
 import indexToasts from "@/pages/advance/indexToasts.vue"
@@ -227,16 +232,58 @@ const routes: Array<RouteRecordRaw> = [
           title: 'Create Project| Mofi - Premium Vue Admin Template',
         }
       },
+      
+    ]
+  },
+
+  {
+    path: "/stations",
+    component: BodyView,
+    children: [
+ 
       {
-        path: "dashboard_education",
-        name: "education",
-        component: indexEducation,
+        path: "AWS_Barani",
+        name: "Barani",
+        component: indexBarani,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
         }
-      }
+      },
+      {
+        path: "AWS_3D_Paws",
+        name: "3DPaws",
+        component: indexPaws,
+        meta: {
+          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+        }
+      },
+      {
+        path: "AWS_Sutron",
+        name: "Sutron",
+        component: indexSutron,
+        meta: {
+          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+        }
+      },
+      {
+        path: "AWS_OTT_Hyrdomet",
+        name: "OTT Hydromet",
+        component: indexHydromet,
+        meta: {
+          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+        }
+      },
+      {
+        path: "AWS_Zentra",
+        name: "Zentra",
+        component: indexZentra,
+        meta: {
+          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+        }
+      },
     ]
   },
+
   {
     path: "/widgets",
     component: BodyView,
@@ -571,9 +618,17 @@ const routes: Array<RouteRecordRaw> = [
         }
       },
       {
-        path: "support",
-        name: "Support",
-        component: indexSupport,
+        path: "api",
+        name: "API Management",
+        component: indexAPI,
+        meta: {
+          title: 'Support | Mofi - Premium Vue Admin Template',
+        }
+      },
+      {
+        path: "users_management",
+        name: "Users Management",
+        component: indexUserManagement,
         meta: {
           title: 'Support | Mofi - Premium Vue Admin Template',
         }

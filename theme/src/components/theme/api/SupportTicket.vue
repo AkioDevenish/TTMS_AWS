@@ -34,8 +34,6 @@
 </template>
 <script lang="ts" setup>
 import { defineAsyncComponent } from 'vue';
-
-import { getImages } from "@/composables/common/getImages"
 import { ticket } from "@/core/data/support"
 
 </script>
