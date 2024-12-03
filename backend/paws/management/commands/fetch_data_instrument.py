@@ -37,7 +37,7 @@ class Command(BaseCommand):
             try:
                 response = requests.get(url, verify=False)
                 response.raise_for_status()
-                print("Response data:", response.json())  # Add this line to inspect the response
+                # print("Response data:", response.json())  # Add this line to inspect the response
                 return response.json()
             except requests.exceptions.RequestException as e:
                 print(f"Error fetching data for instrument {instrument_id}: {e}")
@@ -45,26 +45,37 @@ class Command(BaseCommand):
 
         def process_and_save_data(instrument_id, raw_data):
             processed_data = []
+            # print("start process and save data:", raw_data)
     
             # Assuming raw_data is a dictionary with a key "data" which is a list of entries
-            if "data" in raw_data:
-                for entry in raw_data["data"]:
-                    timestamp = entry["time"]
-                    is_test = entry["test"] == "false"
-                    
-                    measurements = entry["measurements"]
-                    for key, value in measurements.items():
-                        if key in measurement_mapping:
-                            InstrumentMeasurement.objects.create(
-                                name=f"Instrument {instrument_id}",
-                                measurement_name=measurement_mapping[key]["name"],
-                                value=value,
-                                timestamp=timestamp,
-                                is_test=is_test
-                            )
-                            processed_data.append(f"Saved: {measurement_mapping[key]['name']} - {value} at {timestamp}")
+            if isinstance(raw_data, dict):    
+                print("we have a data dictionary:")
+                # Navigate through the nested structure to access the data key
+                features = raw_data.get("features", []) 
+                properties = features[0]["properties"]
+                if "data" in properties:
+                    print("data in raw_data:")
+                    for entry in properties["data"]:
+                        timestamp = entry["time"]
+                        is_test = entry["test"] == "false"
+                        
+                        measurements = entry["measurements"]
+                        for key, value in measurements.items():
+                            if key in measurement_mapping:
+                                InstrumentMeasurement.objects.create(
+                                    name=f"Instrument {instrument_id}",
+                                    measurement_name=measurement_mapping[key]["name"],
+                                    value=value,
+                                    timestamp=timestamp,
+                                    is_test=is_test
+                                )
+                                processed_data.append(f"Saved: {measurement_mapping[key]['name']} - {value} at {timestamp}")
+                            else:
+                                print("Invalid measurement key:", key)
+                else:
+                    print("Invalid response format:")
             else:
-                print("Invalid response format:", raw_data)
+                print("Invalid response format: not a dictionary")
             
             return processed_data
 
