@@ -195,16 +195,8 @@ export const sutronstats = [
 ];
 
 export const paws_stats = [
-    {
-        name: 'Humidity',
-        data: [75.8, 77.2, 78.5, 79.8, 81.2, 82.5, 83.8, 85.2, 86.5, 87.8, 86.5, 85.2,
-               83.8, 82.5, 81.2, 79.8, 78.5, 77.2, 75.8, 74.5, 73.2, 71.8, 70.5, 69.2].map(v => v.toFixed(1) + '%'),
-    },
-    {
-        name: 'Rainfall',
-        data: [0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5,
-               4, 3, 2, 1, 0, 0, 1, 2, 3, 2, 1, 0].map(v => v + 'mm'),
-    }
+  
+
 ];
 
 export const ott_hydromet_stats = [
@@ -1690,108 +1682,53 @@ export const chartOptions11 = {
 }
 export const chartOptions12 = {
     chart: {
-        height: 230,
-        type: 'area',
-        offsetY: 12,
-        offsetX: -15,
-        toolbar: {
-            show: false,
-        },
+      height: 230,
+      type: 'area',
+      offsetY: 12,
+      offsetX: -15,
+      toolbar: { show: false },
     },
-    dataLabels: {
-        enabled: false,
-    },
-    colors: [primary, secondary],
-
+    dataLabels: { enabled: false },
+    colors: ['#00E396', '#0090FF'],
     stroke: {
-        curve: 'straight',
-        width: 3,
+      curve: 'straight',
+      width: 3,
     },
     grid: {
-        show: true,
-        strokeDashArray: 4,
-        position: 'back',
-        xaxis: {
-            lines: {
-                show: false
-            }
-        },
+      show: true,
+      strokeDashArray: 4,
+      position: 'back',
+      xaxis: { lines: { show: false } },
     },
     fill: {
-        type: 'gradient',
-        gradient: {
-            shadeIntensity: 1,
-            inverseColors: false,
-            opacityFrom: 0.45,
-            opacityTo: 0.05,
-            stops: [5, 100, 100, 100]
-        },
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        inverseColors: false,
+        opacityFrom: 0.45,
+        opacityTo: 0.05,
+        stops: [0, 50, 100, 100],
+      },
     },
-  
     xaxis: {
-        labels: {
-            show: true,
-            style: {
-                fontFamily: 'Outfit, sans-serif',
-                fontWeight: 500,
-                colors: '#3D434A',
-            },
-
-            formatter: (value: string) => {
-                return `${value}:00`;
-            },
-        },
+      categories: [],  // Categories will be populated dynamically from the fetched data
+      labels: { show: true, formatter: (value: string) => formatTimeLabel(value) },
     },
     yaxis: {
-        type: 'category',
-        categories: [
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-        ],
-        tickAmount: 5,
-        labels: {
-            minHeight: undefined,
-            maxHeight: 28,
-            offsetX: 10,
-            offsetY: 0,
-            style: {
-                fontFamily: 'Outfit, sans-serif',
-                fontWeight: 500,
-                colors: '#8D8D8D',
-            },
-            tooltip: {
-                enabled: false,
-            },
-        },
-        axisBorder: {
-            show: false
-        },
+      labels: { show: true },
+      axisBorder: { show: false },
     },
-    tooltip: {
-
-    },
-    legend: {
-        show: false,
-    },
-    responsive: [
-        {
-            breakpoint: 1657,
-            options: {
-                chart: {
-                    height: 190,
-                },
-            },
-        },
-    ],
+    tooltip: { shared: true, intersect: false },
+    legend: { show: false },
 }
+
+function formatTimeLabel(value: string): string {
+  const date = new Date(value)
+  const hour = date.getHours()
+  const suffix = hour < 12 ? 'AM' : 'PM'
+  return `${hour % 12 || 12}:00 ${suffix}`
+}
+
 
 export const chartOptions13 = {
     chart: {

@@ -1,14 +1,12 @@
 import requests
 from django.core.management.base import BaseCommand
-from allmeteo.models import WeatherMeasurement, WeatherReading
+from allmeteo.models import WeatherMeasurement
 import time
 from django.utils import timezone
 from dateutil import parser
 from datetime import datetime, timezone as dt_timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
-
-
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -25,10 +23,13 @@ class Command(BaseCommand):
         # Headers for API request
         headers = {"Authorization": f"Token {API_TOKEN}"}
 
-        # Time range (adjust these as needed)
-        current_date = datetime.now().date()
-        START_DATE = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=9)  # 9 AM today
-        END_DATE = datetime.combine(current_date, datetime.min.time()) + timedelta(hours=10)  # 10 AM today
+        # Time range configuration for December 1st to December 2nd, 2024
+        current_date_start = datetime(2024, 12, 1).date()
+        current_date_end = datetime(2024, 12, 2).date()
+
+        # Define the time range from 9 AM on December 1st to 10 AM on December 2nd
+        START_DATE = datetime.combine(current_date_start, datetime.min.time()) + timedelta(hours=9)
+        END_DATE = datetime.combine(current_date_end, datetime.min.time()) + timedelta(hours=10)
 
         params = {
             "device_sn": DEVICE_SN,
@@ -49,11 +50,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Failed to fetch data."))
 
     def fetch_data(self, base_url, headers, params, max_retries=5, initial_delay=60):
-        """Function to fetch data from the API with retry logic."""
+        """Fetch data from the API with retry logic."""
         for attempt in range(max_retries):
             try:
                 response = requests.get(base_url, headers=headers, params=params)
                 if response.status_code == 200:
+                    logger.info("Successfully fetched data from the API.")
+                    logger.debug(f"API response: {response.text}")
                     return response.json()
                 elif response.status_code == 401:
                     logger.error("Authentication failed. Please check your API token.")
@@ -75,7 +78,7 @@ class Command(BaseCommand):
         return None
 
     def process_measurements(self, data):
-        """Function to process and save measurements to the database."""
+        """Process and save measurements to the database."""
         if 'data' not in data:
             self.stdout.write(self.style.ERROR("No 'data' key found in the API response."))
             return
@@ -90,37 +93,39 @@ class Command(BaseCommand):
                 sensor_sn = metadata.get("sensor_sn")
                 if not sensor_sn:
                     logger.warning(f"Missing 'sensor_sn' for {metadata.get('device_name')} - {metadata.get('sensor_name')}. Using 'Unknown'.")
-                    sensor_sn = "Unknown"  # Or any default value you prefer
-
-                # Create or get the WeatherMeasurement object
-                measurement, created = WeatherMeasurement.objects.get_or_create(
-                    device_name=metadata.get("device_name"),
-                    sensor_name=metadata.get("sensor_name"),
-                    sensor_sn=sensor_sn,
-                    units=metadata.get("units"),
-                )
+                    sensor_sn = "Unknown"
 
                 # Process and save each reading
                 for reading in readings:
-                    # Get the datetime string and safely parse it
                     datetime_str = reading.get("datetime")
                     timestamp = self.parse_datetime(datetime_str)
 
-                    # Only save the reading if the datetime is valid
-                    if timestamp:
-                        self.save_weather_reading(measurement, reading, timestamp)
+                    # Only process the reading if the datetime is valid and value exists
+                    if timestamp and reading.get("value") is not None:
+                        # Create a new WeatherMeasurement for each reading
+                        measurement = WeatherMeasurement(
+                            device_name=metadata.get("device_name"),
+                            sensor_name=metadata.get("sensor_name"),
+                            sensor_sn=sensor_sn,
+                            units=metadata.get("units"),
+                            value=reading["value"],  # Explicitly set the value
+                            timestamp=timestamp,
+                            timestamp_utc=self.parse_datetime(reading.get("timestamp_utc")) or timezone.now(),
+                            precision=reading.get("precision"),
+                            error_flag=reading.get("error_flag", False),
+                            error_description=reading.get("error_description", "")
+                        )
+                        measurement.save()
+                        logger.info(f"Saved measurement for sensor {measurement.sensor_name} at {timestamp}")
 
     def parse_datetime(self, datetime_str):
         """Parse the datetime string from the API and make it timezone-aware."""
         if isinstance(datetime_str, str):
             try:
                 logger.debug(f"Parsing datetime string: {datetime_str}")
-                # Use dateutil.parser.parse to handle various datetime formats including timezone
                 parsed_datetime = parser.parse(datetime_str)
 
-                # Make the parsed datetime timezone-aware if it's naive
                 if parsed_datetime.tzinfo is None:
-                    # If datetime is naive, make it aware in UTC
                     parsed_datetime = timezone.make_aware(parsed_datetime, dt_timezone.utc)
 
                 return parsed_datetime
@@ -130,11 +135,9 @@ class Command(BaseCommand):
         
         elif isinstance(datetime_str, (int, float)):
             try:
-                # Validate Unix timestamp range (seconds since the Unix epoch)
                 if datetime_str < 0 or datetime_str > 32503680000:  # Up to year 3000
                     logger.warning(f"Invalid Unix timestamp value: {datetime_str}. Skipping.")
                     return None
-                # Convert Unix timestamp to datetime
                 timestamp = datetime.utcfromtimestamp(datetime_str)
                 return timezone.make_aware(timestamp, dt_timezone.utc)
             except (ValueError, OSError) as e:
@@ -143,26 +146,3 @@ class Command(BaseCommand):
         else:
             logger.warning(f"Invalid datetime value: {datetime_str}")
             return None
-    
-    def save_weather_reading(self, measurement, reading, timestamp):
-        """Create a WeatherReading entry and save it."""
-        timestamp_utc = self.parse_datetime(reading.get("timestamp_utc"))
-        
-        # If timestamp_utc is None, set it to the current UTC time
-        if not timestamp_utc:
-            timestamp_utc = timezone.now()  # Use current UTC time as fallback
-        
-        # Ensure timestamp_utc is timezone-aware
-        if timezone.is_naive(timestamp_utc):
-            timestamp_utc = timezone.make_aware(timestamp_utc, timezone.utc)
-
-        WeatherReading.objects.create(
-            measurement=measurement,
-            value=reading["value"],
-            datetime=timestamp,
-            timestamp_utc=timestamp_utc,
-            precision=reading.get("precision"),
-            error_flag=reading.get("error_flag", False),
-            error_description=reading.get("error_description", ""),
-        )
-        logger.info(f"Saved reading for sensor {measurement.sensor_name} at {timestamp}")

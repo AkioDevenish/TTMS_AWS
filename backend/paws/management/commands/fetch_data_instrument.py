@@ -12,10 +12,10 @@ class Command(BaseCommand):
         user_email = "jerome.ramirez@metoffice.gov.tt"
         api_key = "sVALwcRMyQmjtwYpDPW-"
         instrument_ids = [1, 2, 3]  # List of instrument IDs you want to fetch data for
-        start_datetime = "2024-09-17 1:50:00"
-        end_datetime = "2024-09-17 2:10:00"
+        start_datetime = "2024-12-04 0:00:00"
+        end_datetime = "2024-12-04 23:59:59"
 
-        start = parse_datetime(start_datetime).isoformat() + "Z"
+        start = parse_datetime(start_datetime).isoformat()  + "Z"
         end = parse_datetime(end_datetime).isoformat() + "Z"
 
         measurement_mapping = {

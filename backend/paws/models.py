@@ -4,8 +4,6 @@ from django.db import models
 class InstrumentMeasurement(models.Model):
     # Assuming these fields are required
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    serial_number = models.CharField(max_length=100, unique=True)
     measurement_name = models.CharField(max_length=100)
     value = models.FloatField()
     timestamp = models.DateTimeField()
