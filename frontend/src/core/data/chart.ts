@@ -194,11 +194,6 @@ export const sutronstats = [
     }
 ];
 
-export const paws_stats = [
-  
-
-];
-
 export const ott_hydromet_stats = [
     {
         name: 'Humidity',
@@ -1680,6 +1675,118 @@ export const chartOptions11 = {
         },
     ],
 }
+
+
+const xAxisCategories: string[] = [];
+
+for (let i = 0; i <= 24; i++) { // Use <= 24 to include the final 12 AM
+  const hour24 = i % 24; // Wrap around to ensure it stays within 0–23
+  const hour12 = hour24 % 12 || 12; // Convert to 12-hour format (0 becomes 12)
+  const ampm = hour24 >= 12 ? 'PM' : 'AM'; // Determine AM or PM
+  xAxisCategories.push(`${hour12} ${ampm}`); // Format as "HH AM/PM"
+}
+
+export const pawsOptions1 = {
+  chart: {
+    height: 230,
+    type: 'area',
+    offsetY: 12,
+    offsetX: -15,
+    toolbar: { show: false },
+  },
+  dataLabels: { enabled: false },
+  colors: ['#00E396', '#0090FF'],
+  stroke: {
+    curve: 'straight',
+    width: 3,
+  },
+  grid: {
+    show: true,
+    strokeDashArray: 4,
+    position: 'back',
+    xaxis: { lines: { show: false } },
+  },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      shadeIntensity: 1,
+      inverseColors: false,
+      opacityFrom: 0.45,
+      opacityTo: 0.05,
+      stops: [0, 50, 100, 100],
+    },
+  },
+  xaxis: {
+    categories: xAxisCategories,
+    labels: {
+      show: true,
+      formatter: (value: string) => value, // Explicit type
+    },
+  },
+  yaxis: {
+    labels: { show: true },
+    axisBorder: { show: false },
+  },
+  tooltip: { shared: true, intersect: false },
+  legend: { show: false },
+};
+
+export const zentraoption2 = {
+    chart: {
+      height: 230,
+      type: 'area',
+      offsetY: 12,
+      offsetX: -15,
+      toolbar: { show: false },
+    },
+    dataLabels: { enabled: false },
+    colors: ['#00E396', '#0090FF'],
+    stroke: {
+      curve: 'straight',
+      width: 3,
+    },
+    grid: {
+      show: true,
+      strokeDashArray: 4,
+      position: 'back',
+      xaxis: { lines: { show: false } },
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        inverseColors: false,
+        opacityFrom: 0.45,
+        opacityTo: 0.05,
+        stops: [0, 50, 100, 100],
+      },
+    },
+    xaxis: {
+      categories: [],
+      labels: {
+        show: true,
+        formatter: function (val: any) {
+          if (!val) return ''
+          try {
+            const date = new Date(val)
+            const hour = date.getHours()
+            const suffix = hour < 12 ? 'AM' : 'PM'
+            return `${hour % 12 || 12}:00 ${suffix}`
+          } catch (error) {
+            console.error('Error formatting x-axis label:', error)
+            return val
+          }
+        },
+      },
+    },
+    yaxis: {
+      labels: { show: true },
+      axisBorder: { show: false },
+    },
+    tooltip: { shared: true, intersect: false },
+    legend: { show: false },
+  }
+
 export const chartOptions12 = {
     chart: {
       height: 230,
@@ -1711,8 +1818,22 @@ export const chartOptions12 = {
       },
     },
     xaxis: {
-      categories: [],  // Categories will be populated dynamically from the fetched data
-      labels: { show: true, formatter: (value: string) => formatTimeLabel(value) },
+      categories: [],
+      labels: {
+        show: true,
+        formatter: function (val: any) {
+          if (!val) return ''
+          try {
+            const date = new Date(val)
+            const hour = date.getHours()
+            const suffix = hour < 12 ? 'AM' : 'PM'
+            return `${hour % 12 || 12}:00 ${suffix}`
+          } catch (error) {
+            console.error('Error formatting x-axis label:', error)
+            return val
+          }
+        },
+      },
     },
     yaxis: {
       labels: { show: true },
@@ -1720,16 +1841,8 @@ export const chartOptions12 = {
     },
     tooltip: { shared: true, intersect: false },
     legend: { show: false },
-}
-
-function formatTimeLabel(value: string): string {
-  const date = new Date(value)
-  const hour = date.getHours()
-  const suffix = hour < 12 ? 'AM' : 'PM'
-  return `${hour % 12 || 12}:00 ${suffix}`
-}
-
-
+  }
+  
 export const chartOptions13 = {
     chart: {
         type: 'bar',

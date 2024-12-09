@@ -1,104 +1,156 @@
 <template>
     <div>
-        <div class="row g-2">
-            <div class="col-xl-3 col-md-6 proorder-xl-3 proorder-md-3" v-for="(item, index) in localPawsData" :key="index">
-                <Card1 :cardbodyClass="item.cardclass">
-                    <div class="d-flex gap-2 align-items-end">
-                        <div class="flex-grow-1">
-                            <h2>{{ item.number }}</h2>
-                            <p class="mb-0 text-truncate">{{ item.text }}</p>
-                            <div class="d-flex student-arrow text-truncate">
-                                <p class="mb-0 up-arrow " :class="item.iconclass"><i :class="item.icon"></i></p>
-                                <span class="f-w-500 " :class="item.fontclass">{{ item.total }}%</span>{{ item.month }}
-                            </div>
-                        </div>
-                        <div class="flex-shrink-0"><img :src="getImages(item.img)" alt="">
-                        </div>
-                    </div>
-                </Card1>
+      <!-- Instrument Dropdown -->
+      <div class="dropdown mb-4">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="instrumentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          Instrument {{ selectedInstrument }}
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="instrumentDropdown">
+          <li v-for="instrument in instrument_ids" :key="instrument">
+            <a class="dropdown-item" href="#" @click="changeInstrument(instrument)">Instrument {{ instrument }}</a>
+          </li>
+        </ul>
+      </div>
+  
+      <div class="row g-2">
+        <!-- Loop through transformed data and display cards for each measurement -->
+        <div class="col-xl-3 col-md-6 proorder-xl-3 proorder-md-3" v-for="(item, index) in localPawsData" :key="index">
+          <Card1 :cardbodyClass="item.cardclass">
+            <div class="d-flex gap-2 align-items-end">
+              <div class="flex-grow-1">
+                <h2>{{ item.number }}</h2>
+                <p class="mb-0 text-truncate">{{ item.text }}</p>
+                <div class="d-flex student-arrow text-truncate">
+                  <p class="mb-0 up-arrow" :class="item.iconclass"><i :class="item.icon"></i></p>
+                  <span class="f-w-500" :class="item.fontclass">{{ item.total }}%</span>{{ item.month }}
+                </div>
+              </div>
+              <div class="flex-shrink-0">
+                <img :src="getImages(item.img)" alt="" />
+              </div>
             </div>
+          </Card1>
         </div>
+      </div>
     </div>
-</template>
-
-<script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted } from 'vue'
-import axios from 'axios'
-import { getImages } from "@/composables/common/getImages"
-
-const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-
-// Reactive reference to modify paws_data
-const localPawsData = ref([])
-
-// Helper function to get unit
-const getUnit = (measurementName: string) => {
-   switch(measurementName) {
-       case 'BMX280 Pressure': return 'hPa'
-       case 'Air Temperature': return '°C'
-       case 'Rain Gauge': return 'mm'
-       case 'MCP9808 Temperature': return '°C'
-       case 'Wind Direction': return '°'
-       case 'Wind Speed': return 'm/s'
-       default: return ''
-   }
-}
-
-// Helper function to get image
-const getImage = (measurementName: string) => {
-   switch(measurementName) {
-       case 'BMX280 Pressure': return 'dashboard-4/icon/student.png'
-       case 'Air Temperature': return 'dashboard-4/icon/student.png'
-       case 'Rain Gauge': return 'dashboard-4/icon/student.png'
-       case 'MCP9808 Temperature': return 'dashboard-4/icon/student.png'
-       case 'Wind Direction': return 'dashboard-4/icon/student.png'
-       case 'Wind Speed': return 'dashboard-4/icon/student.png'
-       default: return 'dashboard-4/icon/student.png'
-   }
-}
-
-// Function to transform API data, filter for Instrument 1, and get latest data for each measurement type
-const transformApiData = (apiData: any[]) => {
-    // Filter for Instrument 1 data
-    const instrument1Data = apiData.filter(item => item.name === "Instrument 1")
-    
-    const measurementMap = new Map()
-
-    instrument1Data.forEach(item => {
-        // For each measurement, check if we already have a more recent timestamp
-        if (!measurementMap.has(item.measurement_name) || new Date(measurementMap.get(item.measurement_name).timestamp) < new Date(item.timestamp)) {
-            measurementMap.set(item.measurement_name, {
-                number: `${item.value} ${getUnit(item.measurement_name)}`,
-                text: item.measurement_name,
-                iconclass: item.value > 0 ? "bg-light-success" : "bg-light-danger",
-                icon: item.value > 0 
-                    ? "icon-arrow-up font-success" 
-                    : "icon-arrow-down font-danger",
-                img: getImage(item.measurement_name),
-                cardclass: "student",
-                fontclass: item.value > 0 ? "font-success" : "font-danger",
-                total: Math.abs(item.value).toFixed(1),
-                month: new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                timestamp: item.timestamp // Store the timestamp for comparison
-            })
-        }
-    })
-
-    return Array.from(measurementMap.values())
-}
-
-// Fetch data on component mount
-onMounted(async () => {
-    try {
-        const response = await axios.get('http://127.0.0.1:8000/api/instrument_measurements/')
-        const transformedData = transformApiData(response.data)
-        
-        // Update localPawsData if transformed data exists
-        if (transformedData.length > 0) {
-            localPawsData.value = transformedData
-        }
-    } catch (error) {
-        console.error('Error fetching instrument measurements:', error)
-    }
-})
-</script>
+  </template>
+  
+  <script lang="ts" setup>
+  import { ref, onMounted, defineAsyncComponent } from 'vue';
+  import axios from 'axios';
+  import { getImages } from "@/composables/common/getImages"; // Assuming getImages is a helper function
+  
+  // Dynamically import the Card1 component
+  const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
+  
+  // Reactive reference to store transformed data
+  const localPawsData = ref([]);
+  
+  // List of instruments to switch between
+  const instrument_ids = [1, 3, 4, 6, 11, 12, 18, 24, 27, 28, 29, 31, 32, 33, 36, 37, 38, 41, 42];
+  const selectedInstrument = ref<number>(instrument_ids[0]); // Default to the first instrument in the list
+  
+  // Helper function to get the unit for each measurement
+  const getUnit = (measurementName: string): string => {
+      switch (measurementName) {
+          case 'BMX280 Pressure': return 'hPa';
+          case 'Air Temperature': return '°C';
+          case 'Rain Gauge': return 'mm';
+          case 'MCP9808 Temperature': return '°C';
+          case 'Wind Direction': return '°';
+          case 'Wind Speed': return 'm/s';
+          default: return '';
+      }
+  };
+  
+  // Helper function to get image URL for each measurement
+  const getImage = (measurementName: string): string => {
+      return 'dashboard-4/icon/student.png';  // Static image URL for demonstration
+  };
+  
+  // Function to transform API data and get the latest measurement for each type
+  const transformApiData = (apiData: any[]) => {
+      const latestData: { [key: string]: any } = {};
+  
+      apiData.forEach((item) => {
+          if (item.name === `Instrument ${selectedInstrument.value}`) {
+              const itemTimestamp = new Date(item.timestamp); // Ensure timestamp is a Date object
+  
+              // Check if this measurement is already stored, and if the current one is newer
+              const existingItem = latestData[item.measurement_name];
+              if (!existingItem || new Date(existingItem.timestamp) < itemTimestamp) {
+                  latestData[item.measurement_name] = {
+                      number: `${item.value} ${getUnit(item.measurement_name)}`,
+                      text: item.measurement_name,
+                      iconclass: item.value > 0 ? "bg-light-success" : "bg-light-danger",
+                      icon: item.value > 0 ? "icon-arrow-up font-success" : "icon-arrow-down font-danger",
+                      img: getImage(item.measurement_name),
+                      cardclass: "student",
+                      fontclass: item.value > 0 ? "font-success" : "font-danger",
+                      total: Math.abs(item.value).toFixed(1),
+                      // Convert to 12-hour format with AM/PM
+                      month: itemTimestamp.toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit', 
+                          hour12: true, // 12-hour format
+                          timeZone: 'UTC' // Ensure it's in UTC
+                      }),
+                      timestamp: item.timestamp // Store timestamp for comparison
+                  };
+              }
+          }
+      });
+  
+      return Object.values(latestData);
+  };
+  
+  // Function to fetch data for the selected instrument
+  const fetchData = async () => {
+      try {
+          const response = await axios.get('http://127.0.0.1:8000/api/Measurements/');
+  
+          // If the API response is an array, process it and set it to localPawsData
+          if (Array.isArray(response.data)) {
+              // Transform the data and update the localPawsData reactive reference
+              localPawsData.value = transformApiData(response.data);
+          } else {
+              console.error('API response is not in the expected format');
+          }
+      } catch (error) {
+          console.error('Error fetching instrument measurements:', error);
+      }
+  };
+  
+  // Function to handle instrument change from the dropdown
+  const changeInstrument = (instrument: number) => {
+      selectedInstrument.value = instrument;
+      fetchData(); // Fetch new data based on the selected instrument
+  };
+  
+  // Fetch data initially when the component is mounted
+  onMounted(() => {
+      fetchData();
+  });
+  </script>
+  
+  <style scoped>
+  /* Custom styles for the dropdown and cards */
+  .instrument-tabs .nav-link.active {
+      background-color: #007bff;
+      color: white;
+  }
+  
+  .instrument-tabs .nav-item {
+      cursor: pointer;
+  }
+  
+  .studay-statistics {
+      margin-top: 10px;
+  }
+  
+  .dropdown-menu {
+      max-height: 300px; /* Optional: add scroll if there are too many options */
+      overflow-y: auto;
+  }
+  </style>
+  
