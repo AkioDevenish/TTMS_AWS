@@ -24,13 +24,13 @@ class Command(BaseCommand):
         headers = {"Authorization": f"Token {API_TOKEN}"}
 
         # Time range configuration for December 1st to December 2nd, 2024
-        current_date_start = datetime(2024, 12, 1).date()
-        current_date_end = datetime(2024, 12, 2).date()
+        current_date_start = datetime(2024, 12, 4).date()
+        current_date_end = datetime(2024, 12, 4).date()
 
-        # Define the time range from 9 AM on December 1st to 10 AM on December 2nd
-        START_DATE = datetime.combine(current_date_start, datetime.min.time()) + timedelta(hours=9)
-        END_DATE = datetime.combine(current_date_end, datetime.min.time()) + timedelta(hours=10)
+        START_DATE = datetime.combine(current_date_start, datetime.min.time())  
+        END_DATE = datetime.combine(current_date_end, datetime.min.time()) + timedelta(hours=23, minutes=59) 
 
+        # Parameters for the API request
         params = {
             "device_sn": DEVICE_SN,
             "start_date": START_DATE.strftime("%Y-%m-%d %H:%M:%S"),
@@ -53,10 +53,15 @@ class Command(BaseCommand):
         """Fetch data from the API with retry logic."""
         for attempt in range(max_retries):
             try:
+                # Send the API request
                 response = requests.get(base_url, headers=headers, params=params)
+
+                # Log the full response text (for debugging purposes)
+                logger.debug(f"API response: {response.text}")
+
+                # Check for successful response
                 if response.status_code == 200:
                     logger.info("Successfully fetched data from the API.")
-                    logger.debug(f"API response: {response.text}")
                     return response.json()
                 elif response.status_code == 401:
                     logger.error("Authentication failed. Please check your API token.")
@@ -83,6 +88,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("No 'data' key found in the API response."))
             return
 
+        # Define the sensor name mapping
+        sensor_name_map = {
+            "Precipitation": "Rainfall (mm)",
+            "Wind Speed": "Wind Speed (m/s)",
+            "Solar Radiation": "Solar Radiation (W/m²)",
+            "Lightning Activity": "Lightning Activity (Yes/No)",
+            "Air Temperature": "Air Temperature (°C)",
+            "Relative Humidity": "Relative Humidity (%)",
+            "Atmospheric Pressure": "Atmospheric Pressure (kPa)",
+            "Max Precipitation Rate": "Max Precipitation Rate (mm/h)",
+            "Battery Percent": "Battery Percent (%)",
+            "Battery Voltage": "Battery Voltage (mV)",
+        }
+
         # Iterate through each measurement in the response
         for measurement_name, measurement_data in data['data'].items():
             for config in measurement_data:
@@ -102,13 +121,17 @@ class Command(BaseCommand):
 
                     # Only process the reading if the datetime is valid and value exists
                     if timestamp and reading.get("value") is not None:
+                        # Map the sensor name to a friendly name
+                        sensor_name = metadata.get("sensor_name")
+                        friendly_name = sensor_name_map.get(sensor_name, sensor_name)  # Fallback to original name if not found
+
                         # Create a new WeatherMeasurement for each reading
                         measurement = WeatherMeasurement(
                             device_name=metadata.get("device_name"),
-                            sensor_name=metadata.get("sensor_name"),
+                            sensor_name=friendly_name,  # Use the mapped sensor name here
                             sensor_sn=sensor_sn,
                             units=metadata.get("units"),
-                            value=reading["value"],  # Explicitly set the value
+                            value=reading["value"],
                             timestamp=timestamp,
                             timestamp_utc=self.parse_datetime(reading.get("timestamp_utc")) or timezone.now(),
                             precision=reading.get("precision"),
@@ -116,7 +139,7 @@ class Command(BaseCommand):
                             error_description=reading.get("error_description", "")
                         )
                         measurement.save()
-                        logger.info(f"Saved measurement for sensor {measurement.sensor_name} at {timestamp}")
+                        logger.info(f"Saved measurement for sensor {friendly_name} at {timestamp}")
 
     def parse_datetime(self, datetime_str):
         """Parse the datetime string from the API and make it timezone-aware."""
