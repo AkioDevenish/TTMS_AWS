@@ -1,13 +1,13 @@
 <template>
     <div>
-      <!-- Instrument Dropdown -->
+      <!-- Station Dropdown -->
       <div class="dropdown mb-4">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="instrumentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          Instrument {{ selectedInstrument }}
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="stationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          Station {{ selectedStation }}
         </button>
-        <ul class="dropdown-menu" aria-labelledby="instrumentDropdown">
-          <li v-for="instrument in instrument_ids" :key="instrument">
-            <a class="dropdown-item" href="#" @click="changeInstrument(instrument)">Instrument {{ instrument }}</a>
+        <ul class="dropdown-menu" aria-labelledby="stationDropdown">
+          <li v-for="station in station_ids" :key="station">
+            <a class="dropdown-item" href="#" @click="changeStation(station)">Station {{ station }}</a>
           </li>
         </ul>
       </div>
@@ -46,9 +46,9 @@
   // Reactive reference to store transformed data
   const localPawsData = ref([]);
   
-  // List of instruments to switch between
-  const instrument_ids = [1, 3, 4, 6, 11, 12, 18, 24, 27, 28, 29, 31, 32, 33, 36, 37, 38, 41, 42];
-  const selectedInstrument = ref<number>(instrument_ids[0]); // Default to the first instrument in the list
+  // List of stations to switch between
+  const station_ids = [1, 3, 4, 6, 11, 12, 18, 24, 27, 28, 29, 31, 32, 33, 36, 37, 38, 41, 42];
+  const selectedStation = ref<number>(station_ids[0]); // Default to the first station in the list
   
   // Helper function to get the unit for each measurement
   const getUnit = (measurementName: string): string => {
@@ -73,7 +73,7 @@
       const latestData: { [key: string]: any } = {};
   
       apiData.forEach((item) => {
-          if (item.name === `Instrument ${selectedInstrument.value}`) {
+          if (item.name === `Station ${selectedStation.value}`) {
               const itemTimestamp = new Date(item.timestamp); // Ensure timestamp is a Date object
   
               // Check if this measurement is already stored, and if the current one is newer
@@ -104,7 +104,7 @@
       return Object.values(latestData);
   };
   
-  // Function to fetch data for the selected instrument
+  // Function to fetch data for the selected station
   const fetchData = async () => {
       try {
           const response = await axios.get('http://127.0.0.1:8000/api/Measurements/');
@@ -117,14 +117,14 @@
               console.error('API response is not in the expected format');
           }
       } catch (error) {
-          console.error('Error fetching instrument measurements:', error);
+          console.error('Error fetching station measurements:', error);
       }
   };
   
-  // Function to handle instrument change from the dropdown
-  const changeInstrument = (instrument: number) => {
-      selectedInstrument.value = instrument;
-      fetchData(); // Fetch new data based on the selected instrument
+  // Function to handle station change from the dropdown
+  const changeStation = (station: number) => {
+      selectedStation.value = station;
+      fetchData(); // Fetch new data based on the selected station
   };
   
   // Fetch data initially when the component is mounted

@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'django_celery_beat',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -40,11 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'allmeteo',
-    'paws',  
     'database'
 ]
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -64,6 +62,7 @@ CORS_ALLOWED_ORIGINS = [
      "http://localhost:3000",
        "http://localhost:5173",
    ]
+
 
 REST_FRAMEWORK = {
        'DEFAULT_PERMISSION_CLASSES': [

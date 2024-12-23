@@ -1,15 +1,24 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import BrandViewSet, InstrumentViewSet
+from .views import (
+    BrandViewSet, StationViewSet, SensorViewSet,
+    MeasurementViewSet, StationViewSet, StationHealthLogViewSet,
+    StationSensorViewSet, APIAccessTokenViewSet, SystemLogViewSet,
+    UserViewSet, NotificationViewSet
+)
 
-# Initialize the default router
 router = DefaultRouter()
+router.register(r'brands', BrandViewSet)
+router.register(r'sensors', SensorViewSet)
+router.register(r'measurements', MeasurementViewSet)
+router.register(r'stations', StationViewSet)
+router.register(r'station-health-logs', StationHealthLogViewSet)
+router.register(r'station-sensors', StationSensorViewSet)
+router.register(r'api-tokens', APIAccessTokenViewSet)
+router.register(r'system-logs', SystemLogViewSet)
+router.register(r'users', UserViewSet)
+router.register(r'notifications', NotificationViewSet)
 
-# Register Brand and Instrument viewsets with the router
-router.register(r'brands', BrandViewSet, basename='brand')
-router.register(r'instruments', InstrumentViewSet, basename='instrument')
-
-# Include the router's URLs in the application's URL configuration
 urlpatterns = [
     path('', include(router.urls)),
 ]

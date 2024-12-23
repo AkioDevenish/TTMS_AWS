@@ -1677,60 +1677,113 @@ export const chartOptions11 = {
 }
 
 
-const xAxisCategories: string[] = [];
-
-for (let i = 0; i <= 24; i++) { // Use <= 24 to include the final 12 AM
-  const hour24 = i % 24; // Wrap around to ensure it stays within 0–23
-  const hour12 = hour24 % 12 || 12; // Convert to 12-hour format (0 becomes 12)
-  const ampm = hour24 >= 12 ? 'PM' : 'AM'; // Determine AM or PM
-  xAxisCategories.push(`${hour12} ${ampm}`); // Format as "HH AM/PM"
-}
-
 export const pawsOptions1 = {
-  chart: {
-    height: 230,
-    type: 'area',
-    offsetY: 12,
-    offsetX: -15,
-    toolbar: { show: false },
-  },
-  dataLabels: { enabled: false },
-  colors: ['#00E396', '#0090FF'],
-  stroke: {
-    curve: 'straight',
-    width: 3,
-  },
-  grid: {
-    show: true,
-    strokeDashArray: 4,
-    position: 'back',
-    xaxis: { lines: { show: false } },
-  },
-  fill: {
-    type: 'gradient',
-    gradient: {
-      shadeIntensity: 1,
-      inverseColors: false,
-      opacityFrom: 0.45,
-      opacityTo: 0.05,
-      stops: [0, 50, 100, 100],
+    chart: {
+      height: 400,
+      type: 'area',
+      offsetY: 12,
+      offsetX: -15,
+      toolbar: { show: false },
+      responsive: [
+        {
+          breakpoint: 1600,
+          options: {
+            chart: { height: 500 }
+          }
+        },
+        {
+          breakpoint: 1200,
+          options: {
+            chart: { height: 450 }
+          }
+        },
+        {
+          breakpoint: 600,
+          options: {
+            chart: { height: 300 },
+            xaxis: { labels: { rotate: -45 } },
+          },
+        },
+      ],
     },
-  },
-  xaxis: {
-    categories: xAxisCategories,
-    labels: {
+    dataLabels: { enabled: false },
+    colors: ['#00E396', '#0090FF'],
+    stroke: {
+      curve: 'straight',
+      width: 3,
+    },
+    grid: {
       show: true,
-      formatter: (value: string) => value, // Explicit type
+      strokeDashArray: 4,
+      position: 'back',
+      xaxis: { lines: { show: false } },
     },
-  },
-  yaxis: {
-    labels: { show: true },
-    axisBorder: { show: false },
-  },
-  tooltip: { shared: true, intersect: false },
-  legend: { show: false },
-};
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        inverseColors: false,
+        opacityFrom: 0.45,
+        opacityTo: 0.05,
+        stops: [0, 50, 100, 100],
+      },
+    },
+    xaxis: {
+      type: 'datetime',
+      categories: [],
+      labels: {
+        show: true,
+        formatter: (value: string) => {
+          if (!value) return '';
+          const date = new Date(value);
+  
+          // Format time in AM/PM
+          return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours() % 12 || 12}:${date.getMinutes().toString().padStart(2, '0')} ${date.getHours() >= 12 ? 'PM' : 'AM'}`;
+        },
+        rotateAlways: false,
+        trim: true,
+      },
+    },
+    yaxis: {
+      labels: { 
+        show: true,
+        formatter: (val: number) => {
+          // Will be updated dynamically with unit
+          return `${val.toFixed(2)}`;
+        }
+      },
+      axisBorder: { show: true, color: '#78909C' },
+      axisTicks: { show: true },
+      title: {
+        text: 'Measurement Value', // Will be updated dynamically
+        style: {
+          color: '#78909C',
+          fontSize: '12px',
+          fontWeight: 400,
+        }
+      },
+      min: (min: number) => min - (min * 0.1),
+      max: (max: number) => max + (max * 0.1),
+      forceNiceScale: true,
+    },
+    tooltip: { 
+      shared: true, 
+      intersect: false,
+      x: {
+        format: 'MM/dd hh:mm A', // Use 12-hour format with AM/PM
+      },
+      y: {
+        formatter: (val: number) => {
+          // Will be updated dynamically with unit
+          return `${val.toFixed(2)}`;
+        }
+      }
+    },
+    legend: { show: false },
+  }
+  
 
+  
 export const zentraoption2 = {
     chart: {
       height: 230,

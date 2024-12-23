@@ -1,6 +1,6 @@
 import requests
 from django.core.management.base import BaseCommand
-from paws.models import Measurements
+from database.models import Measurement, Station, Sensor
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 
@@ -11,35 +11,42 @@ class Command(BaseCommand):
         portal_url = "http://3d-trinidad.icdp.ucar.edu"
         user_email = "jerome.ramirez@metoffice.gov.tt"
         api_key = "sVALwcRMyQmjtwYpDPW-"
-        instrument_ids = [1, 3, 4, 6, 11, 12, 18, 24, 27, 28, 29, 31, 32, 33, 36, 37, 38, 41, 42]  # List of instrument IDs you want to fetch data for
         start_datetime = "2024-12-04 0:00:00"
         end_datetime = "2024-12-04 23:59:59"
 
         start = parse_datetime(start_datetime).isoformat() + "Z"
         end = parse_datetime(end_datetime).isoformat() + "Z"
 
-        measurement_mapping = {
-            "bp1": {"name": "BMX280 Pressure", "units": "hPa", "full_name": "Air Pressure"},
-            "bt1": {"name": "BMX280 Temperature", "units": "°C", "full_name": "Temperature"},
-            "mt1": {"name": "MCP9808 Temperature", "units": "°C", "full_name": "Temperature"},
-            "ws": {"name": "Wind Speed", "units": "m/s", "full_name": "Wind Speed"},
-            "wd": {"name": "Wind Direction", "units": "°", "full_name": "Wind Direction"},
-            "rg": {"name": "Rain Gauge", "units": "mm", "full_name": "Precipitation"},
-            "sv1": {"name": "SI1145 Visible", "units": "W/m²", "full_name": "Downwelling Irradiance"},
-            "si1": {"name": "SI1145 Infrared", "units": "W/m²", "full_name": "Downwelling Irradiance"},
-            "su1": {"name": "SI1145 Ultraviolet", "units": "W/m²", "full_name": "Downwelling Irradiance"},
-            "bpc": {"name": "Battery Percent Charge", "units": "%", "full_name": "State of Health"},
-            "css": {"name": "Cell Signal Strength", "units": "%", "full_name": "State of Health"},
-        }
+        # Fetch station IDs for the stations with brand_name "3D Paws"
+        station_response = requests.get("http://127.0.0.1:8000/stations/")
+        if station_response.status_code != 200:
+            print("Error fetching stations:", station_response.content)
+            return
 
-        def fetch_data(instrument_id):
-            url = f"{portal_url}/api/v1/data/{instrument_id}?start={start}&end={end}&email={user_email}&api_key={api_key}"
+        stations = station_response.json()
+        station_ids = [station['id'] for station in stations if station['brand_name'] == "3D Paws"]
+
+        if not station_ids:
+            print("No station IDs found for brand '3D Paws'.")
+            return
+
+        # Fetch sensor IDs
+        sensor_response = requests.get("http://127.0.0.1:8000/sensors/")
+        if sensor_response.status_code != 200:
+            print("Error fetching sensors:", sensor_response.content)
+            return
+
+        sensors = sensor_response.json()
+        sensor_map = {sensor['type']: sensor['id'] for sensor in sensors}  # Assuming 'type' is the key to match
+
+        def fetch_data(station_id):
+            url = f"{portal_url}/api/v1/data/{station_id}?start={start}&end={end}&email={user_email}&api_key={api_key}"
             try:
                 response = requests.get(url, verify=False)
                 response.raise_for_status()
                 return response.json()
             except requests.exceptions.RequestException as e:
-                print(f"Error fetching data for instrument {instrument_id}: {e}")
+                print(f"Error fetching data for station {station_id}: {e}")
                 return None
 
         def round_to_nearest_hour(timestamp_str):
@@ -49,7 +56,6 @@ class Command(BaseCommand):
                 timestamp = timestamp.replace(minute=0) + timedelta(hours=1)
             else:
                 timestamp = timestamp.replace(minute=0)
-            # Ensure that seconds and microseconds are also reset to 0
             return timestamp.replace(second=0, microsecond=0)
 
         def get_closest_measurement(entries, rounded_hour):
@@ -64,7 +70,7 @@ class Command(BaseCommand):
                     closest_entry = entry
             return closest_entry
 
-        def process_and_save_data(instrument_id, raw_data):
+        def process_and_save_data(station_id, raw_data):
             processed_data = []
             
             if isinstance(raw_data, dict):
@@ -93,28 +99,21 @@ class Command(BaseCommand):
                                 measurements = closest_entry["measurements"]
                                 is_test = closest_entry["test"] == "false"
                                 for key, value in measurements.items():
-                                    if key in measurement_mapping:
-                                        # Check if we have already saved a measurement for this hour and instrument
-                                        existing_measurement = Measurements.objects.filter(
-                                            timestamp=rounded_hour,
-                                            name=f"Instrument {instrument_id}",
-                                            measurement_name=measurement_mapping[key]["name"]
-                                        ).first()
+                                    sensor_id = sensor_map.get(key)  # Match the sensor name to get the ID
+                                    if sensor_id:  # Only create measurement if sensor_id is found
+                                        # Create and save the measurement
+                                        Measurement.objects.create(
+                                            station_id=station_id,  # Use the station_id
+                                            sensor_id=sensor_id,  # Use the matched sensor_id
+                                            date=rounded_hour.date(),
+                                            time=rounded_hour.time(),
+                                            value=value,
+                                            status="successful",
+                                            note="Data has been gathered",
+                                            created_at=datetime.now()
+                                        )
+                                        processed_data.append(f"Saved measurement for station {station_id} at {rounded_hour}")
 
-                                        if not existing_measurement:
-                                            # Create and save the measurement only if it hasn't been saved yet
-                                            Measurements.objects.create(
-                                                name=f"Instrument {instrument_id}",
-                                                measurement_name=measurement_mapping[key]["name"],
-                                                value=value,
-                                                timestamp=rounded_hour,
-                                                is_test=is_test
-                                            )
-                                            processed_data.append(f"Saved: {measurement_mapping[key]['name']} - {value} at {rounded_hour}")
-                                        else:
-                                            processed_data.append(f"Already exists for {measurement_mapping[key]['name']} at {rounded_hour}")
-                                    else:
-                                        print("Invalid measurement key:", key)
                     else:
                         print("No 'data' field in properties")
                 else:
@@ -125,10 +124,10 @@ class Command(BaseCommand):
             return processed_data
 
         all_saved_data = []
-        for instrument_id in instrument_ids:
-            raw_data = fetch_data(instrument_id)
+        for station_id in station_ids:
+            raw_data = fetch_data(station_id)
             if raw_data:
-                saved_data = process_and_save_data(instrument_id, raw_data)
+                saved_data = process_and_save_data(station_id, raw_data)
                 all_saved_data.extend(saved_data)
         
-        self.stdout.write(self.style.SUCCESS(f"Data successfully saved: {all_saved_data}"))
+        self.stdout.write(self.style.SUCCESS(f"Data successfully saved: {all_saved_data}")) 
