@@ -6,7 +6,7 @@
   >
     <!-- Title and Dropdown Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="mb-0">{{ selectedStationName }}</h4>
+      <h4 class="mb-0">{{ stationInfo?.name || 'Station Statistics' }}</h4>
       <div class="dropdown position-relative">
         <button
           class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between"
@@ -15,7 +15,7 @@
           data-bs-toggle="dropdown"
           aria-expanded="false"
         >
-          <span class="mx-auto">{{ selectedMeasurement || 'Select Measurement' }}</span>
+          <span class="mx-auto">{{ currentSensorName }}</span>
           <span class="dropdown-toggle-icon ms-3"></span>
         </button>
 
@@ -23,60 +23,45 @@
           class="dropdown-menu dropdown-menu-end position-absolute"
           aria-labelledby="measurementDropdown"
         >
-          <template v-for="(measurements, sensorType) in groupedMeasurements" :key="sensorType">
-            <h6 class="dropdown-header">{{ sensorType }}</h6>
-            <a
-              class="dropdown-item"
-              href="#"
-              v-for="measurement in measurements"
-              :key="measurement.id"
-              @click.prevent="selectMeasurement(measurement.name)"
-            >
-              {{ measurement.display_name }}
-            </a>
-            <div class="dropdown-divider" v-if="sensorType !== lastSensorType"></div>
-          </template>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bt1')">Temperature 1</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('mt1')">Temperature 2</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('ws')">Wind Speed</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wd')">Wind Direction</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('rg')">Precipitation</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bp1')">Pressure</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('sv1')">Downwelling Visible</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('si1')">Downwelling Infrared</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('su1')">Downwelling Ultraviolet</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bpc')">Battery Percent</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('css')">Cell Signal Strength</a>
         </div>
-      </div>
-    </div>
-
-    <!-- Statistics Section -->
-    <div class="studay-statistics mb-4">
-      <div class="d-flex justify-content-end align-items-center mb-4">
-        <ul class="d-flex align-items-center gap-3 mb-0">
-          <li><span class="bg-primary"></span>{{ selectedMeasurement || 'No Measurement Selected' }}</li>
-        </ul>
       </div>
     </div>
 
     <!-- Chart Section -->
     <div class="chart-container">
       <apexchart
-        v-if="paws_stats.length > 0"
+        v-if="chartData.length > 0"
         type="area"
         height="330"
         ref="chart"
-        :options="pawsOptions"
-        :series="paws_stats"
+        :options="chartOptions"
+        :series="chartData"
       ></apexchart>
       <div v-else>
         <p>No data available to display.</p>
       </div>
     </div>
-
-    <!-- Example using a simple alert -->
-    <div v-if="errorMessage" class="alert alert-danger">
-      {{ errorMessage }}
-    </div>
   </Card1>
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, reactive, onMounted, watch, computed } from 'vue';
+import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps } from 'vue';
 import axios from 'axios';
-import { pawsOptions1 as initialPawsOptions1 } from '@/core/data/chart';
+import { pawsOptions1 } from '@/core/data/chart';
 
-// Define the props expected from the parent component
+const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
+
 const props = defineProps({
   selectedStation: {
     type: Number,
@@ -84,250 +69,190 @@ const props = defineProps({
   }
 });
 
-// Ref to store the selected station's name
-const selectedStationName = ref<string>('');
+const chartData = ref<any[]>([]);
+const selectedSensorType = ref<string>('bt1');
+const sensors = ref<any[]>([]);
+const stationInfo = ref<any>(null);
 
-// Async component import
-const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
-const paws_stats = ref<any[]>([]);
-
-// Selected measurement and its units
-const selectedMeasurement = ref<string>(''); // Initially no measurement selected
-
-const measurementUnits: Record<string, string> = {
-  'BMX280 Temperature': '°C',
-  'MCP9808 Temperature': '°C',
-  'Wind Speed': 'm/s',
-  'Wind Direction': '°',
-  'Rain Gauge': 'mm',
-  'BMX280 Pressure': 'hPa',
-  'SI1145 Visible': 'lux',
-  'SI1145 Infrared': 'lux',
-  'SI1145 Ultraviolet': 'UV Index',
-  'Battery Percent Charge': '%',
-  'Cell Signal Strength': 'dBm'
-};
-
-// Reactive options for the chart
-const pawsOptions1 = reactive({ ...initialPawsOptions1 });
-
-// Fetch sensor types
-const sensorTypes = ref<any[]>([]);
-const fetchSensorTypes = async () => {
-  try {
-    const response = await axios.get<any[]>('http://127.0.0.1:8000/sensors/');
-    sensorTypes.value = response.data;
-  } catch (error) {
-    console.error('Error fetching sensor types:', error);
-  }
-};
-
-// Fetch all measurements
-const allMeasurements = ref<any[]>([]);
-const fetchAllMeasurements = async () => {
-  try {
-    const response = await axios.get<any[]>('http://127.0.0.1:8000/api/measurements/');
-    allMeasurements.value = response.data;
-  } catch (error) {
-    console.error('Error fetching all measurements:', error);
-  }
-};
-
-// Compute grouped measurements by sensor type
-const groupedMeasurements = computed(() => {
-  const grouped: Record<string, any[]> = {};
-  if (!sensorTypes.value || sensorTypes.value.length === 0) return grouped;
-
-  // Create a mapping of sensor types to their measurements
-  sensorTypes.value.forEach(sensor => {
-    const measurements = allMeasurements.value.filter(
-      measurement => measurement.sensor.type === sensor.type
-    );
-    if (measurements.length > 0) {
-      grouped[sensor.type] = measurements;
-    }
-  });
-
-  return grouped;
-});
-
-// Get the last sensor type for handling dividers
-const lastSensorType = computed(() => {
-  const types = Object.keys(groupedMeasurements.value);
-  return types.length > 0 ? types[types.length - 1] : '';
-});
-
-// Initialize data by fetching sensor types and measurements
-const initializeData = async () => {
-  await Promise.all([fetchSensorTypes(), fetchAllMeasurements()]);
-};
-
-// Adjust to UTC+3
-const adjustToTimeZone = (timestamp: string, offset: number = 3) => {
-  const date = new Date(timestamp);
-  const timeZoneAdjustedDate = new Date(date.getTime() + offset * 60 * 60 * 1000); // Offset in hours
-  return timeZoneAdjustedDate;
-};
-
-// Round timestamp to the nearest hour, adjusting for a specific offset
-const roundToNearestHour = (timestamp: string, offset: number = 3) => {
-  const date = adjustToTimeZone(timestamp, offset);
-  const minutes = date.getMinutes();
-  if (minutes >= 30) {
-    date.setHours(date.getHours() + 1);
-  }
-  date.setMinutes(0, 0, 0); // Round minutes to zero
-  return date.getTime(); // Return as Unix timestamp (milliseconds)
+// Mapping of sensor types to display names and units
+const sensorConfig: Record<string, { name: string; unit: string }> = {
+  'bp1': { name: 'Pressure', unit: 'hPa' },
+  'bt1': { name: 'Temperature 1', unit: '°C' },
+  'mt1': { name: 'Temperature 2', unit: '°C' },
+  'ws': { name: 'Wind Speed', unit: 'm/s' },
+  'wd': { name: 'Wind Direction', unit: '°' },
+  'rg': { name: 'Precipitation', unit: 'mm' },
+  'sv1': { name: 'Downwelling Visible', unit: 'W/m²' },
+  'si1': { name: 'Downwelling Infrared', unit: 'W/m²' },
+  'su1': { name: 'Downwelling Ultraviolet', unit: 'W/m²' },
+  'bpc': { name: 'Battery Percent', unit: '%' },
+  'css': { name: 'Cell Signal Strength', unit: '%' }
 };
 
 // Format timestamp for display
-const formatTimestamp = (timestamp: number) => {
+const formatTimestamp = (timestamp: string) => {
   const date = new Date(timestamp);
   return date.toLocaleString('en-US', {
+    month: 'numeric',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric'
+    hour12: true
   });
 };
 
-// Aggregate hourly data by rounding timestamps to the nearest hour
-const getHourlyData = (data: any[]) => {
-  const hourlyData: { [key: string]: { value: number; timestamp: number } } = {};
-  data.forEach((item: any) => {
-    const roundedTimestamp = roundToNearestHour(item.timestamp, 3);
-    if (!hourlyData[roundedTimestamp] || new Date(item.timestamp) > new Date(hourlyData[roundedTimestamp].timestamp)) {
-      hourlyData[roundedTimestamp] = { value: item.value, timestamp: item.timestamp };
-    }
-  });
-  const hourlyKeys = Object.keys(hourlyData).sort();
-  return hourlyKeys.map((key) => hourlyData[key].value);
-};
+// Get the current sensor's display name
+const currentSensorName = computed(() => {
+  return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
+});
 
-// Fetch station details to get the station's name
-const fetchStationDetails = async () => {
-  try {
-    const response = await axios.get(`http://127.0.0.1:8000/stations/${props.selectedStation}/`);
-    if (response.status === 200 && response.data) {
-      selectedStationName.value = response.data.name;
-    } else {
-      console.warn('No data found for the selected station.');
-      selectedStationName.value = 'Unknown Station';
+// Get the current sensor's unit
+const currentSensorUnit = computed(() => {
+  return sensorConfig[selectedSensorType.value]?.unit || '';
+});
+
+// Chart options
+const chartOptions = computed(() => ({
+  ...pawsOptions1,
+  yaxis: {
+    ...pawsOptions1.yaxis,
+    title: {
+      ...pawsOptions1.yaxis.title,
+      text: `${currentSensorName.value} (${currentSensorUnit.value})`,
+      style: {
+        ...pawsOptions1.yaxis.title.style,
+        fontSize: '14px',
+        fontWeight: 500
+      }
+    },
+    labels: {
+      ...pawsOptions1.yaxis.labels,
+      formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
     }
-  } catch (error) {
-    console.error('Error fetching station details:', error);
-    selectedStationName.value = 'Error Fetching Station';
+  },
+  xaxis: {
+    ...pawsOptions1.xaxis,
+    labels: {
+      ...pawsOptions1.xaxis.labels,
+      formatter: (val: string) => formatTimestamp(val)
+    }
+  },
+  tooltip: {
+    ...pawsOptions1.tooltip,
+    y: {
+      formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
+    }
   }
-};
+}));
 
-const isLoading = ref<boolean>(false);
-const errorMessage = ref<string>('');
-
-// Fetch data and update chart based on the selected station and measurement
+// Fetch all required data
 const fetchData = async () => {
-  isLoading.value = true;
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/measurements/');
-    const currentUnit = measurementUnits[selectedMeasurement.value] || '';
-    const instrumentData = response.data.filter((item: any) =>
-      item.station_id === props.selectedStation && item.name === selectedMeasurement.value
+    console.log('Fetching data for station:', props.selectedStation);
+    
+    // Get station info
+    const stationResponse = await axios.get('http://127.0.0.1:8000/stations/');
+    const currentStation = stationResponse.data.find((station: any) => station.id === props.selectedStation);
+    if (!currentStation) {
+      console.log('Station not found');
+      return;
+    }
+    stationInfo.value = currentStation;
+    console.log('Station info:', currentStation);
+
+    // Get measurements
+    const measurementsResponse = await axios.get('http://127.0.0.1:8000/measurements/');
+    console.log('All measurements:', measurementsResponse.data);
+    
+    // Filter measurements for current station and selected sensor type
+    const filteredData = measurementsResponse.data.filter((measurement: any) => 
+      measurement.station_name === currentStation.name && 
+      measurement.sensor_type === selectedSensorType.value
     );
 
-    if (instrumentData.length === 0) {
-      console.warn('No data found for selected instrument and measurement');
-      pawsOptions1.xaxis.categories = [];
-      paws_stats.value = [];
+    console.log('Filtered measurements:', filteredData);
+
+    if (filteredData.length === 0) {
+      console.log('No measurements found for selected sensor type:', selectedSensorType.value);
+      chartData.value = [];
       return;
     }
 
-    const hourlyData = getHourlyData(instrumentData);
-
-    pawsOptions1.yaxis.labels.formatter = (val: number) => `${val.toFixed(2)} ${currentUnit}`;
-    pawsOptions1.yaxis.title.text = `${selectedMeasurement.value} (${currentUnit})`;
-    pawsOptions1.tooltip.y.formatter = (val: number) => `${val.toFixed(2)} ${currentUnit}`;
-
-    paws_stats.value = [
-      {
-        name: selectedMeasurement.value,
-        data: hourlyData
-      }
-    ];
-
-    pawsOptions1.xaxis.categories = instrumentData.map((item: { timestamp: string }) => {
-      const roundedTime = roundToNearestHour(item.timestamp, 3);
-      return formatTimestamp(roundedTime);
+    // Sort data by date and time
+    const sortedData = filteredData.sort((a: any, b: any) => {
+      const dateA = new Date(`${a.date}T${a.time}`);
+      const dateB = new Date(`${b.date}T${b.time}`);
+      return dateA.getTime() - dateB.getTime();
     });
-  } catch (error: any) {
+
+    // Transform data for the chart
+    chartData.value = [{
+      name: currentSensorName.value,
+      data: sortedData.map((item: any) => ({
+        x: new Date(`${item.date}T${item.time}`).getTime(),
+        y: parseFloat(item.value)
+      }))
+    }];
+
+    console.log('Chart data updated:', chartData.value);
+  } catch (error) {
     console.error('Error fetching data:', error);
-    pawsOptions1.xaxis.categories = [];
-    paws_stats.value = [];
-    errorMessage.value = 'Failed to load data. Please try again later.';
-  } finally {
-    isLoading.value = false;
+    if (axios.isAxiosError(error)) {
+      console.error('Response status:', error.response?.status);
+      console.error('Response data:', error.response?.data);
+    }
+    chartData.value = [];
   }
 };
 
-// Handler for dropdown selection
-const selectMeasurement = (measurement: string) => {
-  selectedMeasurement.value = measurement;
+// Handler for measurement selection
+const selectMeasurement = async (sensorType: string) => {
+  selectedSensorType.value = sensorType;
+  await fetchData(); // Fetch new data for the selected sensor type
 };
 
-// Watch for changes to selectedStation prop and selectedMeasurement
-watch(
-  () => props.selectedStation,
-  async (newStation, oldStation) => {
-    await fetchStationDetails();
-    fetchData();
-  },
-  { immediate: true }
-);
-
-watch(selectedMeasurement, fetchData);
-
-// Initial data load on component mount
-onMounted(async () => {
-  await initializeData();
-  await fetchStationDetails();
+// Watch for changes to station only, not sensor type
+watch(() => props.selectedStation, () => {
   fetchData();
 });
 
-// Computed properties for pawsOptions (chart configuration)
-const pawsOptions = computed(() => {
-  const currentUnit = measurementUnits[selectedMeasurement.value] || '';
-
-  return {
-    ...pawsOptions1,
-    yaxis: {
-      ...pawsOptions1.yaxis,
-      labels: {
-        ...pawsOptions1.yaxis.labels,
-        formatter: (val: number) => `${val.toFixed(2)} ${currentUnit}`
-      },
-      title: {
-        ...pawsOptions1.yaxis.title,
-        text: `${selectedMeasurement.value} (${currentUnit})`
-      }
-    },
-    tooltip: {
-      ...pawsOptions1.tooltip,
-      y: {
-        ...pawsOptions1.tooltip.y,
-        formatter: (val: number) => `${val.toFixed(2)} ${currentUnit}`
-      }
-    }
-  };
+// Initial data load
+onMounted(() => {
+  fetchData();
 });
 </script>
 
 <style scoped>
-.studay-statistics {
-  margin-top: 45px;
+.chart-container {
+  min-height: 350px;
 }
 
 .dropdown-menu {
-  margin-top: 10px;
-  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.btn.dropdown-toggle {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 0.5rem 1rem;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.btn.dropdown-toggle::after {
+  display: none;
+}
+
+.dropdown-toggle-icon {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: middle;
 }
 </style>
+

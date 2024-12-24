@@ -1679,223 +1679,213 @@ export const chartOptions11 = {
 
 export const pawsOptions1 = {
     chart: {
-      height: 400,
-      type: 'area',
-      offsetY: 12,
-      offsetX: -15,
-      toolbar: { show: false },
-      responsive: [
-        {
-          breakpoint: 1600,
-          options: {
-            chart: { height: 500 }
-          }
+        type: 'area',
+        height: 350,
+        toolbar: {
+            show: false
         },
-        {
-          breakpoint: 1200,
-          options: {
-            chart: { height: 450 }
-          }
-        },
-        {
-          breakpoint: 600,
-          options: {
-            chart: { height: 300 },
-            xaxis: { labels: { rotate: -45 } },
-          },
-        },
-      ],
+        zoom: {
+            enabled: true
+        }
     },
-    dataLabels: { enabled: false },
-    colors: ['#00E396', '#0090FF'],
+    dataLabels: {
+        enabled: false
+    },
     stroke: {
-      curve: 'straight',
-      width: 3,
+        curve: 'smooth',
+        width: 3
     },
     grid: {
-      show: true,
-      strokeDashArray: 4,
-      position: 'back',
-      xaxis: { lines: { show: false } },
+        show: true,
+        borderColor: 'var(--chart-border)',
+        strokeDashArray: 0,
+        position: 'back'
     },
+    colors: ['#7A70BA'],
     fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        inverseColors: false,
-        opacityFrom: 0.45,
-        opacityTo: 0.05,
-        stops: [0, 50, 100, 100],
-      },
+        type: 'gradient',
+        gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.7,
+            opacityTo: 0.2,
+            stops: [0, 90, 100]
+        }
     },
     xaxis: {
-      type: 'datetime',
-      categories: [],
-      labels: {
-        show: true,
-        formatter: (value: string) => {
-          if (!value) return '';
-          const date = new Date(value);
-  
-          // Format time in AM/PM
-          return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours() % 12 || 12}:${date.getMinutes().toString().padStart(2, '0')} ${date.getHours() >= 12 ? 'PM' : 'AM'}`;
+        type: 'datetime',
+        labels: {
+            style: {
+                colors: '#8D8D8D',
+                fontSize: '12px',
+                fontFamily: 'Outfit, sans-serif'
+            }
         },
-        rotateAlways: false,
-        trim: true,
-      },
+        axisBorder: {
+            show: true
+        },
+        axisTicks: {
+            show: true
+        }
     },
     yaxis: {
-      labels: { 
-        show: true,
-        formatter: (val: number) => {
-          // Will be updated dynamically with unit
-          return `${val.toFixed(2)}`;
+        title: {
+            style: {
+                fontSize: '14px',
+                fontWeight: 500,
+                fontFamily: 'Outfit, sans-serif'
+            }
+        },
+        labels: {
+            style: {
+                colors: '#8D8D8D',
+                fontSize: '12px',
+                fontFamily: 'Outfit, sans-serif'
+            }
         }
-      },
-      axisBorder: { show: true, color: '#78909C' },
-      axisTicks: { show: true },
-      title: {
-        text: 'Measurement Value', // Will be updated dynamically
-        style: {
-          color: '#78909C',
-          fontSize: '12px',
-          fontWeight: 400,
-        }
-      },
-      min: (min: number) => min - (min * 0.1),
-      max: (max: number) => max + (max * 0.1),
-      forceNiceScale: true,
     },
-    tooltip: { 
-      shared: true, 
-      intersect: false,
-      x: {
-        format: 'MM/dd hh:mm A', // Use 12-hour format with AM/PM
-      },
-      y: {
-        formatter: (val: number) => {
-          // Will be updated dynamically with unit
-          return `${val.toFixed(2)}`;
+    tooltip: {
+        x: {
+            format: 'MM/dd HH:mm'
         }
-      }
-    },
-    legend: { show: false },
-  }
-  
+    }
+};
 
-  
 export const zentraoption2 = {
     chart: {
-      height: 230,
-      type: 'area',
-      offsetY: 12,
-      offsetX: -15,
-      toolbar: { show: false },
+        height: 230,
+        type: 'area',
+        offsetY: 12,
+        offsetX: -15,
+        toolbar: {
+            show: false
+        },
     },
-    dataLabels: { enabled: false },
+    dataLabels: {
+        enabled: false
+    },
     colors: ['#00E396', '#0090FF'],
     stroke: {
-      curve: 'straight',
-      width: 3,
+        curve: 'straight',
+        width: 3
     },
     grid: {
-      show: true,
-      strokeDashArray: 4,
-      position: 'back',
-      xaxis: { lines: { show: false } },
+        show: true,
+        strokeDashArray: 4,
+        position: 'back'
     },
     fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        inverseColors: false,
-        opacityFrom: 0.45,
-        opacityTo: 0.05,
-        stops: [0, 50, 100, 100],
-      },
+        type: 'gradient',
+        gradient: {
+            shadeIntensity: 1,
+            inverseColors: false,
+            opacityFrom: 0.45,
+            opacityTo: 0.05,
+            stops: [0, 50, 100, 100]
+        }
     },
     xaxis: {
-      categories: [],
-      labels: {
-        show: true,
-        formatter: function (val: any) {
-          if (!val) return ''
-          try {
-            const date = new Date(val)
-            const hour = date.getHours()
-            const suffix = hour < 12 ? 'AM' : 'PM'
-            return `${hour % 12 || 12}:00 ${suffix}`
-          } catch (error) {
-            console.error('Error formatting x-axis label:', error)
-            return val
-          }
+        categories: [],
+        labels: {
+            show: true,
+            formatter: function (val: any) {
+                if (!val) return ''
+                try {
+                    const date = new Date(val)
+                    const hour = date.getHours()
+                    const suffix = hour < 12 ? 'AM' : 'PM'
+                    return `${hour % 12 || 12}:00 ${suffix}`
+                } catch (error) {
+                    console.error('Error formatting x-axis label:', error)
+                    return val
+                }
+            },
         },
-      },
     },
     yaxis: {
-      labels: { show: true },
-      axisBorder: { show: false },
+        labels: {
+            show: true
+        },
+        axisBorder: {
+            show: false
+        }
     },
-    tooltip: { shared: true, intersect: false },
-    legend: { show: false },
-  }
+    tooltip: {
+        shared: true,
+        intersect: false
+    },
+    legend: {
+        show: false
+    }
+};
 
 export const chartOptions12 = {
     chart: {
-      height: 230,
-      type: 'area',
-      offsetY: 12,
-      offsetX: -15,
-      toolbar: { show: false },
+        height: 230,
+        type: 'area',
+        offsetY: 12,
+        offsetX: -15,
+        toolbar: {
+            show: false
+        },
     },
-    dataLabels: { enabled: false },
+    dataLabels: {
+        enabled: false
+    },
     colors: ['#00E396', '#0090FF'],
     stroke: {
-      curve: 'straight',
-      width: 3,
+        curve: 'straight',
+        width: 3
     },
     grid: {
-      show: true,
-      strokeDashArray: 4,
-      position: 'back',
-      xaxis: { lines: { show: false } },
+        show: true,
+        strokeDashArray: 4,
+        position: 'back'
     },
     fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        inverseColors: false,
-        opacityFrom: 0.45,
-        opacityTo: 0.05,
-        stops: [0, 50, 100, 100],
-      },
+        type: 'gradient',
+        gradient: {
+            shadeIntensity: 1,
+            inverseColors: false,
+            opacityFrom: 0.45,
+            opacityTo: 0.05,
+            stops: [0, 50, 100, 100]
+        }
     },
     xaxis: {
-      categories: [],
-      labels: {
-        show: true,
-        formatter: function (val: any) {
-          if (!val) return ''
-          try {
-            const date = new Date(val)
-            const hour = date.getHours()
-            const suffix = hour < 12 ? 'AM' : 'PM'
-            return `${hour % 12 || 12}:00 ${suffix}`
-          } catch (error) {
-            console.error('Error formatting x-axis label:', error)
-            return val
-          }
+        categories: [],
+        labels: {
+            show: true,
+            formatter: function (val: any) {
+                if (!val) return ''
+                try {
+                    const date = new Date(val)
+                    const hour = date.getHours()
+                    const suffix = hour < 12 ? 'AM' : 'PM'
+                    return `${hour % 12 || 12}:00 ${suffix}`
+                } catch (error) {
+                    console.error('Error formatting x-axis label:', error)
+                    return val
+                }
+            },
         },
-      },
     },
     yaxis: {
-      labels: { show: true },
-      axisBorder: { show: false },
+        labels: {
+            show: true
+        },
+        axisBorder: {
+            show: false
+        }
     },
-    tooltip: { shared: true, intersect: false },
-    legend: { show: false },
-  }
-  
+    tooltip: {
+        shared: true,
+        intersect: false
+    },
+    legend: {
+        show: false
+    }
+};
+
 export const chartOptions13 = {
     chart: {
         type: 'bar',
@@ -1916,18 +1906,16 @@ export const chartOptions13 = {
     responsive: [{
         breakpoint: 480,
         options: {
-
             legend: {
-                show: false,
+                show: false
             }
         }
-
     },
     {
         breakpoint: 1200,
         options: {
             chart: {
-                height: 200,
+                height: 200
             },
             series: [{
                 name: 'PRODUCT A',
@@ -1941,15 +1929,14 @@ export const chartOptions13 = {
             }, {
                 name: 'PRODUCT C',
                 data: [1, 2, 2, 1, 2, 2, 1]
-            },],
+            }]
         }
-
     },
     {
         breakpoint: 768,
         options: {
             chart: {
-                height: 345,
+                height: 345
             },
             series: [{
                 name: 'PRODUCT A',
@@ -1963,15 +1950,14 @@ export const chartOptions13 = {
             }, {
                 name: 'PRODUCT C',
                 data: [8.9, 8.9, 8.9, 8.9, 8.9, 8.9, 8.9]
-            },],
+            }]
         }
-
     },
     {
         breakpoint: 436,
         options: {
             chart: {
-                height: 345,
+                height: 345
             },
             series: [{
                 name: 'PRODUCT A',
@@ -1985,11 +1971,9 @@ export const chartOptions13 = {
             }, {
                 name: 'PRODUCT C',
                 data: [8.9, 8.9, 8.9, 8.9, 8.9]
-            },],
+            }]
         }
-
-    },],
-
+    }],
     colors: ['#C95E9E', '#D77748', secondary, primary],
     plotOptions: {
         bar: {
@@ -1998,10 +1982,10 @@ export const chartOptions13 = {
             columnWidth: '38%',
             dataLabels: {
                 total: {
-                    show: false,
+                    show: false
                 }
             }
-        },
+        }
     },
     grid: {
         show: true,
@@ -2011,7 +1995,7 @@ export const chartOptions13 = {
             lines: {
                 show: false
             }
-        },
+        }
     },
     xaxis: {
         categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Feb', 'Feb'],
@@ -2020,21 +2004,21 @@ export const chartOptions13 = {
             style: {
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 500,
-                colors: '#8D8D8D',
-            },
+                colors: '#8D8D8D'
+            }
         },
         axisBorder: {
             show: false
         },
         axisTicks: {
             show: false
-        },
+        }
     },
     legend: {
-        show: false,
+        show: false
     },
     dataLabels: {
-        enabled: false,
+        enabled: false
     },
     fill: {
         opacity: 1
@@ -2044,11 +2028,12 @@ export const chartOptions13 = {
             style: {
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 500,
-                colors: '#3D434A',
-            },
-        },
+                colors: '#3D434A'
+            }
+        }
     }
-}
+};
+
 export const chartOptions14 = {
     chart: {
         height: 315,
@@ -2067,7 +2052,7 @@ export const chartOptions14 = {
         strokeDashArray: 3,
     },
     dataLabels: {
-        enabled: false,
+        enabled: false
     },
     fill: {
         type: 'gradient',
@@ -2077,8 +2062,8 @@ export const chartOptions14 = {
             type: "vertical",
             opacityFrom: 1,
             opacityTo: 0,
-            stops: [0, 80, 100],
-        },
+            stops: [0, 80, 100]
+        }
     },
     markers: {
         discrete: [{
@@ -2109,18 +2094,18 @@ export const chartOptions14 = {
             strokeColor: '#fff',
             size: 5,
             shape: "circle"
-        },],
+        }]
     },
     plotOptions: {
         bar: {
             horizontal: false,
             borderRadius: 4,
-            columnWidth: '60%',
-        },
+            columnWidth: '60%'
+        }
     },
     colors: [primary, secondary],
     legend: {
-        show: false,
+        show: false
     },
     labels: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
     xaxis: {
@@ -2130,12 +2115,12 @@ export const chartOptions14 = {
             style: {
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 500,
-                colors: '#8D8D8D',
-            },
+                colors: '#8D8D8D'
+            }
         },
         axisBorder: {
             show: false
-        },
+        }
     },
     yaxis: {
         labels: {
@@ -2143,22 +2128,19 @@ export const chartOptions14 = {
             style: {
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 500,
-                colors: '#3D434A',
-            },
+                colors: '#3D434A'
+            }
+        }
+    }
+};
 
-            formatter: (value: string) => {
-                return `${value}%`;
-            },
-        },
-    },
-}
 export const chartOptions15 = {
     chart: {
         height: 355,
         type: "rangeBar",
         toolbar: {
-            show: false,
-        },
+            show: false
+        }
     },
     plotOptions: {
         bar: {
@@ -2166,9 +2148,9 @@ export const chartOptions15 = {
             distributed: true,
             barHeight: "40%",
             dataLabels: {
-                hideOverflowingLabels: false,
-            },
-        },
+                hideOverflowingLabels: false
+            }
+        }
     },
     dataLabels: {
         enabled: true,
@@ -2181,7 +2163,7 @@ export const chartOptions15 = {
         offsetY: 0,
         style: {
             fontSize: '16px',
-            fontFamily: 'Outfit, sans-serif',
+            fontFamily: 'Outfit, sans-serif'
         },
         background: {
             enabled: true,
@@ -2189,45 +2171,44 @@ export const chartOptions15 = {
             borderRadius: 12,
             borderWidth: 0,
             borderColor: "var(--white)",
-            opacity: 0,
-        },
+            opacity: 0
+        }
     },
     xaxis: {
         type: "datetime",
         position: "top",
         axisBorder: {
-            show: false,
+            show: false
         },
         axisTicks: {
-            show: false,
+            show: false
         },
         labels: {
             style: {
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 500,
-                colors: '#8D8D8D',
-            },
-        },
+                colors: '#8D8D8D'
+            }
+        }
     },
     yaxis: {
         labels: {
             style: {
                 fontFamily: 'Outfit, sans-serif',
                 fontWeight: 500,
-                colors: '#3D434A',
-            },
+                colors: '#3D434A'
+            }
         },
-
         tooltip: {
-            enabled: false,
-        },
+            enabled: false
+        }
     },
     grid: {
         show: false,
         row: {
             colors: ["#F4F7F9", "#fff"],
-            opacity: 1,
-        },
+            opacity: 1
+        }
     },
     responsive: [
         {
@@ -2235,31 +2216,33 @@ export const chartOptions15 = {
             options: {
                 yaxis: {
                     labels: {
-                        show: false,
-                    },
+                        show: false
+                    }
                 },
                 grid: {
                     padding: {
-                        left: -10,
-                    },
-                },
-            },
-        },
-    ],
+                        left: -10
+                    }
+                }
+            }
+        }
+    ]
 }
+
+
 export const chartOptions16 = {
     chart: {
         height: 350,
-        type: 'radialBar',
+        type: 'radialBar'
     },
     plotOptions: {
         radialBar: {
             dataLabels: {
                 name: {
-                    fontSize: '22px',
+                    fontSize: '22px'
                 },
                 value: {
-                    fontSize: '16px',
+                    fontSize: '16px'
                 },
                 total: {
                     show: true,
@@ -2276,7 +2259,7 @@ export const chartOptions16 = {
         breakpoint: 1640,
         options: {
             chart: {
-                height: 250,
+                height: 250
             },
             legend: {
                 show: false
@@ -2285,11 +2268,11 @@ export const chartOptions16 = {
                 radialBar: {
                     dataLabels: {
                         name: {
-                            offsetY: -1,
+                            offsetY: -1
                         },
                         value: {
-                            offsetY: 4,
-                        },
+                            offsetY: 4
+                        }
                     }
                 }
             }
@@ -2298,25 +2281,22 @@ export const chartOptions16 = {
         breakpoint: 1280,
         options: {
             chart: {
-                height: 220,
-            },
+                height: 220
+            }
         }
-    }
-        , {
+    }, {
         breakpoint: 1200,
         options: {
             chart: {
-                height: 320,
-            },
+                height: 320
+            }
         }
     }, {
         breakpoint: 992,
         options: {
             chart: {
-                height: 250,
-            },
+                height: 250
+            }
         }
-    }],
-    colors: [primary, secondary, '#d77748', '#c95e9e']
-
+    }]
 }
