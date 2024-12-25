@@ -8,59 +8,96 @@ from dateutil import parser
 import logging
 import time
 from django.conf import settings
+import os
+from logging.handlers import RotatingFileHandler
+import asyncio
+import concurrent.futures
 
 # Set up logging
+log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
+log_file = os.path.join(log_dir, 'fetcher.log')
+
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 logger = logging.getLogger(__name__)
+handler = RotatingFileHandler(
+    log_file,
+    maxBytes=10*1024*1024,  # 10MB
+    backupCount=5
+)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 
 class Command(BaseCommand):
     help = 'Fetches data from PAWS, Zentra, and Barani instruments and stores it in the database'
 
     def handle(self, *args, **kwargs):
-        self.fetch_paws_data()
-        self.fetch_zentra_data()
-        self.fetch_barani_data()
-        self.stdout.write(self.style.SUCCESS('Data fetching completed successfully'))
+        # Set Trinidad and Tobago timezone (UTC-4)
+        tt_tz = timezone.get_fixed_timezone(-240)
+        
+        # Calculate time range for the last hour
+        end_time = timezone.now().astimezone(tt_tz)
+        start_time = end_time.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
+        end_time = end_time.replace(minute=0, second=0, microsecond=0)
+
+        # Format times for different APIs
+        self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
+        self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Run fetchers concurrently
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            # Start all fetchers
+            paws_future = executor.submit(self.fetch_paws_data)
+            zentra_future = executor.submit(self.fetch_zentra_data)
+            barani_future = executor.submit(self.fetch_barani_data)
+
+            # Wait for all to complete
+            concurrent.futures.wait([paws_future, zentra_future, barani_future])
+
+    def get_stations_by_brand(self, brand_name):
+        """Get stations by brand name directly from database"""
+        return Station.objects.filter(brand__name=brand_name)
+
+    def get_sensor_map(self):
+        """Get sensor mapping directly from database"""
+        sensors = Sensor.objects.all()
+        return {sensor.type: sensor.id for sensor in sensors}
 
     def fetch_paws_data(self):
         """Fetch data from PAWS instruments"""
         self.stdout.write(self.style.SUCCESS('\n=== Starting PAWS Data Fetch ==='))
+        
+        # Get current time in TT timezone (UTC-4)
+        tt_tz = timezone.get_fixed_timezone(-240)  # -240 minutes = UTC-4
+        end_time = timezone.now().astimezone(tt_tz)
+        start_time = end_time - timedelta(hours=1)
+
+        # Format times for PAWS API
+        start = start_time.isoformat() + "Z"
+        end = end_time.isoformat() + "Z"
 
         portal_url = "http://3d-trinidad.icdp.ucar.edu"
         user_email = "jerome.ramirez@metoffice.gov.tt"
         api_key = "sVALwcRMyQmjtwYpDPW-"
-        start_datetime = "2024-12-04 0:00:00"
-        end_datetime = "2024-12-04 23:59:59"
 
-        start = parse_datetime(start_datetime).isoformat() + "Z"
-        end = parse_datetime(end_datetime).isoformat() + "Z"
-
-        # Fetch station IDs for the stations with brand_name "3D Paws"
-        station_response = requests.get("http://127.0.0.1:8000/stations/")
-        if station_response.status_code != 200:
-            logger.error("Error fetching PAWS stations: %s", station_response.content)
-            return
-
-        stations = station_response.json()
-        paws_stations = [station for station in stations if station['brand_name'] == "3D Paws"]
-
-        if not paws_stations:
+        # Get stations directly from database
+        paws_stations = self.get_stations_by_brand("3D Paws")
+        if not paws_stations.exists():
             logger.warning("No stations found for brand '3D Paws'.")
             return
 
-        # Fetch sensor IDs
-        sensor_response = requests.get("http://127.0.0.1:8000/sensors/")
-        if sensor_response.status_code != 200:
-            logger.error("Error fetching sensors: %s", sensor_response.content)
-            return
-
-        sensors = sensor_response.json()
-        sensor_map = {sensor['type']: sensor['id'] for sensor in sensors}
+        sensor_map = self.get_sensor_map()
 
         for station in paws_stations:
-            self.stdout.write(f"  Fetching data for station: {station['name']} (ID: {station['id']})")
-            raw_data = self.fetch_paws_station_data(portal_url, station['id'], start, end, user_email, api_key)
+            self.stdout.write(f"  Fetching data for station: {station.name} (ID: {station.id})")
+            self.stdout.write(f"  Time range: {start} to {end}")
+            
+            raw_data = self.fetch_paws_station_data(portal_url, station.id, start, end, user_email, api_key)
             if raw_data:
-                saved_data = self.process_paws_data(station['id'], raw_data, sensor_map)
+                saved_data = self.process_paws_data(station.id, raw_data, sensor_map)
                 self.stdout.write(self.style.SUCCESS(f"  Successfully processed {len(saved_data)} measurements"))
             else:
                 self.stdout.write(self.style.ERROR(f"  Failed to fetch data"))
@@ -71,46 +108,27 @@ class Command(BaseCommand):
         """Fetch data from Zentra instruments"""
         self.stdout.write(self.style.SUCCESS('\n=== Starting Zentra Data Fetch ==='))
 
-        # API Configuration
         BASE_URL = "https://zentracloud.com/api/v4/get_readings/"
         API_TOKEN = "3db9d133d878433b0c7f4a26adfa566426921e0e"
         
-        # Headers for API request
         headers = {"Authorization": f"Token {API_TOKEN}"}
 
-        # Time range configuration for specific date
-        current_date_start = datetime(2024, 12, 4).date()
-        current_date_end = datetime(2024, 12, 4).date()
+        # Use current time for the query
+        START_DATE = timezone.now() - timedelta(hours=1)
+        END_DATE = timezone.now()
 
-        START_DATE = datetime.combine(current_date_start, datetime.min.time())
-        END_DATE = datetime.combine(current_date_end, datetime.min.time()) + timedelta(hours=23, minutes=59)
-
-        # Get station info for Zentra brand
-        station_response = requests.get("http://127.0.0.1:8000/stations/")
-        if station_response.status_code != 200:
-            logger.error("Error fetching Zentra stations: %s", station_response.content)
-            return
-
-        stations = station_response.json()
-        zentra_stations = [station for station in stations if station['brand_name'] == "Zentra"]
-
-        if not zentra_stations:
+        # Get stations directly from database
+        zentra_stations = self.get_stations_by_brand("Zentra")
+        if not zentra_stations.exists():
             logger.warning("No stations found for brand 'Zentra'.")
             return
 
-        # Get sensor IDs
-        sensor_response = requests.get("http://127.0.0.1:8000/sensors/")
-        if sensor_response.status_code != 200:
-            logger.error("Error fetching sensors: %s", sensor_response.content)
-            return
-
-        sensors = sensor_response.json()
-        sensor_map = {sensor['type']: sensor['id'] for sensor in sensors}
+        sensor_map = self.get_sensor_map()
 
         for station in zentra_stations:
             # Parameters for the API request
             base_params = {
-                "device_sn": station['serial_number'],  # Use the station's serial number
+                "device_sn": station.serial_number,
                 "start_date": START_DATE.strftime("%Y-%m-%d %H:%M:%S"),
                 "end_date": END_DATE.strftime("%Y-%m-%d %H:%M:%S"),
                 "output_format": "json",
@@ -118,36 +136,49 @@ class Command(BaseCommand):
                 "sort_by": "asc"
             }
 
-            self.stdout.write(f"  Fetching data for station: {station['name']} (Device SN: {station['serial_number']})")
+            self.stdout.write(f"Time range: {base_params['start_date']} to {base_params['end_date']}")
             
             all_data = {'data': {}}
             page = 1
+            data_found = False
+
             while True:
                 params = {**base_params, 'page_num': page}
                 response = self.fetch_zentra_station_data(BASE_URL, headers, params)
                 
-                if not response or 'data' not in response:
+                if not response:
+                    self.stdout.write(self.style.ERROR("No response received from API"))
                     break
-                    
-                # Merge data from this page
+
+                if 'data' not in response:
+                    self.stdout.write(self.style.ERROR("No data field in response"))
+                    self.stdout.write(f"Response structure: {response.keys()}")
+                    break
+
+                if not response['data']:
+                    self.stdout.write(f"No data returned for page {page}")
+                    if page == 1:
+                        self.stdout.write("No measurements found in the specified time range")
+                    break
+
+                data_found = True
+                # Rest of the processing remains the same
                 for measurement_name, measurement_data in response['data'].items():
                     if measurement_name not in all_data['data']:
                         all_data['data'][measurement_name] = []
                     all_data['data'][measurement_name].extend(measurement_data)
                 
-                # Check if we got less than the requested number of items
                 total_readings = sum(len(data) for data in response['data'].values())
                 if total_readings < base_params['per_page']:
                     break
                     
                 page += 1
-                self.stdout.write(f"  Fetched page {page-1}")
 
-            if all_data['data']:
-                saved_data = self.process_zentra_data(station['id'], all_data, sensor_map)
-                self.stdout.write(self.style.SUCCESS(f"  Successfully processed {len(saved_data)} measurements"))
+            if data_found:
+                saved_data = self.process_zentra_data(station.id, all_data, sensor_map)
+                self.stdout.write(self.style.SUCCESS(f"Successfully processed {len(saved_data)} measurements"))
             else:
-                self.stdout.write(self.style.ERROR(f"  Failed to fetch data"))
+                self.stdout.write(self.style.WARNING("No data to process"))
 
         self.stdout.write(self.style.SUCCESS("=== Zentra Data Fetch Complete ===\n"))
 
@@ -159,17 +190,13 @@ class Command(BaseCommand):
         BASE_URL = "https://api.allmeteo.com/api/historical_data"
         TOKEN = "yaoX9GFMP9ZUvxFej6LADSeF2LpccfF+qvYCpiT+LxA="
         
-        # Headers for API request
         headers = {
             "Authorization": f"Bearer {TOKEN}"
         }
 
-        # Time range configuration for specific date
-        current_date_start = datetime(2024, 12, 4).date()
-        current_date_end = datetime(2024, 12, 4).date()
-
-        START_DATE = datetime.combine(current_date_start, datetime.min.time())
-        END_DATE = datetime.combine(current_date_end, datetime.min.time()) + timedelta(hours=23, minutes=59)
+        # Use the same time range as other fetchers
+        START_DATE = parse_datetime(self.start_datetime)
+        END_DATE = parse_datetime(self.end_datetime)
 
         # Convert to Unix timestamps
         params = {
@@ -177,35 +204,21 @@ class Command(BaseCommand):
             "to_time": int(END_DATE.timestamp())
         }
 
-        # Get station info for Allmeteo brand
-        station_response = requests.get("http://127.0.0.1:8000/stations/")
-        if station_response.status_code != 200:
-            logger.error("Error fetching Barani stations: %s", station_response.content)
-            return
-
-        stations = station_response.json()
-        barani_stations = [station for station in stations if station['brand_name'] == "Allmeteo"]
-
-        if not barani_stations:
+        # Get stations directly from database
+        barani_stations = self.get_stations_by_brand("Allmeteo")
+        if not barani_stations.exists():
             logger.warning("No stations found for brand 'Allmeteo'.")
             return
 
-        # Get sensor IDs
-        sensor_response = requests.get("http://127.0.0.1:8000/sensors/")
-        if sensor_response.status_code != 200:
-            logger.error("Error fetching sensors: %s", sensor_response.content)
-            return
-
-        sensors = sensor_response.json()
-        sensor_map = {sensor['type']: sensor['id'] for sensor in sensors}
+        sensor_map = self.get_sensor_map()
 
         for station in barani_stations:
             # Prepare request body with station's device ID
             form_data = {
-                "devices": (None, f'["{station["serial_number"]}"]')
+                "devices": (None, f'["{station.serial_number}"]')
             }
 
-            self.stdout.write(f"  Fetching data for station: {station['name']} (Device ID: {station['serial_number']})")
+            self.stdout.write(f"  Fetching data for station: {station.name} (Device ID: {station.serial_number})")
             
             try:
                 response = requests.post(
@@ -217,7 +230,7 @@ class Command(BaseCommand):
 
                 if response.status_code == 200:
                     data = response.json()
-                    saved_data = self.process_barani_data(station['id'], data, sensor_map)
+                    saved_data = self.process_barani_data(station.id, data, sensor_map)
                     self.stdout.write(self.style.SUCCESS(f"  Successfully processed {len(saved_data)} measurements"))
                 else:
                     self.stdout.write(self.style.ERROR(f"  Failed to fetch data. Status code: {response.status_code}"))
@@ -283,6 +296,9 @@ class Command(BaseCommand):
         """Process and save PAWS data"""
         processed_data = []
         
+        self.stdout.write("Raw PAWS response:")
+        self.stdout.write(str(raw_data)[:1000])  # First 1000 chars
+        
         if isinstance(raw_data, dict):
             features = raw_data.get("features", [])
             
@@ -291,44 +307,36 @@ class Command(BaseCommand):
                 
                 if "data" in properties:
                     data_entries = properties["data"]
-                    measurements_by_hour = {}
-
-                    # Group measurements by the nearest rounded hour
-                    for entry in data_entries:
-                        timestamp = entry["time"]
-                        rounded_timestamp = self.round_to_nearest_hour(timestamp)
+                    
+                    # Get the latest entry
+                    if data_entries:
+                        latest_entry = data_entries[0]  # Assuming data is sorted newest first
+                        measurements = latest_entry["measurements"]
+                        timestamp = latest_entry["time"]
                         
-                        if rounded_timestamp not in measurements_by_hour:
-                            measurements_by_hour[rounded_timestamp] = []
-                        measurements_by_hour[rounded_timestamp].append(entry)
-
-                    # For each rounded hour, find and save the closest measurement
-                    for rounded_hour, entries in measurements_by_hour.items():
-                        closest_entry = self.get_closest_measurement(entries, rounded_hour)
-                        if closest_entry:
-                            measurements = closest_entry["measurements"]
-                            is_test = closest_entry["test"] == "false"
-                            for key, value in measurements.items():
-                                sensor_id = sensor_map.get(key)
-                                if sensor_id:
+                        # Convert timestamp to TT timezone
+                        tt_tz = timezone.get_fixed_timezone(-240)
+                        entry_time = parser.parse(timestamp).astimezone(tt_tz)
+                        
+                        for key, value in measurements.items():
+                            sensor_id = sensor_map.get(key)
+                            if sensor_id:
+                                try:
                                     Measurement.objects.create(
                                         station_id=station_id,
                                         sensor_id=sensor_id,
-                                        date=rounded_hour.date(),
-                                        time=rounded_hour.time(),
+                                        date=entry_time.date(),
+                                        time=entry_time.time(),
                                         value=value,
                                         status="successful",
                                         note="Data has been gathered",
-                                        created_at=datetime.now()
+                                        created_at=timezone.now()
                                     )
-                                    processed_data.append(f"Saved PAWS measurement for station {station_id} at {rounded_hour}")
-                else:
-                    logger.warning("No 'data' field in PAWS properties")
-            else:
-                logger.warning("No features found in PAWS raw data")
-        else:
-            logger.warning("PAWS raw data is not a dictionary: %s", raw_data)
-
+                                    self.stdout.write(f"Saved {key} reading: {value} at {entry_time}")
+                                    processed_data.append(f"Saved PAWS measurement for station {station_id} at {entry_time}")
+                                except Exception as e:
+                                    logger.error(f"Error saving measurement: {e}")
+                                    
         return processed_data
 
     def process_zentra_data(self, station_id, response, sensor_map):
@@ -424,13 +432,15 @@ class Command(BaseCommand):
         return closest_entry
 
     def parse_datetime(self, datetime_str):
-        """Parse datetime string to timezone-aware datetime object"""
+        """Parse datetime string to Trinidad and Tobago timezone (UTC-4)"""
+        tt_tz = timezone.get_fixed_timezone(-240)
+        
         if isinstance(datetime_str, str):
             try:
                 parsed_datetime = parser.parse(datetime_str)
                 if parsed_datetime.tzinfo is None:
-                    parsed_datetime = timezone.make_aware(parsed_datetime, timezone.utc)
-                return parsed_datetime
+                    parsed_datetime = timezone.make_aware(parsed_datetime, tt_tz)
+                return parsed_datetime.astimezone(tt_tz)
             except ValueError:
                 logger.warning("Invalid datetime format: %s", datetime_str)
                 return None
@@ -440,7 +450,7 @@ class Command(BaseCommand):
                     logger.warning("Invalid Unix timestamp value: %s", datetime_str)
                     return None
                 timestamp = datetime.utcfromtimestamp(datetime_str)
-                return timezone.make_aware(timestamp, timezone.utc)
+                return timezone.make_aware(timestamp, tt_tz)
             except (ValueError, OSError) as e:
                 logger.warning("Invalid Unix timestamp value: %s (%s)", datetime_str, e)
                 return None
