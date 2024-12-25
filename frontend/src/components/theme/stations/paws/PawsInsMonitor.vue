@@ -18,23 +18,20 @@
                             <td valign="top" colspan="6" class="dataTables_empty">{{ connectionStatus }}</td>
                         </tr>
                     </tbody>
-                    <tbody>
+                    <tbody v-else>
                         <tr v-for="(item, index) in latestData" :key="index">
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="d-flex align-items-center">  
-                                            <h6>{{ item.name }}</h6>
+                                        <h6>{{ item.name }}</h6>
+                                        <i class="status-dot" :class="{ 'online': item.status === 'successful', 'offline': item.status !== 'successful' }"></i>
                                     </div>
                                 </div>
                             </td>
                             <td>{{ item.id }}</td>
                             <td>{{ formatDate(item.lastUpdated) }}</td>
                             <td>{{ formatTime(item.lastUpdated) }}</td>
-                            <td>
-
-                                {{ item.status }}
-                     
-                            </td>
+                            <td>{{ item.status }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -44,7 +41,7 @@
 </template>
   
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, watch, defineProps } from 'vue'
+import { ref, defineAsyncComponent, onMounted, watch, defineProps, onBeforeUnmount } from 'vue'
 import axios from 'axios';
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
@@ -60,8 +57,17 @@ const latestData = ref<any[]>([])
 const connectionStatus = ref<string>('Unsuccessful')
 const monitorTitle = ref<string>('3DPaws Monitor')
 
+// Cleanup function to clear data
+const clearData = () => {
+    latestData.value = [];
+    connectionStatus.value = 'Unsuccessful';
+};
+
 const fetchData = async () => {
     try {
+        // Clear previous data before fetching
+        clearData();
+
         // First request - get station details
         const stationResponse = await axios.get(`http://127.0.0.1:8000/stations/${props.selectedStation}/`);
         if (!stationResponse.data || stationResponse.status !== 200) {
@@ -74,9 +80,6 @@ const fetchData = async () => {
         if (!measurementsResponse.data || measurementsResponse.status !== 200) {
             throw new Error(`Measurements request failed with status ${measurementsResponse.status}`);
         }
-
-        console.log('Station Response:', stationResponse.data);
-        console.log('Measurements Response:', measurementsResponse.data);
 
         if (measurementsResponse.data.length > 0) {
             const latestMeasurement = measurementsResponse.data.sort((a: any, b: any) => {
@@ -102,9 +105,19 @@ const fetchData = async () => {
     }
 };
 
-watch(() => props.selectedStation, fetchData);
+// Single watcher for selectedStation
+watch(() => props.selectedStation, (newVal) => {
+    if (newVal) {
+        fetchData();
+    } else {
+        clearData();
+    }
+}, { immediate: true });
 
-onMounted(fetchData);
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+    clearData();
+});
 
 const formatDate = (timestamp: string) => {
     try {
@@ -136,3 +149,24 @@ const formatTime = (timestamp: string) => {
     }
 };
 </script>
+
+<style scoped>
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    border-radius: 50%;
+    margin-left: 8px;
+    flex: none;
+}
+
+.online {
+    background-color: #51bb25;
+}
+
+.offline {
+    background-color: #dc3545;
+}
+</style>

@@ -58,7 +58,7 @@
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps } from 'vue';
 import axios from 'axios';
-import { pawsOptions1 } from '@/core/data/chart';
+import { zentraOptions1 } from '@/core/data/chart';
 
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
@@ -113,32 +113,32 @@ const currentSensorUnit = computed(() => {
 
 // Chart options
 const chartOptions = computed(() => ({
-  ...pawsOptions1,
+  ...zentraOptions1,
   yaxis: {
-    ...pawsOptions1.yaxis,
+    ...zentraOptions1.yaxis,
     title: {
-      ...pawsOptions1.yaxis.title,
+      ...zentraOptions1.yaxis.title,
       text: `${currentSensorName.value} (${currentSensorUnit.value})`,
       style: {
-        ...pawsOptions1.yaxis.title.style,
+        ...zentraOptions1.yaxis.title.style,
         fontSize: '14px',
         fontWeight: 500
       }
     },
     labels: {
-      ...pawsOptions1.yaxis.labels,
+      ...zentraOptions1.yaxis.labels,
       formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
     }
   },
   xaxis: {
-    ...pawsOptions1.xaxis,
+    ...zentraOptions1.xaxis,
     labels: {
-      ...pawsOptions1.xaxis.labels,
+      ...zentraOptions1.xaxis.labels,
       formatter: (val: string) => formatTimestamp(val)
     }
   },
   tooltip: {
-    ...pawsOptions1.tooltip,
+    ...zentraOptions1.tooltip,
     y: {
       formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
     }

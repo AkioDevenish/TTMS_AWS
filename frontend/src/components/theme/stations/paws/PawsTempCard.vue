@@ -2,7 +2,7 @@
     <div>
         <div class="row g-2">
             <!-- Loop through transformed data and display cards for each measurement -->
-            <div class="col-xl-6 col-lg-12 box-col-12" v-for="(item, index) in localPawsData" :key="index">
+            <div class="col-xl-6 col-lg-12 box-col-12 proorder-md-3" v-for="(item, index) in localPawsData" :key="index">
                 <Card1 :cardbodyClass="item.cardclass">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
@@ -135,6 +135,7 @@ const calculateValueChange = (measurements: any[], sensorType: string) => {
 
 // Enhanced sensor configuration with thresholds
 const sensorConfig: Record<string, { name: string; unit: string; threshold: number }> = {
+    // PAWS sensors
     'bp1': { name: 'BMX280 Pressure', unit: 'hPa', threshold: 0.5 },
     'bt1': { name: 'BMX280 Temperature', unit: '°C', threshold: 0.1 },
     'mt1': { name: 'MCP9808 Temperature', unit: '°C', threshold: 0.1 },

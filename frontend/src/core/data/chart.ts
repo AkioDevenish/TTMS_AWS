@@ -1750,6 +1750,257 @@ export const pawsOptions1 = {
     }
 };
 
+export const baraniOptions1 = {
+    chart: {
+        height: 330,
+        type: 'area',
+        toolbar: {
+            show: true,
+            tools: {
+                download: true,
+                selection: true,
+                zoom: true,
+                zoomin: true,
+                zoomout: true,
+                pan: true,
+                reset: true
+            }
+        },
+        zoom: {
+            enabled: true
+        }
+    },
+    dataLabels: {
+        enabled: false
+    },
+    stroke: {
+        curve: 'smooth',
+        width: 2
+    },
+    grid: {
+        strokeDashArray: 0,
+        position: 'back',
+        xaxis: {
+            lines: {
+                show: true
+            }
+        }
+    },
+    fill: {
+        type: 'gradient',
+        gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.7,
+            opacityTo: 0.9,
+            stops: [0, 90, 100]
+        }
+    },
+    colors: ['#7366ff'],
+    xaxis: {
+        type: 'datetime',
+        labels: {
+            style: {
+                fontFamily: 'Rubik, sans-serif'
+            }
+        },
+        tooltip: {
+            enabled: false
+        }
+    },
+    yaxis: {
+        labels: {
+            style: {
+                fontFamily: 'Rubik, sans-serif'
+            }
+        },
+        title: {
+            text: '',
+            style: {
+                fontFamily: 'Rubik, sans-serif',
+                color: '#8C8C8C'
+            }
+        }
+    },
+    tooltip: {
+        x: {
+            format: 'MM/dd HH:mm'
+        },
+        fixed: {
+            enabled: false
+        },
+        style: {
+            fontSize: '12px',
+            fontFamily: 'Rubik, sans-serif'
+        }
+    },
+    legend: {
+        show: true,
+        position: 'top',
+        horizontalAlign: 'left',
+        fontFamily: 'Rubik, sans-serif'
+    }
+};
+
+export const baraniOption2 = {
+    chart: {
+        height: 230,
+        type: 'area',
+        offsetY: 12,
+        offsetX: -15,
+        toolbar: {
+            show: false
+        },
+    },
+    dataLabels: {
+        enabled: false
+    },
+    colors: ['#00E396', '#0090FF'],
+    stroke: {
+        curve: 'straight',
+        width: 3
+    },
+    grid: {
+        show: true,
+        strokeDashArray: 4,
+        position: 'back'
+    },
+    fill: {
+        type: 'gradient',
+        gradient: {
+            shadeIntensity: 1,
+            inverseColors: false,
+            opacityFrom: 0.45,
+            opacityTo: 0.05,
+            stops: [0, 50, 100, 100]
+        }
+    },
+    xaxis: {
+        categories: [],
+        labels: {
+            show: true,
+            formatter: function (val: any) {
+                if (!val) return ''
+                try {
+                    const date = new Date(val)
+                    const hour = date.getHours()
+                    const suffix = hour < 12 ? 'AM' : 'PM'
+                    return `${hour % 12 || 12}:00 ${suffix}`
+                } catch (error) {
+                    console.error('Error formatting x-axis label:', error)
+                    return val
+                }
+            },
+        },
+    },
+    yaxis: {
+        labels: {
+            show: true
+        },
+        axisBorder: {
+            show: false
+        }
+    },
+    tooltip: {
+        shared: true,
+        intersect: false
+    },
+    legend: {
+        show: false
+    }
+}; 
+
+export const zentraOptions1 = {
+    chart: {
+      height: 330,
+      type: 'area',
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: true,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true
+        }
+      },
+      zoom: {
+        enabled: true
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 2
+    },
+    grid: {
+      strokeDashArray: 0,
+      position: 'back',
+      xaxis: {
+        lines: {
+          show: true
+        }
+      }
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.9,
+        stops: [0, 90, 100]
+      }
+    },
+    colors: ['#7366ff'],
+    xaxis: {
+      type: 'datetime',
+      labels: {
+        style: {
+          fontFamily: 'Rubik, sans-serif'
+        }
+      },
+      tooltip: {
+        enabled: false
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          fontFamily: 'Rubik, sans-serif'
+        }
+      },
+      title: {
+        text: '',
+        style: {
+          fontFamily: 'Rubik, sans-serif',
+          color: '#8C8C8C'
+        }
+      }
+    },
+    tooltip: {
+      x: {
+        format: 'MM/dd HH:mm'
+      },
+      fixed: {
+        enabled: false
+      },
+      style: {
+        fontSize: '12px',
+        fontFamily: 'Rubik, sans-serif'
+      }
+    },
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'left',
+      fontFamily: 'Rubik, sans-serif'
+    }
+  }; 
+
+
 export const zentraoption2 = {
     chart: {
         height: 230,

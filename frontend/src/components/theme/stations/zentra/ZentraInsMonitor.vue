@@ -1,78 +1,172 @@
 <template>
-    <Card1 colClass="col-xl-12 col-md-12 proorder-md-1" headerTitle="true" title="Zentra Monitor "
+    <Card1 colClass="col-xl-12 col-md-12 proorder-md-1" headerTitle="true" :title="monitorTitle"
         cardhaderClass="card-no-border pb-0" cardbodyClass="pt-0 assignments-table px-0">
         <div class="table-responsive theme-scrollbar">
             <div id="recent-order_wrapper" class="dataTables_wrapper no-footer">
-           
                 <table class="table display dataTable" id="assignments-table" style="width:100%">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>ID</th>
-                            <th>Last Updated</th>
+                            <th>Date</th>
                             <th>Time</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody v-if="!get_rows().length">
+                    <tbody v-if="!latestData.length">
                         <tr class="odd">
-                            <td valign="top" colspan="6" class="dataTables_empty">No matching records found</td>
+                            <td valign="top" colspan="6" class="dataTables_empty">{{ connectionStatus }}</td>
                         </tr>
                     </tbody>
-                    <tbody>
-                        <tr v-for="(item, index) in get_rows()" :key="index">
+                    <tbody v-else>
+                        <tr v-for="(item, index) in latestData" :key="index">
                             <td>
                                 <div class="d-flex align-items-center">
-                                <div class="d-flex align-items-center"><router-link to="/dashboards/dashboard_education">
-                                            <h6>{{ item.name }}</h6>
-                                        </router-link></div>
-                                    <div class="active-status active-online"></div>
+                                    <div class="d-flex align-items-center">  
+                                        <h6>{{ item.name }}</h6>
+                                        <i class="status-dot" :class="{ 'online': item.status === 'successful', 'offline': item.status !== 'successful' }"></i>
+                                    </div>
                                 </div>
                             </td>
-                        
                             <td>{{ item.id }}</td>
-                            <td>{{ item.date }}</td>
-                            <td>{{ item.time }}</td>
+                            <td>{{ formatDate(item.lastUpdated) }}</td>
+                            <td>{{ formatTime(item.lastUpdated) }}</td>
                             <td>{{ item.status }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-      
     </Card1>
 </template>
+
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, watch } from 'vue'
-import { zentramonitor } from "@/core/data/dashboards"
+import { ref, defineAsyncComponent, onMounted, watch, defineProps, onBeforeUnmount } from 'vue'
+import axios from 'axios';
+
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-let elementsPerPage = ref<number>(4)
-let currentPage = ref<number>(1)
-let allData = ref<any>([])
 
-function get_rows() {
-    var start = (currentPage.value - 1) * elementsPerPage.value;
-    var end = start + elementsPerPage.value;
-    return allData.value.slice(start, end);
-}
-function num_pages() {
-    return Math.ceil(allData.value.length / elementsPerPage.value);
-}
-function change_page(page: number) {
-    currentPage.value = page;
-}
-function change() {
-    if (currentPage.value < Math.ceil(allData.value.length / elementsPerPage.value)) {
-        currentPage.value++;
+const props = defineProps({
+    selectedStation: {
+        type: Number,
+        required: true
     }
-}
-function prev() {
-    if (currentPage.value > 1) {
-        currentPage.value--;
-    }
-}
+});
 
-onMounted(() => {
-    allData.value = zentramonitor;
-})
+const latestData = ref<any[]>([])
+const connectionStatus = ref<string>('Unsuccessful')
+const monitorTitle = ref<string>('Zentra Monitor')
+
+// Cleanup function to clear data
+const clearData = () => {
+    latestData.value = [];
+    connectionStatus.value = 'Unsuccessful';
+};
+
+const fetchData = async () => {
+    try {
+        // Clear previous data before fetching
+        clearData();
+
+        // First request - get station details
+        const stationResponse = await axios.get(`http://127.0.0.1:8000/stations/${props.selectedStation}/`);
+        if (!stationResponse.data || stationResponse.status !== 200) {
+            throw new Error(`Station request failed with status ${stationResponse.status}`);
+        }
+        const stationName = stationResponse.data.name;
+
+        // Second request - get measurements
+        const measurementsResponse = await axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${props.selectedStation}`);
+        if (!measurementsResponse.data || measurementsResponse.status !== 200) {
+            throw new Error(`Measurements request failed with status ${measurementsResponse.status}`);
+        }
+
+        if (measurementsResponse.data.length > 0) {
+            const latestMeasurement = measurementsResponse.data.sort((a: any, b: any) => {
+                const dateA = new Date(`${b.date}T${b.time}`);
+                const dateB = new Date(`${a.date}T${a.time}`);
+                return dateA.getTime() - dateB.getTime();
+            })[0];
+
+            latestData.value = [{
+                id: props.selectedStation,
+                name: stationName,
+                status: latestMeasurement.status,
+                lastUpdated: `${latestMeasurement.date}T${latestMeasurement.time}`,
+            }];
+
+            connectionStatus.value = 'Successful';
+        } else {
+            connectionStatus.value = 'No measurements found';
+        }
+    } catch (error: any) {
+        console.error('Error details:', error.response?.data || error.message);
+        connectionStatus.value = `Error: ${error.response?.status || 'Network error'}`;
+    }
+};
+
+// Single watcher for selectedStation
+watch(() => props.selectedStation, (newVal) => {
+    if (newVal) {
+        fetchData();
+    } else {
+        clearData();
+    }
+}, { immediate: true });
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+    clearData();
+});
+
+const formatDate = (timestamp: string) => {
+    try {
+        if (!timestamp || typeof timestamp !== 'string') return 'Invalid Date';
+        const date = new Date(timestamp);
+        if (isNaN(date.getTime())) return 'Invalid Date';
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    } catch {
+        return 'Invalid Date';
+    }
+};
+
+const formatTime = (timestamp: string) => {
+    try {
+        const date = new Date(timestamp);
+        if (isNaN(date.getTime())) return 'Invalid Time';
+        return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+    } catch {
+        return 'Invalid Time';
+    }
+};
 </script>
+
+<style scoped>
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    min-height: 8px;
+    border-radius: 50%;
+    margin-left: 8px;
+    flex: none;
+}
+
+.online {
+    background-color: #51bb25;
+}
+
+.offline {
+    background-color: #dc3545;
+}
+</style>
