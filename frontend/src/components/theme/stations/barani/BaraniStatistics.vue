@@ -24,12 +24,8 @@
           aria-labelledby="measurementDropdown"
         >
           <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wind_ave10')">Wind Speed (Average)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wind_max10')">Wind Speed (Max)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wind_min10')">Wind Speed (Min)</a>
           <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('dir_ave10')">Wind Direction (Average)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('dir_max10')">Wind Direction (Max)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('dir_hi10')">Wind Direction (High)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('dir_lo10')">Wind Direction (Low)</a>
+          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('battery')">Battery</a>
         </div>
       </div>
     </div>
@@ -58,6 +54,7 @@ import { baraniOptions1 } from '@/core/data/chart';
 
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
+
 const props = defineProps({
   selectedStation: {
     type: Number,
@@ -71,6 +68,7 @@ const stationInfo = ref<any>(null);
 
 // Mapping of sensor types to display names and units
 const sensorConfig: Record<string, { name: string; unit: string }> = {
+  'battery': { name: 'Battery', unit: 'V' },
   'wind_ave10': { name: 'Wind Speed (Average)', unit: 'm/s' },
   'wind_max10': { name: 'Wind Speed (Max)', unit: 'm/s' },
   'wind_min10': { name: 'Wind Speed (Min)', unit: 'm/s' },

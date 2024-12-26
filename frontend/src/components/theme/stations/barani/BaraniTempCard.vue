@@ -118,7 +118,9 @@ const sensorConfig: Record<string, { name: string; unit: string; threshold: numb
     'dir_ave10': { name: 'Wind Direction (Average)', unit: '°', threshold: 5 },
     'dir_max10': { name: 'Wind Direction (Max)', unit: '°', threshold: 5 },
     'dir_hi10': { name: 'Wind Direction (High)', unit: '°', threshold: 5 },
-    'dir_lo10': { name: 'Wind Direction (Low)', unit: '°', threshold: 5 }
+    'dir_lo10': { name: 'Wind Direction (Low)', unit: '°', threshold: 5 },
+    'battery': { name: 'Battery', unit: 'V', threshold: 5 }
+
 };
 
 // Optimized data fetching with better error handling
@@ -190,7 +192,10 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
             fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                            changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
             total: Math.abs(value).toFixed(1),
-            month: new Date(`${latest.date}T${latest.time}`).toLocaleTimeString('en-US', {
+            month: new Date(`${latest.date}T${latest.time}`).toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true

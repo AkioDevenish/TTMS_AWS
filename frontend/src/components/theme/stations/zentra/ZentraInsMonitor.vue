@@ -24,7 +24,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="d-flex align-items-center">  
                                         <h6>{{ item.name }}</h6>
-                                        <i class="status-dot" :class="{ 'online': item.status === 'successful', 'offline': item.status !== 'successful' }"></i>
+                                        <i class="status-dot" :class="{ 'online': item.status === 'Successful', 'offline': item.status !== 'Successful' }"></i>
                                     </div>
                                 </div>
                             </td>
@@ -65,17 +65,15 @@ const clearData = () => {
 
 const fetchData = async () => {
     try {
-        // Clear previous data before fetching
         clearData();
-
-        // First request - get station details
+        
         const stationResponse = await axios.get(`http://127.0.0.1:8000/stations/${props.selectedStation}/`);
         if (!stationResponse.data || stationResponse.status !== 200) {
             throw new Error(`Station request failed with status ${stationResponse.status}`);
         }
         const stationName = stationResponse.data.name;
+        const serialNumber = stationResponse.data.serial_number;
 
-        // Second request - get measurements
         const measurementsResponse = await axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${props.selectedStation}`);
         if (!measurementsResponse.data || measurementsResponse.status !== 200) {
             throw new Error(`Measurements request failed with status ${measurementsResponse.status}`);
@@ -89,12 +87,11 @@ const fetchData = async () => {
             })[0];
 
             latestData.value = [{
-                id: props.selectedStation,
+                id: serialNumber,
                 name: stationName,
                 status: latestMeasurement.status,
                 lastUpdated: `${latestMeasurement.date}T${latestMeasurement.time}`,
             }];
-
             connectionStatus.value = 'Successful';
         } else {
             connectionStatus.value = 'No measurements found';

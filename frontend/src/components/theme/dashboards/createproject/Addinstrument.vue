@@ -4,8 +4,9 @@
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label>AWS Name</label>
-                    <input class="form-control" type="text" :class="inputClasses.name" placeholder="Enter Device Name"
+                    <label>AWS Name <span class="txt-danger">*</span></label>
+                    <input class="form-control" type="text" :class="inputClasses.name" 
+                        placeholder="Enter AWS device name (min. 5 characters)"
                         v-model="name" @input="validated('name')">
                 </div>
             </div>
@@ -14,9 +15,10 @@
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label>Device Code</label> <!-- Changed label to Device Code -->
+                    <label>Device Code <span class="txt-danger">*</span></label>
                     <input class="form-control" v-model="deviceCode" @input="validated('deviceCode')" 
-                        :class="inputClasses.deviceCode" type="text" placeholder="Enter Device Code">
+                        :class="inputClasses.deviceCode" type="text" 
+                        placeholder="Enter unique device identification code">
                 </div>
             </div>
         </div>
@@ -24,9 +26,10 @@
         <!-- Brand, Lat/Lng, and Device Location fields -->
         <div class="row">
             <div class="col-sm-4">
-                <label>Brand</label>
-                <select class="form-select" v-model="brandId" @change="validated('brandId')">
-                    <option value="0" disabled>Select a Brand</option> <!-- Default value -->
+                <label>Brand <span class="txt-danger">*</span></label>
+                <select class="form-select" v-model="brandId" @change="validated('brandId')"
+                    :class="inputClasses.brandId">
+                    <option value="0" disabled>Select device brand</option>
                     <option v-for="brand in brands" :key="brand.id" :value="brand.id">
                         {{ brand.name }}
                     </option>
@@ -34,13 +37,15 @@
             </div>
             <div class="col-sm-4">
                 <div class="mb-3">
-                    <label>Lat/Lng</label>
-                    <input class="form-control" type="text" v-model="latLng" placeholder="Enter Lat/Lng (optional)">
+                    <label>Lat/Lng <span class="f-light">(Optional)</span></label>
+                    <input class="form-control" type="text" v-model="latLng" 
+                        placeholder="e.g., 12.3456, -78.9012">
                 </div>
             </div>
             <div class="col-sm-4">
-                <label>Device Location</label>
-                <input class="form-control" type="text" v-model="address" placeholder="Enter Device Location">
+                <label>Device Location <span class="f-light">(Optional)</span></label>
+                <input class="form-control" type="text" v-model="address" 
+                    placeholder="Enter physical location">
             </div>
         </div>
 
@@ -48,16 +53,22 @@
         <div class="row">
             <div class="col-sm-4">
                 <div class="mb-3">
-                    <label>Installation Date</label>
-                    <datepicker class="datepicker-here form-control" v-model="installationDate" :format="format" />
+                    <label>Installation Date <span class="txt-danger">*</span></label>
+                    <datepicker class="datepicker-here form-control" 
+                        v-model="installationDate" 
+                        :format="format"
+                        placeholder="Select installation date" />
                 </div>
             </div>
         </div>
 
-        <!-- Buttons to submit the form or cancel -->
+        <!-- Status Message and Buttons -->
         <div class="row">
             <div class="col">
                 <div class="text-end">
+                    <div v-if="statusMessage" :class="['status-message', statusType]">
+                        {{ statusMessage }}
+                    </div>
                     <a class="btn btn-success me-3" @click="add">Add</a>
                     <a class="btn btn-danger" @click="cancel">Cancel</a>
                 </div>
@@ -83,6 +94,8 @@ const latLng = ref<string>('');
 const brandId = ref<number>(0);
 const installationDate = ref<Date | null>(null);
 const brands = ref<Array<{ id: number, name: string }>>([]);
+const statusMessage = ref<string>('');
+const statusType = ref<string>('');
 
 // Input validation
 const inputClasses = ref({
@@ -190,8 +203,11 @@ async function add() {
         console.log('Success Response:', response.data);
 
         if (response.status === 201) {
-            alert('Device added successfully!');
-            router.push('/project/project_list');
+            statusMessage.value = 'Device added successfully!';
+            statusType.value = 'success';
+            setTimeout(() => {
+                router.push('/dashboard/Main_Dashboard');
+            }, 2000);
         }
     } catch (error: any) {
         console.error('Full error:', error);
@@ -216,7 +232,8 @@ async function add() {
             }
         }
         
-        alert('Error adding device:\n' + errorMessage);
+        statusMessage.value = 'Error adding device: ' + errorMessage;
+        statusType.value = 'error';
     }
 }
 
@@ -231,3 +248,32 @@ onMounted(() => {
     fetchBrands();
 });
 </script>
+
+<style scoped>
+.datepicker-here {
+    border: none ;
+    background: none ;
+    padding: 0.375rem 0.75rem;
+    width: 100%;
+}
+
+.status-message {
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+}
+
+.error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+</style>

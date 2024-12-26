@@ -184,7 +184,10 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
             fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                                changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
             total: Math.abs(value).toFixed(1),
-            month: new Date(`${latest.date}T${latest.time}`).toLocaleTimeString('en-US', {
+            month: new Date(`${latest.date}T${latest.time}`).toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true

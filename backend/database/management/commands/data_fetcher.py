@@ -27,7 +27,7 @@ handler = RotatingFileHandler(
     backupCount=5
 )
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
+handler.setFormatter(formatter)   
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
@@ -38,10 +38,9 @@ class Command(BaseCommand):
         # Set Trinidad and Tobago timezone (UTC-4)
         tt_tz = timezone.get_fixed_timezone(-240)
         
-        # Calculate time range for the last hour
+        # Calculate time range from 12 hours ago to now
         end_time = timezone.now().astimezone(tt_tz)
-        start_time = end_time.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
-        end_time = end_time.replace(minute=0, second=0, microsecond=0)
+        start_time = end_time - timedelta(hours=12)
 
         # Format times for different APIs
         self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -70,14 +69,13 @@ class Command(BaseCommand):
         """Fetch data from PAWS instruments"""
         self.stdout.write(self.style.SUCCESS('\n=== Starting PAWS Data Fetch ==='))
         
-        # Get current time in TT timezone (UTC-4)
-        tt_tz = timezone.get_fixed_timezone(-240)  # -240 minutes = UTC-4
-        end_time = timezone.now().astimezone(tt_tz)
-        start_time = end_time - timedelta(hours=1)
-
-        # Format times for PAWS API
-        start = start_time.isoformat() + "Z"
-        end = end_time.isoformat() + "Z"
+        # Use the same time range as defined in handle method
+        START_DATE = parse_datetime(self.start_datetime)
+        END_DATE = parse_datetime(self.end_datetime)
+        
+        # Format times for PAWS API without timezone adjustment
+        start = START_DATE.isoformat()
+        end = END_DATE.isoformat()
 
         portal_url = "http://3d-trinidad.icdp.ucar.edu"
         user_email = "jerome.ramirez@metoffice.gov.tt"
@@ -94,6 +92,10 @@ class Command(BaseCommand):
         for station in paws_stations:
             self.stdout.write(f"  Fetching data for station: {station.name} (ID: {station.id})")
             self.stdout.write(f"  Time range: {start} to {end}")
+            
+            # Add debug logging for time range
+            self.stdout.write(f"  Start time: {START_DATE}")
+            self.stdout.write(f"  End time: {END_DATE}")
             
             raw_data = self.fetch_paws_station_data(portal_url, station.id, start, end, user_email, api_key)
             if raw_data:
@@ -113,9 +115,9 @@ class Command(BaseCommand):
         
         headers = {"Authorization": f"Token {API_TOKEN}"}
 
-        # Use current time for the query
-        START_DATE = timezone.now() - timedelta(hours=1)
-        END_DATE = timezone.now()
+        # Use the same time range as defined in handle method
+        START_DATE = parse_datetime(self.start_datetime)
+        END_DATE = parse_datetime(self.end_datetime)
 
         # Get stations directly from database
         zentra_stations = self.get_stations_by_brand("Zentra")
@@ -247,7 +249,23 @@ class Command(BaseCommand):
         try:
             response = requests.get(url, verify=False)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            
+            # Add debug logging
+            if isinstance(data, dict) and 'features' in data:
+                features = data.get('features', [])
+                if features and 'properties' in features[0]:
+                    properties = features[0].get('properties', {})
+                    if 'data' in properties:
+                        data_entries = properties['data']
+                        self.stdout.write(f"Number of raw data entries: {len(data_entries)}")
+                        # Log a few sample entries
+                        for i, entry in enumerate(data_entries[:3]):
+                            self.stdout.write(f"Sample entry {i + 1}: {entry}")
+                            if 'measurements' in entry:
+                                self.stdout.write(f"Number of measurements in entry: {len(entry['measurements'])}")
+            
+            return data
         except requests.exceptions.RequestException as e:
             logger.error("Error fetching data for PAWS station %s: %s", station_id, e)
             return None
@@ -295,48 +313,71 @@ class Command(BaseCommand):
     def process_paws_data(self, station_id, raw_data, sensor_map):
         """Process and save PAWS data"""
         processed_data = []
-        
-        self.stdout.write("Raw PAWS response:")
-        self.stdout.write(str(raw_data)[:1000])  # First 1000 chars
+        measurements_by_hour = {}
         
         if isinstance(raw_data, dict):
             features = raw_data.get("features", [])
+            self.stdout.write(f"Number of features: {len(features)}")
             
             if features:
                 properties = features[0].get("properties", {})
+                data_entries = properties.get("data", [])
+                self.stdout.write(f"Number of data entries: {len(data_entries)}")
                 
-                if "data" in properties:
-                    data_entries = properties["data"]
+                # First, collect all measurements for each hour
+                for entry in data_entries:
+                    measurements = entry.get("measurements", {})
+                    timestamp = entry.get("time")
                     
-                    # Get the latest entry
-                    if data_entries:
-                        latest_entry = data_entries[0]  # Assuming data is sorted newest first
-                        measurements = latest_entry["measurements"]
-                        timestamp = latest_entry["time"]
+                    if timestamp and measurements:
+                        # Parse timestamp without timezone adjustment
+                        entry_time = parser.parse(timestamp)
+                        rounded_hour = self.round_to_nearest_hour(entry_time.isoformat())
                         
-                        # Convert timestamp to TT timezone
-                        tt_tz = timezone.get_fixed_timezone(-240)
-                        entry_time = parser.parse(timestamp).astimezone(tt_tz)
+                        if rounded_hour not in measurements_by_hour:
+                            measurements_by_hour[rounded_hour] = {}
                         
-                        for key, value in measurements.items():
-                            sensor_id = sensor_map.get(key)
-                            if sensor_id:
-                                try:
-                                    Measurement.objects.create(
-                                        station_id=station_id,
-                                        sensor_id=sensor_id,
-                                        date=entry_time.date(),
-                                        time=entry_time.time(),
-                                        value=value,
-                                        status="successful",
-                                        note="Data has been gathered",
-                                        created_at=timezone.now()
-                                    )
-                                    self.stdout.write(f"Saved {key} reading: {value} at {entry_time}")
-                                    processed_data.append(f"Saved PAWS measurement for station {station_id} at {entry_time}")
-                                except Exception as e:
-                                    logger.error(f"Error saving measurement: {e}")
-                                    
+                        for sensor_type, value in measurements.items():
+                            if sensor_type not in measurements_by_hour[rounded_hour]:
+                                measurements_by_hour[rounded_hour][sensor_type] = []
+                            
+                            measurements_by_hour[rounded_hour][sensor_type].append({
+                                'timestamp': entry_time,
+                                'value': value
+                            })
+                
+                # Now process and save measurements for each hour
+                for rounded_hour in measurements_by_hour:
+                    for sensor_type, readings in measurements_by_hour[rounded_hour].items():
+                        sensor_id = sensor_map.get(sensor_type)
+                        if sensor_id:
+                            # Get the reading closest to the rounded hour
+                            closest_reading = min(readings, 
+                                key=lambda x: abs(x['timestamp'] - rounded_hour))
+                            
+                            try:
+                                Measurement.objects.create(
+                                    station_id=station_id,
+                                    sensor_id=sensor_id,
+                                    date=rounded_hour.date(),
+                                    time=rounded_hour.time(),
+                                    value=closest_reading['value'],
+                                    status="Successful",
+                                    note="Data Acquired",
+                                    created_at=timezone.now()
+                                )
+                                processed_data.append(
+                                    f"Saved PAWS measurement for station {station_id} "
+                                    f"sensor {sensor_type} at {rounded_hour}"
+                                )
+                                self.stdout.write(
+                                    f"Saved measurement: {sensor_type} = {closest_reading['value']} "
+                                    f"at {rounded_hour}"
+                                )
+                            except Exception as e:
+                                logger.error(f"Error saving measurement: {e}")
+                                self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
+        
         return processed_data
 
     def process_zentra_data(self, station_id, response, sensor_map):
@@ -391,8 +432,8 @@ class Command(BaseCommand):
                             date=rounded_hour.date(),
                             time=rounded_hour.time(),
                             value=closest_reading['value'],
-                            status="successful",
-                            note="Data has been gathered",
+                            status="Successful",
+                            note="Data Aquired",
                             created_at=datetime.now()
                         )
                         processed_data.append(f"Saved Zentra measurement for station {station_id} at {rounded_hour}")
@@ -526,8 +567,8 @@ class Command(BaseCommand):
                                     date=rounded_hour.date(),
                                     time=rounded_hour.time(),
                                     value=closest_reading['value'],
-                                    status="successful",
-                                    note="Data has been gathered",
+                                    status="Successful",
+                                    note="Data Aquired",
                                     created_at=datetime.now()
                                 )
                                 processed_data.append(f"Saved Barani measurement for station {station_id} at {rounded_hour}")
