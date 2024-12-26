@@ -250,12 +250,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.datepicker-here {
-    border: none ;
-    background: none ;
-    padding: 0.375rem 0.75rem;
-    width: 100%;
-}
+
 
 .status-message {
     margin-bottom: 1rem;
