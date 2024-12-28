@@ -64,7 +64,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps } from 'vue';
+import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps, onUnmounted } from 'vue';
 import axios from 'axios';
 import { zentraOptions1 } from '@/core/data/chart';
 
@@ -160,6 +160,35 @@ const chartOptions = computed(() => ({
   }
 }));
 
+// Add helper function for datetime handling
+const getDateTime = (date: string, time: string): number => {
+    return new Date(`${date}T${time}`).getTime()
+}
+
+// Add function to filter last 2 days of data
+const filterLastTwoDaysData = (measurements: any[]) => {
+    if (!measurements.length) return []
+    
+    // Sort measurements by date and time (newest first)
+    const sortedMeasurements = measurements.sort((a, b) => {
+        const dateA = getDateTime(a.date, a.time)
+        const dateB = getDateTime(b.date, b.time)
+        return dateB - dateA
+    })
+
+    // Get the latest timestamp
+    const latestTime = getDateTime(sortedMeasurements[0].date, sortedMeasurements[0].time)
+    
+    // Calculate timestamp for 2 days ago
+    const twoDaysAgo = latestTime - (2 * 24 * 60 * 60 * 1000)
+
+    // Filter measurements within the last 2 days
+    return sortedMeasurements.filter(measurement => {
+        const measurementTime = getDateTime(measurement.date, measurement.time)
+        return measurementTime >= twoDaysAgo
+    })
+}
+
 // Fetch all required data
 const fetchData = async () => {
   try {
@@ -179,35 +208,29 @@ const fetchData = async () => {
     const measurementsResponse = await axios.get('http://127.0.0.1:8000/measurements/');
     console.log('All measurements:', measurementsResponse.data);
     
-    // Filter measurements for current station and selected sensor type
-    const filteredData = measurementsResponse.data.filter((measurement: any) => 
-      measurement.station_name === currentStation.name && 
-      measurement.sensor_type === selectedSensorType.value
+    // Filter for current station and sensor type
+    const stationMeasurements = measurementsResponse.data.filter((measurement: any) => 
+        measurement.station_name === currentStation.name && 
+        measurement.sensor_type === selectedSensorType.value
     );
 
-    console.log('Filtered measurements:', filteredData);
+    // Get last 2 days of data
+    const recentMeasurements = filterLastTwoDaysData(stationMeasurements);
 
-    if (filteredData.length === 0) {
-      console.log('No measurements found for selected sensor type:', selectedSensorType.value);
-      chartData.value = [];
-      return;
+    if (recentMeasurements.length === 0) {
+        console.log('No recent measurements found')
+        chartData.value = []
+        return
     }
-
-    // Sort data by date and time
-    const sortedData = filteredData.sort((a: any, b: any) => {
-      const dateA = new Date(`${a.date}T${a.time}`);
-      const dateB = new Date(`${b.date}T${b.time}`);
-      return dateA.getTime() - dateB.getTime();
-    });
 
     // Transform data for the chart
     chartData.value = [{
-      name: currentSensorName.value,
-      data: sortedData.map((item: any) => ({
-        x: new Date(`${item.date}T${item.time}`).getTime(),
-        y: parseFloat(item.value)
-      }))
-    }];
+        name: currentSensorName.value,
+        data: recentMeasurements.map((item: any) => ({
+            x: getDateTime(item.date, item.time),
+            y: parseFloat(item.value)
+        }))
+    }]
 
     console.log('Chart data updated:', chartData.value);
   } catch (error) {
@@ -231,10 +254,21 @@ watch(() => props.selectedStation, () => {
   fetchData();
 });
 
-// Initial data load
+// Add auto-refresh interval
+let refreshInterval: number | undefined
+
 onMounted(() => {
-  fetchData();
-});
+    fetchData()
+    // Refresh data every minute
+    refreshInterval = setInterval(fetchData, 60000)
+})
+
+// Clean up interval on component unmount
+onUnmounted(() => {
+    if (refreshInterval) {
+        clearInterval(refreshInterval)
+    }
+})
 </script>
 
 <style scoped>

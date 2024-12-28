@@ -247,27 +247,74 @@ class Command(BaseCommand):
         """Fetch data for a specific PAWS station"""
         url = f"{portal_url}/api/v1/data/{station_id}?start={start}&end={end}&email={user_email}&api_key={api_key}"
         try:
-            response = requests.get(url, verify=False)
-            response.raise_for_status()
-            data = response.json()
+            max_retries = 3
+            retry_delay = 5  # seconds
             
-            # Add debug logging
-            if isinstance(data, dict) and 'features' in data:
-                features = data.get('features', [])
-                if features and 'properties' in features[0]:
-                    properties = features[0].get('properties', {})
-                    if 'data' in properties:
-                        data_entries = properties['data']
-                        self.stdout.write(f"Number of raw data entries: {len(data_entries)}")
-                        # Log a few sample entries
-                        for i, entry in enumerate(data_entries[:3]):
-                            self.stdout.write(f"Sample entry {i + 1}: {entry}")
-                            if 'measurements' in entry:
-                                self.stdout.write(f"Number of measurements in entry: {len(entry['measurements'])}")
+            for attempt in range(max_retries):
+                try:
+                    response = requests.get(url, verify=False, timeout=30)
+                    
+                    if response.status_code == 403:
+                        logger.error(
+                            f"Authentication failed for PAWS station {station_id}. "
+                            f"Status: {response.status_code}, "
+                            f"Response: {response.text[:200]}"  # Log first 200 chars of response
+                        )
+                        # Try to get historical data from database instead
+                        historical_data = self.get_historical_data(station_id, start, end)
+                        if historical_data:
+                            logger.info(f"Using historical data for station {station_id}")
+                            return historical_data
+                        return None
+                        
+                    response.raise_for_status()
+                    data = response.json()
+                    
+                    if not isinstance(data, dict) or 'features' not in data:
+                        logger.error(f"Invalid data structure received for station {station_id}")
+                        return None
+                    
+                    return data
+                    
+                except requests.exceptions.RequestException as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+                    else:
+                        raise
+                        
+        except Exception as e:
+            logger.error(f"Error fetching data for PAWS station {station_id}: {str(e)}")
+            return None
+
+    def get_historical_data(self, station_id, start, end):
+        """Get historical data from database when API fails"""
+        try:
+            from database.models import Measurement
             
-            return data
-        except requests.exceptions.RequestException as e:
-            logger.error("Error fetching data for PAWS station %s: %s", station_id, e)
+            measurements = Measurement.objects.filter(
+                station_id=station_id,
+                date__gte=start.split('T')[0],
+                date__lte=end.split('T')[0]
+            ).order_by('date', 'time')
+            
+            if measurements.exists():
+                # Format data to match API response structure
+                return {
+                    'features': [{
+                        'properties': {
+                            'data': [{
+                                'time': f"{m.date}T{m.time}",
+                                'measurements': {
+                                    m.sensor.type: m.value
+                                }
+                            } for m in measurements]
+                        }
+                    }]
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting historical data: {e}")
             return None
 
     def fetch_zentra_station_data(self, base_url, headers, params, max_retries=5, initial_delay=60):

@@ -56,7 +56,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps } from 'vue';
+import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps, onUnmounted } from 'vue';
 import axios from 'axios';
 import { zentraOptions1 } from '@/core/data/chart';
 
@@ -145,13 +145,20 @@ const chartOptions = computed(() => ({
   }
 }));
 
-// Fetch all required data
+// Declare fetchData function before using it in watchers
 const fetchData = async () => {
   try {
-    console.log('Fetching data for station:', props.selectedStation);
-    
-    // Get station info
-    const stationResponse = await axios.get('http://127.0.0.1:8000/stations/');
+    if (!props.selectedStation) {
+      console.log('No station selected');
+      return;
+    }
+
+    // Get station info and measurements in parallel
+    const [stationResponse, measurementsResponse] = await Promise.all([
+      axios.get('http://127.0.0.1:8000/stations/'),
+      axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${props.selectedStation}`)
+    ]);
+
     const currentStation = stationResponse.data.find((station: any) => station.id === props.selectedStation);
     if (!currentStation) {
       console.log('Station not found');
@@ -160,13 +167,14 @@ const fetchData = async () => {
     stationInfo.value = currentStation;
     console.log('Station info:', currentStation);
 
-    // Get measurements
-    const measurementsResponse = await axios.get('http://127.0.0.1:8000/measurements/');
-    console.log('All measurements:', measurementsResponse.data);
-    
-    // Filter measurements for current station and selected sensor type
+    if (!measurementsResponse.data || measurementsResponse.data.length === 0) {
+      console.log('No measurements found for station');
+      chartData.value = [];
+      return;
+    }
+
+    // Filter measurements for selected sensor type only
     const filteredData = measurementsResponse.data.filter((measurement: any) => 
-      measurement.station_name === currentStation.name && 
       measurement.sensor_type === selectedSensorType.value
     );
 
@@ -178,7 +186,7 @@ const fetchData = async () => {
       return;
     }
 
-    // Sort data by date and time
+    // Sort and transform data for the chart
     const sortedData = filteredData.sort((a: any, b: any) => {
       const dateA = new Date(`${a.date}T${a.time}`);
       const dateB = new Date(`${b.date}T${b.time}`);
@@ -208,17 +216,28 @@ const fetchData = async () => {
 // Handler for measurement selection
 const selectMeasurement = async (sensorType: string) => {
   selectedSensorType.value = sensorType;
-  await fetchData(); // Fetch new data for the selected sensor type
+  await fetchData();
 };
 
-// Watch for changes to station only, not sensor type
-watch(() => props.selectedStation, () => {
-  fetchData();
+// Single watcher for station changes with immediate option
+watch(() => props.selectedStation, (newStation) => {
+  console.log('Station changed in PawsStatistics:', newStation);
+  if (newStation) {
+    fetchData();
+  }
+}, { immediate: true });
+
+// Add auto-refresh interval
+let refreshInterval: number | undefined;
+
+onMounted(() => {
+  refreshInterval = setInterval(fetchData, 60000);
 });
 
-// Initial data load
-onMounted(() => {
-  fetchData();
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
 });
 </script>
 
