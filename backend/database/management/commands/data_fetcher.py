@@ -73,9 +73,9 @@ class Command(BaseCommand):
         START_DATE = parse_datetime(self.start_datetime)
         END_DATE = parse_datetime(self.end_datetime)
         
-        # Format times for PAWS API without timezone adjustment
-        start = START_DATE.isoformat()
-        end = END_DATE.isoformat()
+        # Format times for PAWS API
+        start = START_DATE.strftime("%Y-%m-%dT%H:%M:%S")
+        end = END_DATE.strftime("%Y-%m-%dT%H:%M:%S")
 
         portal_url = "http://3d-trinidad.icdp.ucar.edu"
         user_email = "jerome.ramirez@metoffice.gov.tt"
@@ -90,19 +90,28 @@ class Command(BaseCommand):
         sensor_map = self.get_sensor_map()
 
         for station in paws_stations:
-            self.stdout.write(f"  Fetching data for station: {station.name} (ID: {station.id})")
-            self.stdout.write(f"  Time range: {start} to {end}")
+            self.stdout.write(f"Fetching data for PAWS station: {station.name} (Serial: {station.serial_number})")
             
-            # Add debug logging for time range
-            self.stdout.write(f"  Start time: {START_DATE}")
-            self.stdout.write(f"  End time: {END_DATE}")
-            
-            raw_data = self.fetch_paws_station_data(portal_url, station.id, start, end, user_email, api_key)
-            if raw_data:
-                saved_data = self.process_paws_data(station.id, raw_data, sensor_map)
-                self.stdout.write(self.style.SUCCESS(f"  Successfully processed {len(saved_data)} measurements"))
+            # Use fetch_paws_station_data instead of direct API call
+            data = self.fetch_paws_station_data(
+                portal_url=portal_url,
+                station_id=station.serial_number,  # Use serial_number instead of ID
+                start=start,
+                end=end,
+                user_email=user_email,
+                api_key=api_key
+            )
+
+            if data:
+                try:
+                    saved_data = self.process_paws_data(station.id, data, sensor_map)
+                    self.stdout.write(self.style.SUCCESS(
+                        f"Successfully processed data for station {station.name}"
+                    ))
+                except Exception as e:
+                    logger.error(f"Error processing data for station {station.name}: {str(e)}")
             else:
-                self.stdout.write(self.style.ERROR(f"  Failed to fetch data"))
+                logger.warning(f"No data received for station {station.name}")
 
         self.stdout.write(self.style.SUCCESS("=== PAWS Data Fetch Complete ===\n"))
 
@@ -128,9 +137,14 @@ class Command(BaseCommand):
         sensor_map = self.get_sensor_map()
 
         for station in zentra_stations:
+            self.stdout.write(f"Fetching data for Zentra station: {station.name} (Serial: {station.serial_number})")
+            if not station.serial_number:
+                logger.warning(f"No serial number for station {station.name}")
+                continue
+
             # Parameters for the API request
             base_params = {
-                "device_sn": station.serial_number,
+                "device_sn": station.serial_number.strip(),  # Ensure clean serial number
                 "start_date": START_DATE.strftime("%Y-%m-%d %H:%M:%S"),
                 "end_date": END_DATE.strftime("%Y-%m-%d %H:%M:%S"),
                 "output_format": "json",
@@ -188,7 +202,6 @@ class Command(BaseCommand):
         """Fetch data from Barani instruments"""
         self.stdout.write(self.style.SUCCESS('\n=== Starting Barani Data Fetch ==='))
 
-        # API Configuration
         BASE_URL = "https://api.allmeteo.com/api/historical_data"
         TOKEN = "yaoX9GFMP9ZUvxFej6LADSeF2LpccfF+qvYCpiT+LxA="
         
@@ -215,12 +228,16 @@ class Command(BaseCommand):
         sensor_map = self.get_sensor_map()
 
         for station in barani_stations:
+            if not station.serial_number:
+                logger.warning(f"No serial number for station {station.name}")
+                continue
+
             # Prepare request body with station's device ID
             form_data = {
-                "devices": (None, f'["{station.serial_number}"]')
+                "devices": (None, f'["{station.serial_number.strip()}"]')  # Ensure clean serial number
             }
 
-            self.stdout.write(f"  Fetching data for station: {station.name} (Device ID: {station.serial_number})")
+            self.stdout.write(f"Fetching data for Barani station: {station.name} (Serial: {station.serial_number})")
             
             try:
                 response = requests.post(

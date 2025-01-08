@@ -163,6 +163,20 @@ const formatDate = (date: Date | null): string => {
     return `${year}-${month}-${day}`;
 };
 
+// Add this function before the add() function
+const getBrandRoute = (brandId: number): string => {
+  // Map brand IDs to their respective routes
+  const brandRoutes: { [key: number]: string } = {
+    1: '/stations/AWS_Barani',
+    2: '/stations/AWS_3D_Paws',
+    3: '/stations/AWS_Sutron',
+    4: '/stations/AWS_OTT_Hyrdomet',
+    5: '/stations/AWS_Zentra'
+  };
+  
+  return brandRoutes[brandId] || '/stations';
+};
+
 // Add method to submit form data
 async function add() {
     try {
@@ -206,7 +220,7 @@ async function add() {
             statusMessage.value = 'Device added successfully!';
             statusType.value = 'success';
             setTimeout(() => {
-                router.push('/dashboard/Main_Dashboard');
+                router.push('/pages/users_management');
             }, 2000);
         }
     } catch (error: any) {

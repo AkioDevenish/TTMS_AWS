@@ -1,35 +1,38 @@
 <template>
     <div class="row">
-        <div class="col-sm-4">
-        <label>Password</label>
-            <input class="form-control" type="Password" placeholder="Password">
-        </div>   
         <div class="col-sm-12">
             <div class="mb-3">
                 <label>Package</label>
-                <select class="form-select">
-                    <option>Weekly</option>
-                    <option>Monthly</option>
-                    <option>Yearly</option>
+                <select 
+                    class="form-select"
+                    v-model="selectedPackage"
+                    :class="inputClasses.package"
+                    @change="emitPackageSelection">
+                    <option value="">Select Package</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Yearly">Yearly</option>
                 </select>
+                <div class="invalid-feedback" v-if="!selectedPackage">
+                    Please select a package
+                </div>
             </div>
         </div>   
-   
     </div>
 </template>
+
 <script lang="ts" setup>
-import { ref } from 'vue'
-const date = ref<Date | null>(null);
-const date1 = ref<Date | null>(null);
-const format = (date: Date | null): string => {
-    if (date === null) {
-        return '';
-    }
+import { ref, reactive } from 'vue'
 
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
+const selectedPackage = ref('')
+const inputClasses = reactive({
+    package: ''
+})
 
-    return ` ${day}/${month}/${year}`;
-};
+const emitPackageSelection = () => {
+    inputClasses.package = selectedPackage.value ? 'is-valid' : 'is-invalid'
+    emit('package-selected', selectedPackage.value)
+}
+
+const emit = defineEmits(['package-selected'])
 </script>

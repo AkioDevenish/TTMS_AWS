@@ -21,9 +21,21 @@
     <div class="row">
       <template v-if="selectedStation">
         <div class="row">
-          <ZentraInsMonitor :selectedStation="selectedStation" />
-          <ZentraStatistics :selectedStation="selectedStation" />
-          <ZentraTempCard :selectedStation="selectedStation" />
+          <ZentraInsMonitor 
+            :selectedStation="selectedStation"
+            :measurements="zentraData.measurements?.value || []"
+            :stationInfo="zentraData.stationInfo?.value || {}"
+          />
+          <ZentraStatistics 
+            :selectedStation="selectedStation"
+            :measurements="zentraData.getLast24HoursMeasurements?.value || []"
+            :stationInfo="zentraData.stationInfo?.value || {}"
+          />
+          <ZentraTempCard 
+            :selectedStation="selectedStation"
+            :measurements="zentraData.measurements?.value || []"
+            :stationInfo="zentraData.stationInfo?.value || {}"
+          />
         </div>
       </template>
       <template v-else>
@@ -36,11 +48,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { useStationData } from '@/composables/useStationData';
 
-// Define the type for a station
 interface Station {
   id: number;
   name: string;
@@ -51,8 +63,10 @@ const ZentraInsMonitor = defineAsyncComponent(() => import("@/components/theme/s
 const ZentraStatistics = defineAsyncComponent(() => import("@/components/theme/stations/zentra/ZentraStatistics.vue"));
 const ZentraTempCard = defineAsyncComponent(() => import("@/components/theme/stations/zentra/ZentraTempCard.vue"));
 
-const stationNames = ref<Station[]>([]); // Explicitly define the type as an array of Station
-const selectedStation = ref<number>(0); // Default to 0 instead of null
+const stationNames = ref<Station[]>([]);
+const selectedStation = ref<number>(0);
+
+const zentraData = useStationData();
 
 const fetchStationNames = async () => {
   try {
@@ -67,6 +81,12 @@ const fetchStationNames = async () => {
     console.error('Error fetching station names:', error);
   }
 };
+
+watch(() => selectedStation.value, async (newVal) => {
+  if (newVal) {
+    await zentraData.fetchStationData(newVal);
+  }
+}, { immediate: true });
 
 onMounted(fetchStationNames);
 </script>

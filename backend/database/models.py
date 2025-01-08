@@ -138,6 +138,8 @@ class SystemLog(models.Model):
 
 class User(models.Model):
     name = models.CharField(max_length=255)
+    organization = models.TextField(null=True)
+    package = models.CharField(max_length=50, null=True)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     role = models.CharField(max_length=50)

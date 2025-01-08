@@ -27,8 +27,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, defineAsyncComponent, watch, defineProps } from 'vue';
-import axios from 'axios';
+import { ref, defineAsyncComponent, watch, defineProps } from 'vue';
+import { useStationData } from '@/composables/useStationData';
 import { getImages } from "@/composables/common/getImages";
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
@@ -58,6 +58,13 @@ const props = defineProps({
     }
 });
 
+const { 
+    measurements,
+    stationInfo,
+    fetchStationData,
+    formatDateTime
+} = useStationData();
+
 const localPawsData = ref<CardData[]>([]);
 const sensors = ref([]);
 
@@ -78,61 +85,6 @@ const sortMeasurementsByDate = (a: any, b: any): number => {
     return dateTimeB - dateTimeA;
 };
 
-// Optimized value change calculation
-const calculateValueChange = (measurements: any[], sensorType: string) => {
-    if (!measurements?.length || measurements.length < 2) {
-        return { 
-            change: '0',
-            trend: 'stable',
-            rateOfChange: '0',
-            timeDiff: '2.0'
-        };
-    }
-
-    // Sort measurements by date and time
-    const sortedMeasurements = measurements.sort(sortMeasurementsByDate);
-    const latest = sortedMeasurements[0];
-    const latestTime = getDateTime(latest.date, latest.time);
-    
-    // Find measurement closest to 2 hours ago
-    const twoHoursAgo = latestTime - (2 * 60 * 60 * 1000); // 2 hours in milliseconds
-    let previous = sortedMeasurements[1]; // Default to second measurement
-    
-    for (let i = 1; i < sortedMeasurements.length; i++) {
-        const measurement = sortedMeasurements[i];
-        const measurementTime = getDateTime(measurement.date, measurement.time);
-        if (measurementTime <= twoHoursAgo) {
-            previous = measurement;
-            break;
-        }
-    }
-
-    const latestValue = parseFloat(latest.value);
-    const previousValue = parseFloat(previous.value);
-    const change = latestValue - previousValue;
-
-    // Use predefined thresholds from sensor config
-    const threshold = sensorConfig[sensorType]?.threshold || 0.1;
-    const trend = Math.abs(change) < threshold ? 'stable' : 
-                 change > 0 ? 'increasing' : 'decreasing';
-
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`${sensorType} calculations:`, {
-            latest: { value: latestValue, date: latest.date, time: latest.time },
-            previous: { value: previousValue, date: previous.date, time: previous.time },
-            change,
-            trend
-        });
-    }
-
-    return {
-        change: change.toFixed(1),
-        rateOfChange: (change / 2).toFixed(1),
-        trend,
-        timeDiff: '2.0'
-    };
-};
-
 // Enhanced sensor configuration with thresholds
 const sensorConfig: Record<string, { name: string; unit: string; threshold: number }> = {
     // PAWS sensors
@@ -149,11 +101,54 @@ const sensorConfig: Record<string, { name: string; unit: string; threshold: numb
     'css': { name: 'Cell Signal Strength', unit: '%', threshold: 1 }
 };
 
-// Optimized measurements transformation
+// Optimized value change calculation
+const calculateValueChange = (measurements: any[], sensorType: string) => {
+    if (!measurements?.length || measurements.length < 2) {
+        return { 
+            change: '0',
+            trend: 'stable',
+            rateOfChange: '0',
+            timeDiff: '2.0'
+        };
+    }
+
+    const sortedMeasurements = measurements.sort(sortMeasurementsByDate);
+    const latest = sortedMeasurements[0];
+    const latestTime = getDateTime(latest.date, latest.time);
+    
+    // Find measurement closest to 2 hours ago
+    const twoHoursAgo = latestTime - (2 * 60 * 60 * 1000);
+    let previous = sortedMeasurements[1];
+    
+    for (let i = 1; i < sortedMeasurements.length; i++) {
+        const measurement = sortedMeasurements[i];
+        const measurementTime = getDateTime(measurement.date, measurement.time);
+        if (measurementTime <= twoHoursAgo) {
+            previous = measurement;
+            break;
+        }
+    }
+
+    const latestValue = parseFloat(latest.value);
+    const previousValue = parseFloat(previous.value);
+    const change = latestValue - previousValue;
+
+    const threshold = sensorConfig[sensorType]?.threshold || 0.1;
+    const trend = Math.abs(change) < threshold ? 'stable' : 
+                 change > 0 ? 'increasing' : 'decreasing';
+
+    return {
+        change: change.toFixed(1),
+        rateOfChange: (change / 2).toFixed(1),
+        trend,
+        timeDiff: '2.0'
+    };
+};
+
+// Transform measurements into card data
 const transformMeasurements = (measurements: any[]): CardData[] => {
     if (!measurements?.length) return [];
 
-    // Group measurements by sensor type in a single pass
     const measurementsByType = new Map<string, any[]>();
     for (const measurement of measurements) {
         const type = measurement.sensor_type;
@@ -163,79 +158,55 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
         measurementsByType.get(type)!.push(measurement);
     }
 
-    // Transform grouped measurements
-    return Array.from(measurementsByType.entries()).map(([sensorType, sensorMeasurements]) => {
-        const config = sensorConfig[sensorType];
-        if (!config) return null;
+    return Array.from(measurementsByType.entries())
+        .map(([sensorType, sensorMeasurements]) => {
+            const config = sensorConfig[sensorType];
+            if (!config) return null;
 
-        const changes = calculateValueChange(sensorMeasurements, sensorType);
-        const latest = sensorMeasurements.sort(sortMeasurementsByDate)[0];
-        const value = parseFloat(latest.value);
+            const changes = calculateValueChange(sensorMeasurements, sensorType);
+            const latest = sensorMeasurements.sort(sortMeasurementsByDate)[0];
+            const value = parseFloat(latest.value);
 
-        return {
-            number: `${value.toFixed(1)} ${config.unit}`,
-            text: config.name,
-            iconclass: `bg-light-${changes.trend === 'increasing' ? 'success' : 
-                                   changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
-            icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
-                         changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
-            img: 'dashboard-4/icon/student.png',
-            cardclass: "student",
-            fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
-                               changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
-            total: Math.abs(value).toFixed(1),
-            month: new Date(`${latest.date}T${latest.time}`).toLocaleString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            }),
-            timestamp: `${latest.date}T${latest.time}`,
-            change: changes.change,
-            rateOfChange: `${changes.rateOfChange}${config.unit}`,
-            timeDiff: changes.timeDiff,
-            trend: changes.trend,
-            unit: config.unit
-        };
-    }).filter(Boolean) as CardData[];
-};
-
-// Optimized data fetching with better error handling
-const fetchData = async () => {
-    if (!props.selectedStation) return;
-
-    try {
-        if (process.env.NODE_ENV === 'development') {
-            console.log('Fetching data for station:', props.selectedStation);
-        }
-
-        const [sensorsResponse, measurementsResponse] = await Promise.all([
-            axios.get('http://127.0.0.1:8000/sensors/'),
-            axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${props.selectedStation}`)
-        ]);
-
-        sensors.value = sensorsResponse.data;
-        localPawsData.value = transformMeasurements(measurementsResponse.data);
-    } catch (error: any) {
-        console.error('Error fetching data:', {
-            message: error.message,
-            status: error.response?.status,
-            data: error.response?.data
-        });
-        localPawsData.value = [];
-    }
+            return {
+                number: `${value.toFixed(1)} ${config.unit}`,
+                text: config.name,
+                iconclass: `bg-light-${changes.trend === 'increasing' ? 'success' : 
+                                     changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
+                icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
+                             changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
+                img: 'dashboard-4/icon/student.png',
+                cardclass: "student",
+                fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
+                                  changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
+                total: Math.abs(value).toFixed(1),
+                month: formatDateTime.date(`${latest.date}T${latest.time}`) + ' ' + 
+                      formatDateTime.time(`${latest.date}T${latest.time}`),
+                timestamp: `${latest.date}T${latest.time}`,
+                change: changes.change,
+                rateOfChange: `${changes.rateOfChange}${config.unit}`,
+                timeDiff: changes.timeDiff,
+                trend: changes.trend,
+                unit: config.unit
+            };
+        })
+        .filter(Boolean) as CardData[];
 };
 
 // Watch for station changes
-watch(() => props.selectedStation, (newVal) => {
-    console.log('Selected station changed to:', newVal);
-    fetchData();
-});
+watch(() => props.selectedStation, (newStationId) => {
+    if (newStationId) {
+        fetchStationData(newStationId);
+    }
+}, { immediate: true });
 
-// Initial data fetch
-onMounted(fetchData);
+// Watch for measurements changes
+watch(() => measurements.value, (newMeasurements) => {
+    if (!newMeasurements?.length) {
+        localPawsData.value = [];
+        return;
+    }
+    localPawsData.value = transformMeasurements(newMeasurements);
+}, { immediate: true });
 </script>
 
 <style scoped>

@@ -29,8 +29,8 @@
                                 </div>
                             </td>
                             <td>{{ item.id }}</td>
-                            <td>{{ formatDate(item.lastUpdated) }}</td>
-                            <td>{{ formatTime(item.lastUpdated) }}</td>
+                            <td>{{ formatDateTime.date(item.lastUpdated) }}</td>
+                            <td>{{ formatDateTime.time(item.lastUpdated) }}</td>
                             <td>{{ item.status }}</td>
                         </tr>
                     </tbody>
@@ -41,8 +41,8 @@
 </template>
   
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, watch, defineProps, onBeforeUnmount } from 'vue'
-import axios from 'axios';
+import { ref, defineAsyncComponent, watch, defineProps } from 'vue'
+import { useStationData } from '@/composables/useStationData'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 
@@ -53,98 +53,49 @@ const props = defineProps({
     }
 });
 
+const { 
+    measurements,
+    stationInfo,
+    getLatestMeasurement,
+    formatDateTime,
+    isLoading,
+    fetchStationData
+} = useStationData();
+
 const latestData = ref<any[]>([])
 const connectionStatus = ref<string>('Unsuccessful')
-const monitorTitle = ref<string>('3DPaws Monitor')
+const monitorTitle = ref<string>('Station Monitor')
 
-// Cleanup function to clear data
-const clearData = () => {
-    latestData.value = [];
-    connectionStatus.value = 'Unsuccessful';
-};
-
-const fetchData = async () => {
-    try {
-        clearData();
-        
-        const stationResponse = await axios.get(`http://127.0.0.1:8000/stations/${props.selectedStation}/`);
-        if (!stationResponse.data || stationResponse.status !== 200) {
-            throw new Error(`Station request failed with status ${stationResponse.status}`);
-        }
-        const stationName = stationResponse.data.name;
-        const serialNumber = stationResponse.data.serial_number;
-
-        const measurementsResponse = await axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${props.selectedStation}`);
-        if (!measurementsResponse.data || measurementsResponse.status !== 200) {
-            throw new Error(`Measurements request failed with status ${measurementsResponse.status}`);
-        }
-
-        if (measurementsResponse.data.length > 0) {
-            const latestMeasurement = measurementsResponse.data.sort((a: any, b: any) => {
-                const dateA = new Date(`${b.date}T${b.time}`);
-                const dateB = new Date(`${a.date}T${a.time}`);
-                return dateA.getTime() - dateB.getTime();
-            })[0];
-
-            latestData.value = [{
-                id: serialNumber,
-                name: stationName,
-                status: latestMeasurement.status,
-                lastUpdated: `${latestMeasurement.date}T${latestMeasurement.time}`,
-            }];
-            connectionStatus.value = 'Successful';
-        } else {
-            connectionStatus.value = 'No measurements found';
-        }
-    } catch (error: any) {
-        console.error('Error details:', error.response?.data || error.message);
-        connectionStatus.value = `Error: ${error.response?.status || 'Network error'}`;
-    }
-};
-
-// Single watcher for selectedStation
-watch(() => props.selectedStation, (newVal) => {
-    if (newVal) {
-        fetchData();
-    } else {
-        clearData();
+// Fetch data when selectedStation changes
+watch(() => props.selectedStation, (newStationId) => {
+    if (newStationId) {
+        fetchStationData(newStationId);
     }
 }, { immediate: true });
 
-// Cleanup on component unmount
-onBeforeUnmount(() => {
-    clearData();
-});
-
-const formatDate = (timestamp: string) => {
-    try {
-        if (!timestamp || typeof timestamp !== 'string') return 'Invalid Date';
-        const date = new Date(timestamp);
-        if (isNaN(date.getTime())) return 'Invalid Date';
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    } catch {
-        return 'Invalid Date';
+// Watch for data changes
+watch([() => measurements.value, () => stationInfo.value, () => getLatestMeasurement.value], 
+    ([newMeasurements, newStationInfo, latestMeasurement]) => {
+    if (!newMeasurements?.length || !newStationInfo || !latestMeasurement) {
+        latestData.value = [];
+        connectionStatus.value = isLoading.value ? 'Loading...' : 'Unsuccessful';
+        return;
     }
-};
 
-const formatTime = (timestamp: string) => {
     try {
-        const date = new Date(timestamp);
-        if (isNaN(date.getTime())) return 'Invalid Time';
-        return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-        });
-    } catch {
-        return 'Invalid Time';
+        latestData.value = [{
+            id: newStationInfo.serial_number,
+            name: newStationInfo.name,
+            status: latestMeasurement.status || 'Unknown',
+            lastUpdated: `${latestMeasurement.date}T${latestMeasurement.time}`,
+        }];
+        connectionStatus.value = 'Successful';
+    } catch (error) {
+        console.error('Error processing measurements:', error);
+        latestData.value = [];
+        connectionStatus.value = 'Error processing data';
     }
-};
+}, { immediate: true });
 </script>
 
 <style scoped>

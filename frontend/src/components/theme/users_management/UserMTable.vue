@@ -14,41 +14,43 @@
                         <th colspan="4"></th>
                     </tr>
                     <tr>
-                        <th>Username</th>
+                        <th>Name</th>
                         <th>Organization</th>
+                        <th>Email</th>
+                        <th>Role</th>
                         <th>Package</th>
-                        <th>Last Login</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody v-if="!get_rows().length">
                     <tr class="odd">
-                        <td valign="top" colspan="6" class="dataTables_empty">No matching records found</td>
+                        <td valign="top" colspan="6" class="dataTables_empty">
+                            {{ loading ? 'Loading...' : 'No matching records found' }}
+                        </td>
                     </tr>
                 </tbody>
                 <tbody v-if="get_rows().length">
                     <tr v-for="(row, index) in get_rows()" :key="index">
-                        <td>{{ row.username }}</td>
+                        <td>{{ row.name }}</td>
                         <td>{{ row.organization }}</td>
-                        <td>{{ row.packages }}</td>
-                        <td>{{ row.lastlogin }}</td>
-                        <td>{{ row.status }}</td>
+                        <td>{{ row.email }}</td>
+                        <td>{{ row.role }}</td>
+                        <td>{{ row.package }}</td>
+                        <td>
+                            <span :class="['badge', row.is_active ? 'bg-success' : 'bg-danger']">
+                                {{ row.is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </td>
                     </tr>
                 </tbody>
-                <tfoot>
-                    <tr>
-                        <th>Username</th>
-                        <th>Organization</th>
-                        <th>Package</th>
-                        <th>Last Login</th>
-                        <th>Status</th>
-                    </tr>
-                </tfoot>
             </table>
             <ul class="pagination m-2 justify-content-end pagination-primary">
                 <li class="page-item"><a class="page-link" @click="prev()">Previous</a></li>
-                <li class="page-item" v-for="i in num_pages()" :key="i" v-bind:class="[i == currentPage ? 'active' : '']"
-                    v-on:click="change_page(i)">
+                <li class="page-item" 
+                    v-for="i in num_pages()" 
+                    :key="i" 
+                    :class="{ active: i === currentPage }"
+                    @click="change_page(i)">
                     <a class="page-link">{{ i }}</a>
                 </li>
                 <li class="page-item"><a class="page-link" @click="change()">Next</a></li>
@@ -56,48 +58,107 @@
         </form>
     </div>
 </template>
+
 <script lang="ts" setup>
 import { ref, onMounted, watch } from "vue"
-import { items } from "@/core/data/usersmanagement"
-import { getImages } from "@/composables/common/getImages"
-let elementsPerPage = ref<number>(10)
-let currentPage = ref<number>(1)
-let filterQuery = ref<string>("")
-let allData = ref<any[]>([])
-onMounted(() => {
-    allData.value = items;
-})
-watch(filterQuery, (search: string) => {
+import axios from 'axios'
 
-    var filteredData = items.filter((row) => {
-        return (
-         row.username.toLowerCase().includes(search.toLowerCase()) || row.lastlogin.toLowerCase().includes(search.toLowerCase()) || row.organization.toLowerCase().includes(search.toLowerCase())
-        );
-    });
-    search == "" ? allData.value = items : allData.value = filteredData
-})
-function get_rows() {
-    var start = (currentPage.value - 1) * elementsPerPage.value;
-    var end = start + elementsPerPage.value;
-    return allData.value.slice(start, end);
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    organization: string;
+    role: string;
+    package: string;
+    is_active: boolean;
 }
-function num_pages() {
-    return Math.ceil(allData.value.length / elementsPerPage.value);
-}
-function change_page(page: number) {
-    currentPage.value = page;
-}
-function change() {
-    if (currentPage.value < Math.ceil(allData.value.length / elementsPerPage.value)) {
-        currentPage.value++;
+
+const elementsPerPage = ref<number>(10)
+const currentPage = ref<number>(1)
+const filterQuery = ref<string>("")
+const allData = ref<User[]>([])
+const loading = ref<boolean>(true)
+
+// Fetch users from API
+const fetchUsers = async () => {
+    try {
+        loading.value = true
+        const response = await axios.get('http://127.0.0.1:8000/users/')
+        allData.value = response.data
+    } catch (error) {
+        console.error('Error fetching users:', error)
+    } finally {
+        loading.value = false
     }
 }
+
+onMounted(() => {
+    fetchUsers()
+})
+
+// Search functionality
+watch(filterQuery, (search: string) => {
+    if (!search) {
+        fetchUsers()
+        return
+    }
+
+    const searchLower = search.toLowerCase()
+    allData.value = allData.value.filter((user) => {
+        return (
+            user.name?.toLowerCase().includes(searchLower) ||
+            user.email?.toLowerCase().includes(searchLower) ||
+            user.organization?.toLowerCase().includes(searchLower) ||
+            user.role?.toLowerCase().includes(searchLower)
+        )
+    })
+})
+
+// Pagination functions
+function get_rows() {
+    const start = (currentPage.value - 1) * elementsPerPage.value
+    const end = start + elementsPerPage.value
+    return allData.value.slice(start, end)
+}
+
+function num_pages() {
+    return Math.ceil(allData.value.length / elementsPerPage.value)
+}
+
+function change_page(page: number) {
+    currentPage.value = page
+}
+
+function change() {
+    if (currentPage.value < num_pages()) {
+        currentPage.value++
+    }
+}
+
 function prev() {
     if (currentPage.value > 1) {
-        currentPage.value--;
+        currentPage.value--
     }
 }
-function removeProduct(index: any) {
-    items.splice(index, 1)
-}
 </script>
+
+<style scoped>
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.page-item {
+    cursor: pointer;
+}
+
+.page-item.active .page-link {
+    background-color: #7A70BA;
+    border-color: #7A70BA;
+}
+</style>

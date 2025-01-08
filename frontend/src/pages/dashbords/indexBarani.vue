@@ -21,9 +21,21 @@
     <div class="row">
       <template v-if="selectedStation">
         <div class="row">
-          <BaraniInsMonitor :selectedStation="selectedStation" />
-          <BaraniStatistics :selectedStation="selectedStation" />
-          <BaraniTempCard :selectedStation="selectedStation" />
+          <BaraniInsMonitor 
+            :selectedStation="selectedStation"
+            :measurements="baraniData.measurements?.value || []"
+            :stationInfo="baraniData.stationInfo?.value || {}"
+          />
+          <BaraniStatistics 
+            :selectedStation="selectedStation"
+            :measurements="baraniData.getLast24HoursMeasurements?.value || []"
+            :stationInfo="baraniData.stationInfo?.value || {}"
+          />
+          <BaraniTempCard 
+            :selectedStation="selectedStation"
+            :measurements="baraniData.measurements?.value || []"
+            :stationInfo="baraniData.stationInfo?.value || {}"
+          />
         </div>
       </template>
       <template v-else>
@@ -39,8 +51,8 @@
 import { ref, onMounted, watch } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { useStationData } from '@/composables/useStationData';
 
-// Define the type for a station
 interface Station {
   id: number;
   name: string;
@@ -51,8 +63,9 @@ const BaraniInsMonitor = defineAsyncComponent(() => import("@/components/theme/s
 const BaraniStatistics = defineAsyncComponent(() => import("@/components/theme/stations/barani/BaraniStatistics.vue"));
 const BaraniTempCard = defineAsyncComponent(() => import("@/components/theme/stations/barani/BaraniTempCard.vue"));
 
-const stationNames = ref<Station[]>([]); // Explicitly define the type as an array of Station
-const selectedStation = ref<number>(0); // Default to 0 instead of null
+const stationNames = ref<Station[]>([]);
+const selectedStation = ref<number>(0);
+const baraniData = useStationData();
 
 const fetchStationNames = async () => {
   try {
@@ -68,13 +81,11 @@ const fetchStationNames = async () => {
   }
 };
 
-// Watch for station changes to refetch data
-watch(() => selectedStation.value, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    // The child components will handle their own data fetching
-    console.log('Station changed:', newVal);
+watch(() => selectedStation.value, async (newVal) => {
+  if (newVal) {
+    await baraniData.fetchStationData(newVal);
   }
-});
+}, { immediate: true });
 
 onMounted(fetchStationNames);
 </script>

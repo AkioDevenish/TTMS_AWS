@@ -21,9 +21,21 @@
     <div class="row">
       <template v-if="selectedStation">
         <div class="row">
-          <PawsInsMonitor :selectedStation="selectedStation" />
-          <PawsStatistics :selectedStation="selectedStation" />
-          <PawsTempCard :selectedStation="selectedStation" />
+          <PawsInsMonitor 
+            :selectedStation="selectedStation"
+            :measurements="pawsData.measurements?.value || []"
+            :stationInfo="pawsData.stationInfo?.value || {}"
+          />
+          <PawsStatistics 
+            :selectedStation="selectedStation"
+            :measurements="pawsData.getLast24HoursMeasurements?.value || []"
+            :stationInfo="pawsData.stationInfo?.value || {}"
+          />
+          <PawsTempCard 
+            :selectedStation="selectedStation"
+            :measurements="pawsData.measurements?.value || []"
+            :stationInfo="pawsData.stationInfo?.value || {}"
+          />
         </div>
       </template>
       <template v-else>
@@ -39,6 +51,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { useStationData } from '@/composables/useStationData';
 
 // Define the type for a station
 interface Station {
@@ -53,6 +66,8 @@ const PawsTempCard = defineAsyncComponent(() => import("@/components/theme/stati
 
 const stationNames = ref<Station[]>([]); // Explicitly define the type as an array of Station
 const selectedStation = ref<number>(0); // Default to 0 instead of null
+
+const pawsData = useStationData();
 
 const fetchStationNames = async () => {
   try {
@@ -69,12 +84,11 @@ const fetchStationNames = async () => {
 };
 
 // Watch for station changes to refetch data
-watch(() => selectedStation.value, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    // The child components will handle their own data fetching
-    console.log('Station changed:', newVal);
+watch(() => selectedStation.value, async (newVal) => {
+  if (newVal) {
+    await pawsData.fetchStationData(newVal);
   }
-});
+}, { immediate: true });
 
 onMounted(fetchStationNames);
 </script>

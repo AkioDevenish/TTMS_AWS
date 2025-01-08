@@ -56,8 +56,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, reactive, onMounted, watch, computed, defineProps, onUnmounted } from 'vue';
-import axios from 'axios';
+import { defineAsyncComponent, ref, onMounted, watch, computed, defineProps, onUnmounted, PropType } from 'vue';
 import { zentraOptions1 } from '@/core/data/chart';
 
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
@@ -66,13 +65,19 @@ const props = defineProps({
   selectedStation: {
     type: Number,
     required: true
+  },
+  measurements: {
+    type: Array as PropType<any[]>,
+    default: () => []
+  },
+  stationInfo: {
+    type: Object,
+    default: () => ({})
   }
 });
 
 const chartData = ref<any[]>([]);
 const selectedSensorType = ref<string>('bt1');
-const sensors = ref<any[]>([]);
-const stationInfo = ref<any>(null);
 
 // Mapping of sensor types to display names and units
 const sensorConfig: Record<string, { name: string; unit: string }> = {
@@ -145,93 +150,46 @@ const chartOptions = computed(() => ({
   }
 }));
 
-// Declare fetchData function before using it in watchers
-const fetchData = async () => {
-  try {
-    if (!props.selectedStation) {
-      console.log('No station selected');
-      return;
-    }
-
-    // Get station info and measurements in parallel
-    const [stationResponse, measurementsResponse] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/stations/'),
-      axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${props.selectedStation}`)
-    ]);
-
-    const currentStation = stationResponse.data.find((station: any) => station.id === props.selectedStation);
-    if (!currentStation) {
-      console.log('Station not found');
-      return;
-    }
-    stationInfo.value = currentStation;
-    console.log('Station info:', currentStation);
-
-    if (!measurementsResponse.data || measurementsResponse.data.length === 0) {
-      console.log('No measurements found for station');
-      chartData.value = [];
-      return;
-    }
-
-    // Filter measurements for selected sensor type only
-    const filteredData = measurementsResponse.data.filter((measurement: any) => 
-      measurement.sensor_type === selectedSensorType.value
-    );
-
-    console.log('Filtered measurements:', filteredData);
-
-    if (filteredData.length === 0) {
-      console.log('No measurements found for selected sensor type:', selectedSensorType.value);
-      chartData.value = [];
-      return;
-    }
-
-    // Sort and transform data for the chart
-    const sortedData = filteredData.sort((a: any, b: any) => {
-      const dateA = new Date(`${a.date}T${a.time}`);
-      const dateB = new Date(`${b.date}T${b.time}`);
-      return dateA.getTime() - dateB.getTime();
-    });
-
-    // Transform data for the chart
-    chartData.value = [{
-      name: currentSensorName.value,
-      data: sortedData.map((item: any) => ({
-        x: new Date(`${item.date}T${item.time}`).getTime(),
-        y: parseFloat(item.value)
-      }))
-    }];
-
-    console.log('Chart data updated:', chartData.value);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    if (axios.isAxiosError(error)) {
-      console.error('Response status:', error.response?.status);
-      console.error('Response data:', error.response?.data);
-    }
+// Add watch for selectedSensorType changes
+watch([() => props.measurements, () => selectedSensorType.value], ([newMeasurements, newSensorType]) => {
+  if (!Array.isArray(newMeasurements) || !newMeasurements.length) {
     chartData.value = [];
+    return;
   }
-};
 
-// Handler for measurement selection
-const selectMeasurement = async (sensorType: string) => {
-  selectedSensorType.value = sensorType;
-  await fetchData();
-};
+  const filteredData = newMeasurements.filter(measurement => 
+    measurement.sensor_type === newSensorType
+  );
 
-// Single watcher for station changes with immediate option
-watch(() => props.selectedStation, (newStation) => {
-  console.log('Station changed in PawsStatistics:', newStation);
-  if (newStation) {
-    fetchData();
+  if (filteredData.length === 0) {
+    chartData.value = [];
+    return;
   }
+
+  chartData.value = [{
+    name: sensorConfig[newSensorType]?.name || 'Unknown',
+    data: filteredData.map(item => ({
+      x: new Date(`${item.date}T${item.time}`).getTime(),
+      y: parseFloat(item.value)
+    }))
+  }];
 }, { immediate: true });
+
+// Modify selectMeasurement to only update the selected type
+const selectMeasurement = (sensorType: string) => {
+  selectedSensorType.value = sensorType;
+};
 
 // Add auto-refresh interval
 let refreshInterval: number | undefined;
 
 onMounted(() => {
-  refreshInterval = setInterval(fetchData, 60000);
+  refreshInterval = setInterval(() => {
+    // Just trigger a re-render of the chart
+    if (props.measurements.length > 0) {
+      chartData.value = [...chartData.value];
+    }
+  }, 60000);
 });
 
 onUnmounted(() => {
