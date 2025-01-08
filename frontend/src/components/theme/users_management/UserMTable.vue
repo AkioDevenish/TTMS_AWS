@@ -20,6 +20,7 @@
                         <th>Role</th>
                         <th>Package</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody v-if="!get_rows().length">
@@ -36,34 +37,56 @@
                         <td>{{ row.email }}</td>
                         <td>{{ row.role }}</td>
                         <td>{{ row.package }}</td>
-                        <td>
-                            <div class="dropdown status-dropdown">
-                                <button 
-                                    class="btn status-btn dropdown-toggle" 
-                                    :class="getStatusClass(row.status)"
-                                    type="button" 
-                                    data-bs-toggle="dropdown" 
-                                    aria-expanded="false"
-                                >
-                                    <span class="status-dot" :class="getStatusDotClass(row.status)"></span>
-                                    {{ row.status }}
-                                </button>
-                                <ul class="dropdown-menu status-menu">
-                                    <li v-for="status in getAvailableStatuses(row.status)" :key="status">
-                                        <a 
-                                            class="dropdown-item status-item" 
-                                            href="#" 
-                                            @click.prevent="updateUserStatus(row.id, status)"
-                                            :class="{ 
-                                                'active': row.status === status,
-                                                [`status-${status.toLowerCase()}`]: true
-                                            }"
+                        <td class="actions-cell">
+                            <div class="actions-container">
+                                <div class="action-group status-group">
+                                    <div class="dropdown status-dropdown">
+                                        <button 
+                                            class="btn status-btn dropdown-toggle" 
+                                            :class="getStatusClass(row.status)"
+                                            type="button" 
+                                            data-bs-toggle="dropdown" 
+                                            aria-expanded="false"
                                         >
-                                            <span class="status-dot" :class="getStatusDotClass(status)"></span>
-                                            {{ status }}
-                                        </a>
-                                    </li>
-                                </ul>
+                                            <span class="status-dot" :class="getStatusDotClass(row.status)"></span>
+                                            {{ row.status }}
+                                        </button>
+                                        <ul class="dropdown-menu status-menu">
+                                            <li v-for="status in getAvailableStatuses(row.status)" :key="status">
+                                                <a 
+                                                    class="dropdown-item status-item" 
+                                                    href="#" 
+                                                    @click.prevent="updateUserStatus(row.id, status)"
+                                                    :class="{ 
+                                                        'active': row.status === status,
+                                                        [`status-${status.toLowerCase()}`]: true
+                                                    }"
+                                                >
+                                                    <span class="status-dot" :class="getStatusDotClass(status)"></span>
+                                                    {{ status }}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="action-group control-group">
+                                    <button 
+                                        class="btn control-btn pause-btn" 
+                                        :class="{ 'started': !row.isPaused }"
+                                        @click="togglePauseUser(row.id, !row.isPaused)"
+                                        :title="row.isPaused ? 'Start User' : 'Pause User'"
+                                    >
+                                        <i class="fa" :class="row.isPaused ? 'fa-play' : 'fa-pause'"></i>
+                                    </button>
+                                    <button 
+                                        class="btn control-btn delete-btn" 
+                                        @click="deleteUser(row.id)"
+                                        title="Delete User"
+                                    >
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -211,6 +234,37 @@ const getAvailableStatuses = (currentStatus: string): string[] => {
         return ['Active', 'Inactive'];
     }
     return ['Active', 'Inactive'];
+};
+
+const togglePauseUser = async (userId: number, isPaused: boolean) => {
+    try {
+        const response = await axios.patch(`http://127.0.0.1:8000/users/${userId}/`, {
+            is_paused: isPaused
+        });
+        
+        if (response.status === 200) {
+            const userIndex = allData.value.findIndex(user => user.id === userId);
+            if (userIndex !== -1) {
+                allData.value[userIndex].isPaused = isPaused;
+            }
+        }
+    } catch (error) {
+        console.error('Error updating user pause status:', error);
+    }
+};
+
+const deleteUser = async (userId: number) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    try {
+        const response = await axios.delete(`http://127.0.0.1:8000/users/${userId}/`);
+        
+        if (response.status === 204) {
+            allData.value = allData.value.filter(user => user.id !== userId);
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+    }
 };
 </script>
 
@@ -369,5 +423,165 @@ const getAvailableStatuses = (currentStatus: string): string[] => {
 .status-Pending {
     color: #856404 !important;
     background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.action-btn i {
+    font-size: 14px;
+}
+
+.pause-btn {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.pause-btn:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.pause-btn.started {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.delete-btn {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Add hover effects */
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.actions-cell {
+    min-width: 280px;
+    padding: 0.75rem !important;
+}
+
+.actions-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.action-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-group {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.control-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.control-btn i {
+    font-size: 14px;
+}
+
+.pause-btn {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #e9ecef;
+}
+
+.pause-btn:hover {
+    background-color: #e9ecef;
+    color: #495057;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+.pause-btn.started {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.delete-btn {
+    background-color: #fff;
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.delete-btn:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(220, 53, 69, 0.2);
+}
+
+/* Update existing status button styles */
+.status-btn {
+    min-width: 130px;
+    padding: 8px 16px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.status-menu {
+    padding: 0.5rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+}
+
+.status-item {
+    padding: 8px 16px;
+    margin: 2px 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+/* Add hover animations */
+.control-btn:active {
+    transform: translateY(0);
+}
+
+.status-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
 }
 </style>
