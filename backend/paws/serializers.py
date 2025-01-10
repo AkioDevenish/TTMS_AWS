@@ -1,8 +1,8 @@
 # paws/serializers.py
 from rest_framework import serializers
-from .models import InstrumentMeasurement
+from .models import Measurements
 
-class InstrumentMeasurementSerializer(serializers.ModelSerializer):
+class MeasurementsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InstrumentMeasurement
-        fields = ['id', 'name', 'description', 'serial_number', 'measurement_name', 'value', 'timestamp', 'is_test', 'created_at', 'updated_at']
+        model = Measurements
+        fields = ['id', 'name',  'measurement_name', 'value', 'timestamp', 'is_test', 'created_at', 'updated_at']
