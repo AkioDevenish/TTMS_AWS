@@ -11,24 +11,56 @@
 				</li>
 			</ul>
 		</div>
+		<Card1 colClass="col-xl-12 col-md-12 proorder-xl-2 proorder-md-2" dropdown="true" cardhaderClass="card-no-border pb-0">
+			<!-- Title and Dropdown Section -->
+			<div class="d-flex justify-content-between align-items-center mb-4">
+				<h4 class="mb-0">{{ stationInfo?.name || 'Station Statistics' }}</h4>
+				<div class="dropdown position-relative">
+					<button class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between" id="measurementDropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						<span class="mx-auto">{{ currentSensorName }}</span>
+						<span class="dropdown-toggle-icon ms-3"></span>
+					</button>
 
-		<div class="studay-statistics">
-			<ul class="d-flex align-item-center gap-2">
-				<li><span class="bg-primary"></span>Rainfall</li>
-				<li><span class="bg-secondary"></span>Wind Speed</li>
-			</ul>
-		</div>
+					<div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bt1')">Temperature 1</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('mt1')">Temperature 2</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('ws')">Wind Speed</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wd')">Wind Direction</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('rg')">Precipitation</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bp1')">Pressure</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('sv1')">Downwelling Visible</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('si1')">Downwelling Infrared</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('su1')">Downwelling Ultraviolet</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bpc')">Battery Percent</a>
+						<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('css')">Cell Signal Strength</a>
+					</div>
+				</div>
+			</div>
 
-		<div id="study-statistics">
-			<apexchart type="area" height="230" ref="chart" :options="pawsOptions1" :series="paws_stats"></apexchart>
+			<div class="studay-statistics">
+				<ul class="d-flex align-item-center gap-2">
+					<li><span class="bg-primary"></span>Rainfall</li>
+					<li><span class="bg-secondary"></span>Wind Speed</li>
+				</ul>
+			</div>
+
+			<div id="study-statistics">
+				<apexchart type="area" height="230" ref="chart" :options="pawsOptions1" :series="paws_stats"></apexchart>
+			</div>
+		</Card1>
+		<!-- Chart Section -->
+		<div class="chart-container">
+			<apexchart v-if="chartData.length > 0" type="area" height="330" ref="chart" :options="chartOptions" :series="chartData"></apexchart>
+			<div v-else>
+				<p>No data available to display.</p>
+			</div>
 		</div>
 	</Card1>
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, onMounted } from 'vue'
-import axios from 'axios'
-import { pawsOptions1 } from '@/core/data/chart'
+import { defineAsyncComponent, ref, onMounted, watch, computed, defineProps, onUnmounted, PropType } from 'vue';
+import { zentraOptions1 } from '@/core/data/chart';
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 const paws_stats = ref<any[]>([])
@@ -53,7 +85,7 @@ const getLatestHourlyData = (data: any[]) => {
 
 const fetchData = async () => {
 	try {
-		const response = await axios.get('http://167.88.45.83/api/Measurements/')
+		const response = await axios.get('http://127.0.0.1:8000/api/Measurements/')
 		const instrumentData = response.data.filter((item: any) => item.name === `Instrument ${selectedInstrument.value}`)
 		const rainGaugeData = instrumentData.filter((item: any) => item.measurement_name === 'Rain Gauge')
 		const windSpeedData = instrumentData.filter((item: any) => item.measurement_name === 'Wind Speed')
@@ -106,8 +138,19 @@ const changeInstrument = (instrument: number) => {
 }
 
 onMounted(() => {
-	fetchData()
-})
+	refreshInterval = setInterval(() => {
+		// Just trigger a re-render of the chart
+		if (props.measurements.length > 0) {
+			chartData.value = [...chartData.value];
+		}
+	}, 60000);
+});
+
+onUnmounted(() => {
+	if (refreshInterval) {
+		clearInterval(refreshInterval);
+	}
+});
 </script>
 
 <style scoped>
@@ -128,5 +171,28 @@ onMounted(() => {
 	max-height: 300px;
 	/* Optional: add scroll if there are too many options */
 	overflow-y: auto;
+}
+
+.btn.dropdown-toggle {
+	background-color: #f8f9fa;
+	border: 1px solid #dee2e6;
+	color: #495057;
+	padding: 0.5rem 1rem;
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+}
+
+.btn.dropdown-toggle::after {
+	display: none;
+}
+
+.dropdown-toggle-icon {
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-top: 4px solid currentColor;
+	display: inline-block;
+	margin-left: 0.255em;
+	vertical-align: middle;
 }
 </style>

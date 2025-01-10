@@ -1,32 +1,183 @@
-from rest_framework import viewsets
-from .models import Brand, Instrument
-from .serializers import BrandSerializer, InstrumentSerializer
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import (
+    Brand, Station, Sensor, Measurement, Station,
+    StationHealthLog, StationSensor, APIAccessToken,
+    SystemLog, User, Notification
+)
+from .serializers import (
+    BrandSerializer, StationSerializer, SensorSerializer,
+    MeasurementSerializer, StationSerializer, StationHealthLogSerializer,
+    StationSensorSerializer, APIAccessTokenSerializer, SystemLogSerializer,
+    UserSerializer, NotificationSerializer
+)
+from django.utils import timezone
+from rest_framework import serializers
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-# Brand ViewSet to handle CRUD operations for Brand
 class BrandViewSet(viewsets.ModelViewSet):
-    queryset = Brand.objects.all()  # All brands
-    serializer_class = BrandSerializer  # Use the BrandSerializer
-    
-    # Optionally, you can add custom actions (e.g., to list instruments related to a specific brand)
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+
     @action(detail=True, methods=['get'])
-    def instruments(self, request, pk=None):
-        """Custom action to retrieve instruments for a specific brand"""
+    def stations(self, request, pk=None):
         brand = self.get_object()
-        instruments = brand.instruments.all()  # Get all instruments related to the brand
-        serializer = InstrumentSerializer(instruments, many=True)
+        stations = brand.stations.all()
+        serializer = StationSerializer(stations, many=True)
         return Response(serializer.data)
 
-# Instrument ViewSet to handle CRUD operations for Instrument
-class InstrumentViewSet(viewsets.ModelViewSet):
-    queryset = Instrument.objects.all()  # All instruments
-    serializer_class = InstrumentSerializer  # Use the InstrumentSerializer
 
-    # Optionally, add custom actions (e.g., to fetch the brand of a specific instrument)
+class StationViewSet(viewsets.ModelViewSet):
+    queryset = Station.objects.all()
+    serializer_class = StationSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            print("Received data:", request.data)
+            data = request.data.copy()
+            if 'last_updated_at' not in data:
+                data['last_updated_at'] = timezone.now()
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            return Response({"error": e.detail}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
-    def brand(self, request, pk=None):
-        """Custom action to retrieve the brand for a specific instrument"""
-        instrument = self.get_object()
-        serializer = BrandSerializer(instrument.brand)
+    def measurements(self, request, pk=None):
+        station = self.get_object()
+        measurements = station.measurements.all()
+        serializer = MeasurementSerializer(measurements, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def health_logs(self, request, pk=None):
+        station = self.get_object()
+        logs = station.health_logs.all()
+        serializer = StationHealthLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+
+class SensorViewSet(viewsets.ModelViewSet):
+    queryset = Sensor.objects.all()
+    serializer_class = SensorSerializer
+
+    @action(detail=True, methods=['get'])
+    def stations(self, request, pk=None):
+        sensor = self.get_object()
+        stations = sensor.stations.all()
+        serializer = StationSerializer(stations, many=True)
+        return Response(serializer.data)
+
+
+class MeasurementViewSet(viewsets.ModelViewSet):
+    queryset = Measurement.objects.all()
+    serializer_class = MeasurementSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_station(self, request):
+        station_id = request.query_params.get('station_id')
+        if not station_id:
+            return Response({"error": "station_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        measurements = self.queryset.filter(station_id=station_id)
+        serializer = self.serializer_class(measurements, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def by_sensor(self, request):
+        sensor_id = request.query_params.get('sensor_id')
+        if not sensor_id:
+            return Response({"error": "sensor_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        measurements = self.queryset.filter(sensor_id=sensor_id)
+        serializer = self.serializer_class(measurements, many=True)
+        return Response(serializer.data)
+
+
+class StationHealthLogViewSet(viewsets.ModelViewSet):
+    queryset = StationHealthLog.objects.all()
+    serializer_class = StationHealthLogSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_station(self, request):
+        station_id = request.query_params.get('station_id')
+        if not station_id:
+            return Response({"error": "station_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        logs = self.queryset.filter(station_id=station_id)
+        serializer = self.serializer_class(logs, many=True)
+        return Response(serializer.data)
+
+
+class StationSensorViewSet(viewsets.ModelViewSet):
+    queryset = StationSensor.objects.all()
+    serializer_class = StationSensorSerializer
+
+
+class APIAccessTokenViewSet(viewsets.ModelViewSet):
+    queryset = APIAccessToken.objects.all()
+    serializer_class = APIAccessTokenSerializer
+
+
+class SystemLogViewSet(viewsets.ModelViewSet):
+    queryset = SystemLog.objects.all()
+    serializer_class = SystemLogSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_module(self, request):
+        module = request.query_params.get('module')
+        if not module:
+            return Response({"error": "module is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        logs = self.queryset.filter(module=module)
+        serializer = self.serializer_class(logs, many=True)
+        return Response(serializer.data)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+    @action(detail=False, methods=['get'])
+    def unread(self, request):
+        notifications = self.queryset.filter(read_at__isnull=True)
+        serializer = self.serializer_class(notifications, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def mark_as_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.read_at = timezone.now()
+        notification.save()
+        serializer = self.serializer_class(notification)
+        return Response(serializer.data)
+
+router = DefaultRouter()
+router.register(r'brands', BrandViewSet)
+router.register(r'sensors', SensorViewSet)
+router.register(r'measurements', MeasurementViewSet)
+router.register(r'stations', StationViewSet)
+router.register(r'station-health-logs', StationHealthLogViewSet)
+router.register(r'station-sensors', StationSensorViewSet)
+router.register(r'api-tokens', APIAccessTokenViewSet)
+router.register(r'system-logs', SystemLogViewSet)
+router.register(r'users', UserViewSet)
+router.register(r'notifications', NotificationViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]

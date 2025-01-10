@@ -10,137 +10,152 @@
 			<apexchart type="area" height="230" ref="chart" :options="chartOptions12" :series="zentrastats"></apexchart>
 		</div>
 	</Card1>
+	<Card1 colClass="col-xl-12 col-md-12 proorder-xl-2 proorder-md-2" dropdown="true" cardhaderClass="card-no-border pb-0">
+		<!-- Title and Dropdown Section -->
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h4 class="mb-0">{{ stationInfo?.name || 'Station Statistics' }}</h4>
+			<div class="dropdown position-relative">
+				<button class="btn dropdown-toggle w-100 d-flex align-items-center justify-content-between" id="measurementDropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<span class="mx-auto">{{ currentSensorName }}</span>
+					<span class="dropdown-toggle-icon ms-3"></span>
+				</button>
+
+				<div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
+					<a v-for="sensor in sensorTypes" :key="sensor" class="dropdown-item" href="#" @click.prevent="selectedSensorType = sensor">
+						{{ sensorConfig[sensor]?.name || sensor }}
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- Chart Section -->
+		<div class="chart-container">
+			<apexchart v-if="chartData.length > 0" type="area" height="330" ref="chart" :options="chartOptions" :series="chartData"></apexchart>
+			<div v-else>
+				<p>No data available to display.</p>
+			</div>
+		</div>
+	</Card1>
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, onMounted } from 'vue'
-import axios from 'axios'
-import { chartOptions12 } from "@/core/data/chart"
+import { defineAsyncComponent, ref, computed, watch, defineProps } from 'vue';
+import { zentraOptions1 } from '@/core/data/chart';
+import { useStationData } from '@/composables/useStationData';
 
-const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-const zentrastats = ref<any[]>([])
+const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
-// Keep the original sensor name mapping
-const sensorNameMapping = {
-	'Solar Radiation': 'Solar Radiation (W/m²)',
-	'Precipitation': 'Precipitation (mm)',
-	'Lightning Activity': 'Lightning Activity (Yes/No)',
-	'Lightning Distance': 'Lightning Distance (km)',
-	'Wind Direction': 'Wind Direction (°)',
-	'Wind Speed': 'Wind Speed (m/s)',
-	'Gust Speed': 'Gust Speed (m/s)',
-	'Air Temperature': 'Air Temperature (°C)',
-	'Relative Humidity': 'Relative Humidity (%)',
-	'Atmospheric Pressure': 'Atmospheric Pressure (kPa)',
-	'X-axis Level': 'X-axis Level (°)',
-	'Y-axis Level': 'Y-axis Level (°)',
-	'Max Precipitation Rate': 'Max Precipitation Rate (mm/h)',
-	'RH Sensor Temperature': 'RH Sensor Temperature (°C)',
-	'Vapor Pressure Deficit': 'Vapor Pressure Deficit (kPa)',
-	'Battery Percent': 'Battery Percent (%)',
-	'Battery Voltage': 'Battery Voltage (mV)',
-	'Atmospheric Pressure (Reference Pressure)': 'Atmospheric Pressure (Reference Pressure) (kPa)',
+const props = defineProps({
+	selectedStation: {
+		type: Number,
+		required: true
+	}
+});
+
+const { measurements, stationInfo, getLast24HoursMeasurements, fetchStationData } = useStationData();
+const selectedSensorType = ref<string>('Air Temperature');
+
+// Sensor configuration
+const sensorConfig: Record<string, { name: string; unit: string }> = {
+	'Solar Radiation': { name: 'Solar Radiation', unit: 'W/m²' },
+	'Precipitation': { name: 'Precipitation', unit: 'mm' },
+	'Wind Speed': { name: 'Wind Speed', unit: 'm/s' },
+	'Air Temperature': { name: 'Air Temperature', unit: '°C' },
+	'Relative Humidity': { name: 'Relative Humidity', unit: '%' },
+	'Atmospheric Pressure': { name: 'Atmospheric Pressure', unit: 'kPa' }
 };
 
-// Keep the original utility functions
-const roundToNearestHour = (timestamp: string) => {
-	const date = new Date(timestamp)
-	const minutes = date.getMinutes()
+const sensorTypes = computed(() => Object.keys(sensorConfig));
+const currentSensorName = computed(() => sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value);
+const currentSensorUnit = computed(() => sensorConfig[selectedSensorType.value]?.unit || '');
 
-	if (minutes >= 30) {
-		date.setHours(date.getHours() + 1)
+const chartData = computed(() => {
+	const filteredData = getLast24HoursMeasurements.value.filter(
+		measurement => measurement.sensor_type === selectedSensorType.value
+	);
+
+	if (!filteredData.length) return [];
+
+	return [{
+		name: currentSensorName.value,
+		data: filteredData.map(item => ({
+			x: new Date(`${item.date}T${item.time}`).getTime(),
+			y: parseFloat(item.value.toString())
+		}))
+	}];
+});
+
+const chartOptions = computed(() => ({
+	...zentraOptions1,
+	yaxis: {
+		...zentraOptions1.yaxis,
+		title: {
+			text: `${currentSensorName.value} (${currentSensorUnit.value})`,
+			style: {
+				fontSize: '14px',
+				fontWeight: 500
+			}
+		},
+		labels: {
+			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
+		}
+	},
+	xaxis: {
+		...zentraOptions1.xaxis,
+		labels: {
+			...zentraOptions1.xaxis.labels,
+			formatter: (val: string) => {
+				const date = new Date(val);
+				return date.toLocaleString('en-US', {
+					month: 'numeric',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					hour12: true
+				});
+			}
+		}
+	},
+	tooltip: {
+		x: {
+			formatter: (val: number) => {
+				const date = new Date(val);
+				return date.toLocaleString('en-US', {
+					month: 'numeric',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					hour12: true
+				});
+			}
+		},
+		y: {
+			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
+		}
 	}
+}));
 
-	date.setMinutes(0, 0, 0)
-
-	return date
-}
-
-// Keep the original getHourlyData function
-const getHourlyData = (data: any[]) => {
-	const hourlyData: { [key: string]: { rain: number, wind: number, timestamp: string, sensors: any[] } } = {}
-
-	data.forEach((item: any) => {
-		const roundedTimestamp = roundToNearestHour(item.timestamp).toISOString()
-
-		// Initialize the hour slot if it doesn't exist
-		if (!hourlyData[roundedTimestamp]) {
-			hourlyData[roundedTimestamp] = { rain: 0, wind: 0, timestamp: roundedTimestamp, sensors: [] }
-		}
-
-		// Add sensor data to the hourly data
-		const sensorData = {
-			name: item.sensor_name,
-			value: item.value,
-			units: item.units,
-		}
-
-		// Push the sensor data into the respective hour
-		hourlyData[roundedTimestamp].sensors.push(sensorData)
-
-		// Handle Rainfall (mm) - Store rainfall value
-		if (item.sensor_name === 'Precipitation' && item.units === ' mm') {
-			hourlyData[roundedTimestamp].rain += item.value
-		}
-		// Handle Wind Speed (m/s) - Store wind speed value
-		else if (item.sensor_name === 'Wind Speed' && item.units === ' m/s') {
-			hourlyData[roundedTimestamp].wind += item.value
-		}
-	})
-
-	// Create the array of hourly values for Rainfall and Wind Speed
-	const hourlyKeys = Object.keys(hourlyData).sort()
-
-	const rainData = hourlyKeys.map((key) => hourlyData[key].rain)
-	const windData = hourlyKeys.map((key) => hourlyData[key].wind)
-	const timeStamps = hourlyKeys
-
-	return {
-		rainData,
-		windData,
-		timeStamps,
-		sensors: hourlyKeys.map((key) => {
-			return hourlyData[key].sensors.map(sensor => ({
-				name: sensorNameMapping[sensor.name] || sensor.name,
-				value: sensor.value,
-				units: sensor.units,
-			}))
-		})
+watch(() => props.selectedStation, (newStationId) => {
+	if (newStationId) {
+		fetchStationData(newStationId);
 	}
-}
-
-// Main data fetching function
-const fetchData = async () => {
-	try {
-		const response = await axios.get('http://167.88.45.83/api/allmeteo/measurements/')
-
-		// Get hourly data for Rainfall and Wind Speed
-		const { rainData, windData, timeStamps, sensors } = getHourlyData(response.data)
-
-		// Update chart x-axis categories (timestamps)
-		chartOptions12.xaxis.categories = timeStamps
-
-		// Update chart series for Rainfall and Wind Speed
-		zentrastats.value = [
-			{
-				name: 'Rainfall',
-				data: rainData,
-			},
-			{
-				name: 'Wind Speed',
-				data: windData,
-			},
-		]
-
-		// Log sensor data for debugging
-		console.log('Sensors:', sensors)
-	} catch (error) {
-		console.error('Error fetching data:', error)
-	}
-}
-
-// Fetch data when component is mounted
-onMounted(() => {
-	fetchData()
-})
+}, { immediate: true });
 </script>
+
+<style scoped>
+.chart-container {
+	min-height: 350px;
+}
+
+.dropdown-menu {
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.btn.dropdown-toggle {
+	background-color: #f8f9fa;
+	border: 1px solid #dee2e6;
+	color: #495057;
+	padding: 0.5rem 1rem;
+}
+</style>

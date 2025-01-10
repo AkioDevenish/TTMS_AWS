@@ -1,92 +1,234 @@
 <template>
-    <div class="form theme-form h-100 ">
+    <div class="form theme-form h-100">
         <div class="row">
             <div class="col">
                 <div class="mb-3">
-                    <label>Username</label>
-                    <input class="form-control" type="text" :class="inputclasses" placeholder="Username"
-                        v-model="title" @input="validated($event.target.value)">
+                    <label>Name</label>
+                    <input 
+                        class="form-control" 
+                        type="text" 
+                        :class="inputClasses.name"
+                        placeholder="Name"
+                        v-model="formData.name"
+                        @input="validateField('name')">
                 </div>
             </div>
         </div>
+
         <div class="row">
             <div class="col">
                 <div class="mb-3">
                     <label>Organization</label>
-                    <input class="form-control" v-model="sites" @input="validated($event.target.value)"
-                        :class="inputclasses" type="text" placeholder="Organization">
+                    <input 
+                        class="form-control"
+                        type="text"
+                        :class="inputClasses.organization"
+                        placeholder="Organization"
+                        v-model="formData.organization"
+                        @input="validateField('organization')">
                 </div>
             </div>
         </div>
-        
-        <SubscriptionType />
+
         <div class="row">
             <div class="col">
-                <div class="text-end"><a class="btn btn-success me-3" target="_blank" @click="add()">Create</a><a
-                        class="btn btn-danger" href="#">Cancel</a></div>
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input 
+                        class="form-control"
+                        type="email"
+                        :class="inputClasses.email"
+                        placeholder="Email"
+                        v-model="formData.email"
+                        @input="validateField('email')">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="mb-3">
+                    <label>Password</label>
+                    <input 
+                        class="form-control"
+                        type="password"
+                        :class="inputClasses.password"
+                        placeholder="Password"
+                        v-model="formData.password"
+                        @input="validateField('password')">
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="mb-3">
+                    <label>Role</label>
+                    <select 
+                        class="form-control"
+                        :class="inputClasses.role"
+                        v-model="formData.role"
+                        @change="validateField('role')">
+                        <option value="">Select Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <SubscriptionType @package-selected="onPackageSelected" />
+
+        <div class="row mt-3">
+            <div class="col">
+                <div v-if="errorMessage" class="alert alert-danger">
+                    {{ errorMessage }}
+                </div>
+                <div v-if="successMessage" class="alert alert-success">
+                    {{ successMessage }}
+                </div>
+                <div class="text-end">
+                    <button 
+                        class="btn btn-success me-3" 
+                        @click="createUser"
+                        :disabled="isSubmitting">
+                        {{ isSubmitting ? 'Creating...' : 'Create' }}
+                    </button>
+                    <button 
+                        class="btn btn-danger" 
+                        @click="cancel"
+                        :disabled="isSubmitting">
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </template>
+
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, ref } from 'vue'
-import { all } from "@/core/data/project"
-import { inputclasses, itemclasses } from "@/composables/createProject"
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-const SubscriptionType = defineAsyncComponent(() => import("@/components/theme/users_management/createuser/SubscriptionType.vue"))
-let formSubmitted = ref<boolean>(false)
-let titleError = ref<boolean>(false)
-let descError = ref<boolean>(false)
-let errors = ref<string | number[]>([])
-let title = ref<string>("")
-let desc = ref<string>("")
-let sites = ref<string>("")
-let allprojects = ref()
-let router = useRouter()
-function add() {
-    formSubmitted.value = true;
-    errors.value = [];
-    if (title.value.length < 5 || desc.value.length < 5) {
-        titleError.value = true; descError.value = true;
-        errors.value.push();
-    } else {
-        titleError.value = false; descError.value = false;
-        errors.value.push();
-        const arr = {
-            id: 1,
-            title: title, badge: "Doing", box: "b-light1-primary",
-            type: "primary progress-bar-striped", font: "primary",
-            img: "user/3.jpg", sites: sites,
-            desc: desc, issue: "12", resolved: "5",
-            comment: "7", like: "+10",
-            progress: "70", customers_img1: "user/3.jpg",
-            customers_img2: "user/5.jpg", customers_img3: "user/1.jpg"
-        }
-        allprojects.value.push(arr)
-        router.replace('/project/project_list');
+import axios from 'axios'
+import { defineAsyncComponent } from 'vue'
+
+const SubscriptionType = defineAsyncComponent(() => import("./SubscriptionType.vue"))
+const router = useRouter()
+
+// Form data
+const formData = reactive({
+    name: '',
+    email: '',
+    password: '',
+    organization: '',
+    role: '',
+    package: ''
+})
+
+// Form state
+const inputClasses = reactive({
+    name: '',
+    email: '',
+    password: '',
+    organization: '',
+    role: '',
+    package: ''
+})
+
+const isSubmitting = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
+
+// Validation
+const validateField = (field: string) => {
+    switch (field) {
+        case 'name':
+            inputClasses.name = formData.name.length >= 3 ? 'is-valid' : 'is-invalid'
+            break
+        case 'email':
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            inputClasses.email = emailRegex.test(formData.email) ? 'is-valid' : 'is-invalid'
+            break
+        case 'password':
+            inputClasses.password = formData.password.length >= 6 ? 'is-valid' : 'is-invalid'
+            break
+        case 'organization':
+            inputClasses.organization = formData.organization.length >= 2 ? 'is-valid' : 'is-invalid'
+            break
+        case 'role':
+            inputClasses.role = formData.role ? 'is-valid' : 'is-invalid'
+            break
     }
 }
-function validated() {
-    if (title.value.length < 5) {
-        inputclasses.value = 'is-invalid'
+
+const validateForm = (): boolean => {
+    let isValid = true
+    
+    // Validate all fields
+    validateField('name')
+    validateField('email')
+    validateField('password')
+    validateField('organization')
+    validateField('role')
+    
+    // Check if any field is invalid
+    Object.values(inputClasses).forEach(className => {
+        if (className === 'is-invalid') isValid = false
+    })
+    
+    // Check if package is selected
+    if (!formData.package) {
+        isValid = false
+        errorMessage.value = 'Please select a package'
     }
-    else {
-        inputclasses.value = 'is-valid'
-    }
+    
+    return isValid
 }
-function update() {
-    if (desc.value.length < 4) {
-        itemclasses.value = 'is-invalid'
-    }
-    else {
-        itemclasses.value = 'is-valid'
-    }
+
+const onPackageSelected = (packageType: string) => {
+    formData.package = packageType
+    inputClasses.package = packageType ? 'is-valid' : 'is-invalid'
 }
-onMounted(() => {
+
+// API interaction
+const createUser = async () => {
     try {
-        allprojects.value = all;
-    } catch (error) {
-        console.error('Error fetching user data:', error);
+        if (!validateForm()) {
+            return
+        }
+
+        isSubmitting.value = true
+        errorMessage.value = ''
+        successMessage.value = ''
+
+        // Configure axios
+        axios.defaults.baseURL = 'http://127.0.0.1:8000'
+
+        // Send POST request to Django API
+        const response = await axios.post('/users/', formData)
+        
+        successMessage.value = 'User created successfully!'
+        
+        // Wait for 1 second to show success message
+        setTimeout(() => {
+            router.push('/users_management')
+        }, 1000)
+
+    } catch (error: any) {
+        console.error('Error creating user:', error)
+        errorMessage.value = error.response?.data?.message || 'Error creating user. Please try again.'
+    } finally {
+        isSubmitting.value = false
     }
-});
+}
+
+const cancel = () => {
+    router.push('/users_management')
+}
 </script>
+
+<style scoped>
+.alert {
+    margin-bottom: 1rem;
+}
+</style>
