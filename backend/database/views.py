@@ -150,6 +150,32 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
 
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            # Prevent deleting yourself
+            if instance.id == request.user.id:
+                return Response(
+                    {"error": "You cannot delete your own account"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Only superusers can delete other users
+            if not request.user.is_superuser:
+                return Response(
+                    {"error": "Only superusers can delete users"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            self.perform_destroy(instance)
+            return Response(
+                {"message": "User deleted successfully"},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
