@@ -1,5 +1,5 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import (
@@ -17,6 +17,8 @@ from django.utils import timezone
 from rest_framework import serializers
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
@@ -146,6 +148,7 @@ class SystemLogViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -181,3 +184,32 @@ router.register(r'notifications', NotificationViewSet)
 urlpatterns = [
     path('', include(router.urls)),
 ]
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def verify_token(request):
+    return Response({'valid': True})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_current_user(request):
+    user = request.user
+    return Response({
+        'id': user.id,
+        'email': user.email,
+        'name': user.name,
+        'role': user.role,
+        'is_staff': user.is_staff,
+        'is_superuser': user.is_superuser
+    })
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+            return response
+        except Exception as e:
+            return Response(
+                {'detail': 'Invalid credentials'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )

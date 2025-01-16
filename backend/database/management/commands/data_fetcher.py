@@ -82,7 +82,7 @@ class Command(BaseCommand):
         api_key = "sVALwcRMyQmjtwYpDPW-"
 
         # Get stations directly from database
-        paws_stations = self.get_stations_by_brand("3D Paws")
+        paws_stations = self.get_stations_by_brand("3D_Paws")
         if not paws_stations.exists():
             logger.warning("No stations found for brand '3D Paws'.")
             return

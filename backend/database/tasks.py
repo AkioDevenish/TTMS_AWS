@@ -2,6 +2,8 @@ from celery import shared_task
 from django.core.management import call_command
 from celery.utils.log import get_task_logger
 from celery import Task
+from .models import Station, StationHealthLog
+from django.utils import timezone
 
 logger = get_task_logger(__name__)
 
@@ -33,3 +35,13 @@ def fetch_weather_data(self):
     except Exception as e:
         logger.error(f"Task failed: {str(e)}")
         raise
+
+@shared_task
+def check_station_health():
+    stations = Station.objects.all()
+    for station in stations:
+        StationHealthLog.objects.create(
+            station=station,
+            battery_status='CHECK',
+            connectivity_status='CHECK',
+        )

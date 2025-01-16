@@ -6,7 +6,10 @@ djangorestframework-simplejwt
 PyJWT
 pytz
 sqlparse
-psycopg2-binary
+mysqlclient
 python-dotenv
-requests
+celery
 django-celery-beat
+redis
+python-dateutil
+requests

@@ -159,8 +159,17 @@ import indexPagenation from "@/pages/advance/indexPagenation.vue"
 import indexBreadcrumb from "@/pages/advance/indexBreadcrumb.vue"
 import indexRange from "@/pages/advance/indexRange.vue"
 
+import { useAuth } from '@/composables/useAuth'
 
 const routes: Array<RouteRecordRaw> = [
+  {
+    path: "/auth/login",
+    name: "Login",
+    component: () => import("@/components/common/block/auth/LoginPage.vue"),
+    meta: {
+      requiresAuth: false
+    }
+  },
   {
     path: "",
     redirect: "/dashboards/Main_Dashboard"
@@ -193,6 +202,7 @@ const routes: Array<RouteRecordRaw> = [
         component: LoginPage,
         meta: {
           title: 'Mofi - Premium Vue Admin Template',
+          requiresAuth: false
         }
       }
     ]
@@ -207,6 +217,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexHome,
         meta: {
           title: 'Dashboards | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -215,6 +226,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProject,
         meta: {
           title: 'Dashboards CRM | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -223,6 +235,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexEcommerce,
         meta: {
           title: 'Dashboards Ecommerce | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -231,6 +244,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCreateProject,
         meta: {
           title: 'Create Project| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       
@@ -248,6 +262,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexBarani,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -256,6 +271,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexPaws,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -264,6 +280,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSutron,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -272,6 +289,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexHydromet,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -280,6 +298,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexZentra,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
     ]
@@ -295,6 +314,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGeneral,
         meta: {
           title: 'Widgets General | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -303,6 +323,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexChart,
         meta: {
           title: 'Widgets Chart | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -317,6 +338,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProjectlist,
         meta: {
           title: 'Project List| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
 
@@ -332,6 +354,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexFileManeger,
         meta: {
           title: 'File Manager| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -340,6 +363,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexKanbanBoard,
         meta: {
           title: 'kanban Board| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -348,6 +372,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexLetterBox,
         meta: {
           title: 'Letter Box| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -356,6 +381,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexPrivateChat,
         meta: {
           title: 'Private Chat| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -364,6 +390,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGroupChat,
         meta: {
           title: 'Group Chat| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -372,6 +399,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexBookmark,
         meta: {
           title: 'Bookmark| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -380,6 +408,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexContact,
         meta: {
           title: 'contact| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -388,6 +417,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTodo,
         meta: {
           title: 'To Do| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -396,6 +426,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTask,
         meta: {
           title: 'Task| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -404,6 +435,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCalendar,
         meta: {
           title: 'Calendar| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
 
@@ -419,6 +451,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAddProduct,
         meta: {
           title: 'Add Product | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -427,6 +460,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProduct,
         meta: {
           title: 'Product | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -435,6 +469,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCart,
         meta: {
           title: 'Cart | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -443,6 +478,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProductPage,
         meta: {
           title: 'Product Page | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
 
@@ -452,6 +488,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexPaymentDetail,
         meta: {
           title: 'Payment Detail | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -460,6 +497,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInvoiceOne,
         meta: {
           title: 'Invoice | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -468,6 +506,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInvoiceTwo,
         meta: {
           title: 'Invoice Two | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -476,6 +515,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInvoiceThree,
         meta: {
           title: 'Invoice Three | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -484,6 +524,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInvoiceFour,
         meta: {
           title: 'Invoice Four | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -492,6 +533,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInvoiceFive,
         meta: {
           title: 'Invoice Five | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -500,6 +542,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInvoiceSix,
         meta: {
           title: 'Invoice Six | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -508,6 +551,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCheckout,
         meta: {
           title: 'Checkout | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -516,6 +560,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexPricing,
         meta: {
           title: 'Pricing | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -524,6 +569,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexWishlist,
         meta: {
           title: 'Wish List | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -532,6 +578,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexOrder,
         meta: {
           title: 'Order History | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -540,6 +587,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProductList,
         meta: {
           title: 'Product list | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -554,6 +602,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProfile,
         meta: {
           title: 'User Profile| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -562,6 +611,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexEdit,
         meta: {
           title: 'User Edit| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -570,6 +620,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCard,
         meta: {
           title: 'User Cards| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -584,6 +635,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSoical,
         meta: {
           title: 'Social App| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -592,6 +644,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSearch,
         meta: {
           title: 'Search| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -600,6 +653,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSample,
         meta: {
           title: 'Simple Page| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -608,6 +662,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInternationalization,
         meta: {
           title: 'Internationalization| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -616,6 +671,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexFaq,
         meta: {
           title: 'Faq| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -624,6 +680,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAPI,
         meta: {
           title: 'Support | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -632,6 +689,8 @@ const routes: Array<RouteRecordRaw> = [
         component: indexUserManagement,
         meta: {
           title: 'Support | Mofi - Premium Vue Admin Template',
+          requiresAuth: true,
+          requiresAdmin: true
         }
       },
       {
@@ -639,7 +698,8 @@ const routes: Array<RouteRecordRaw> = [
         name: "Create Users",
         component: indexCreateUser,
         meta: {
-          title: 'Support | Mofi - Premium Vue Admin Template',
+          requiresAuth: true,
+          title: 'Create User | Mofi - Premium Vue Admin Template'
         }
       }
     ]
@@ -655,6 +715,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexValidation,
         meta: {
           title: 'Form Controls Form Validation | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -663,6 +724,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInputs,
         meta: {
           title: 'Form Controls Base Input | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -671,6 +733,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCheckbox,
         meta: {
           title: 'Form Controls Checkbox & Radio | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -679,6 +742,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSelect,
         meta: {
           title: 'Form Widgets Select | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -687,6 +751,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGroups,
         meta: {
           title: 'Form Controls Input Groups | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -695,6 +760,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexMask,
         meta: {
           title: 'Form Controls Input Mask | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -703,6 +769,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexMega,
         meta: {
           title: 'Form Controls Mega Options | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -711,6 +778,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexDatapicker,
         meta: {
           title: 'Form Widgets Datepicker | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -719,6 +787,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTouchspin,
         meta: {
           title: 'Form Widgets Touchspin | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -727,6 +796,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSwitch,
         meta: {
           title: 'Form Widgets Switch| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -735,6 +805,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTypeahead,
         meta: {
           title: 'Form Widgets Typeahead | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -743,6 +814,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexClipboard,
         meta: {
           title: 'Form Widgets Clipboard | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -751,6 +823,7 @@ const routes: Array<RouteRecordRaw> = [
         component: formWizard2,
         meta: {
           title: 'Form Layout Form Wizard 2 | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -759,6 +832,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTwofactor,
         meta: {
           title: 'Form Layout Two Factor| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -767,6 +841,7 @@ const routes: Array<RouteRecordRaw> = [
         component: formWizard,
         meta: {
           title: 'Form Layout Form Wizard 2| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
     ]
@@ -781,6 +856,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexBootstrap,
         meta: {
           title: 'Table Bootstrap Table | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -789,6 +865,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexComponent,
         meta: {
           title: 'Table Table Components | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -797,6 +874,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexInit,
         meta: {
           title: 'Table Basic Init | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -811,6 +889,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTypography,
         meta: {
           title: 'Uikits Typography | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -819,6 +898,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAvatars,
         meta: {
           title: 'Uikits Avatars | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -827,6 +907,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexHelper,
         meta: {
           title: 'Uikits Helper Classes | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -835,6 +916,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGrid,
         meta: {
           title: 'Uikits Grid | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -843,6 +925,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTagPills,
         meta: {
           title: 'Uikits Tag & Pills | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -851,6 +934,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexProgress,
         meta: {
           title: 'Uikits Progressbar | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -859,6 +943,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexModal,
         meta: {
           title: 'Uikits Modal | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -867,6 +952,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAlert,
         meta: {
           title: 'Uikits Alert | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -875,6 +961,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexPopover,
         meta: {
           title: 'Uikits popover | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -883,6 +970,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTooltip,
         meta: {
           title: 'Uikits Tooltip | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -891,6 +979,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexDropdown,
         meta: {
           title: 'Uikits Dropdown | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -899,6 +988,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAccordion,
         meta: {
           title: 'Uikits Accordion | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -907,6 +997,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTabs,
         meta: {
           title: 'Uikits Tabs | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -915,6 +1006,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexLists,
         meta: {
           title: 'Uikits Lists | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -929,6 +1021,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAnimate,
         meta: {
           title: 'Animate | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -937,6 +1030,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAos,
         meta: {
           title: 'Aos Animation | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -951,6 +1045,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexFlag,
         meta: {
           title: 'Icons Flag | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -959,6 +1054,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexFontawesome,
         meta: {
           title: 'Icons Fontawesome | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -967,6 +1063,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexThemify,
         meta: {
           title: 'Icons Themify | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -975,6 +1072,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexFeather,
         meta: {
           title: 'Icons Feather | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -983,6 +1081,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexWhether,
         meta: {
           title: 'Icons Whether | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -991,6 +1090,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexIcoicon,
         meta: {
           title: 'Icons Icoicon | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1005,6 +1105,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexDefaultStyle,
         meta: {
           title: 'Buttons Default | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1013,6 +1114,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexFlat,
         meta: {
           title: 'Buttons Flat | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1021,6 +1123,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexEdge,
         meta: {
           title: 'Buttons Edge | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1029,6 +1132,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexRaised,
         meta: {
           title: 'Buttons Raised | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1037,6 +1141,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGroup,
         meta: {
           title: 'Buttons Group | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
 
@@ -1052,6 +1157,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexApexchart,
         meta: {
           title: 'Chart Apex Chart | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1060,6 +1166,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGoogle,
         meta: {
           title: 'Chart Google Chart | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1068,6 +1175,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexChartist,
         meta: {
           title: 'Chart Chartist Chart | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1078,6 +1186,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexErrorPage1,
     meta: {
       title: 'Error Page1 | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1086,6 +1195,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexErrorPage2,
     meta: {
       title: 'Error Page2 | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1094,6 +1204,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexErrorPage3,
     meta: {
       title: 'Error Page3 | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1102,6 +1213,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexErrorPage4,
     meta: {
       title: 'Error Page4 | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1110,6 +1222,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexErrorPage5,
     meta: {
       title: 'Error Page5 | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1118,6 +1231,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexErrorPage6,
     meta: {
       title: 'Error Page6 | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1126,6 +1240,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexComingsoonPage,
     meta: {
       title: 'Comingsoon Page | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1134,6 +1249,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexComingsoonVideo,
     meta: {
       title: 'Comingsoon Video | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1142,6 +1258,7 @@ const routes: Array<RouteRecordRaw> = [
     component: indexComingsoonImage,
     meta: {
       title: 'Comingsoon Image | Mofi - Premium Vue Admin Template',
+      requiresAuth: true
     }
   },
   {
@@ -1150,6 +1267,7 @@ const routes: Array<RouteRecordRaw> = [
     component: loginSimple,
     meta: {
       title: 'Login Simple | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1158,6 +1276,7 @@ const routes: Array<RouteRecordRaw> = [
     component: loginImage,
     meta: {
       title: 'Login Image | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1166,6 +1285,7 @@ const routes: Array<RouteRecordRaw> = [
     component: loginImageTwo,
     meta: {
       title: 'Login Image Two | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1174,6 +1294,7 @@ const routes: Array<RouteRecordRaw> = [
     component: loginValidation,
     meta: {
       title: 'Login Validation | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1182,6 +1303,7 @@ const routes: Array<RouteRecordRaw> = [
     component: loginTooltip,
     meta: {
       title: 'Login Tooltip | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1190,6 +1312,7 @@ const routes: Array<RouteRecordRaw> = [
     component: loginSweetalert,
     meta: {
       title: 'Login Sweetalert | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1198,6 +1321,7 @@ const routes: Array<RouteRecordRaw> = [
     component: registerImageTwo,
     meta: {
       title: 'Register Image Two | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1206,6 +1330,7 @@ const routes: Array<RouteRecordRaw> = [
     component: registerSimple,
     meta: {
       title: 'Register | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1214,6 +1339,7 @@ const routes: Array<RouteRecordRaw> = [
     component: registerImage,
     meta: {
       title: 'Register Image | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1222,6 +1348,7 @@ const routes: Array<RouteRecordRaw> = [
     component: unlockUser,
     meta: {
       title: 'Unlock User | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1230,6 +1357,7 @@ const routes: Array<RouteRecordRaw> = [
     component: forgetPassword,
     meta: {
       title: 'Forget Password | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1238,6 +1366,7 @@ const routes: Array<RouteRecordRaw> = [
     component: resetPassword,
     meta: {
       title: 'Reset Password | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1246,6 +1375,7 @@ const routes: Array<RouteRecordRaw> = [
     component: maintenanceView,
     meta: {
       title: 'Maintenance | Mofi - Premium Vue Admin Template',
+      requiresAuth: false
     }
   },
   {
@@ -1258,6 +1388,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGallery,
         meta: {
           title: 'Grid Gallery | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1266,6 +1397,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGriddesc,
         meta: {
           title: 'Grid Gallery With Desc | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1274,6 +1406,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexMasonry,
         meta: {
           title: 'Masonry | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1282,6 +1415,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexMasonarydesc,
         meta: {
           title: 'Masonry Desc | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1290,6 +1424,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexHoverGallery,
         meta: {
           title: 'Hover Gallery | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1304,6 +1439,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexDetails,
         meta: {
           title: 'Blog Details | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1312,6 +1448,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSingle,
         meta: {
           title: 'Blog Single | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1320,6 +1457,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexAdd,
         meta: {
           title: 'Add Post | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1334,6 +1472,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexJobCard,
         meta: {
           title: 'Job Card | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1343,6 +1482,7 @@ const routes: Array<RouteRecordRaw> = [
         props: true,
         meta: {
           title: 'Job Details | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1351,6 +1491,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexApply,
         meta: {
           title: 'Job Apply | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1359,6 +1500,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexList,
         meta: {
           title: 'Job List | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1373,6 +1515,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexLearning,
         meta: {
           title: 'Learning List | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1381,6 +1524,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCourse,
         meta: {
           title: 'course Detailed | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1395,6 +1539,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexGoogleMap,
         meta: {
           title: 'Google Map | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1403,6 +1548,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexLeaflet,
         meta: {
           title: 'Leaflet Map | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
 
@@ -1418,6 +1564,7 @@ const routes: Array<RouteRecordRaw> = [
         component: simpleEditor,
         meta: {
           title: 'Simple Editor | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1426,6 +1573,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCk,
         meta: {
           title: 'Ck Editor | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
@@ -1440,6 +1588,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexKnowledgebase,
         meta: {
           title: 'Knowledgebase | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
     ]
@@ -1454,6 +1603,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexScrollable,
         meta: {
           title: 'Bonus UI  Scrollable | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1462,6 +1612,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTree,
         meta: {
           title: 'Bonus UI  Tree | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1470,6 +1621,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexToasts,
         meta: {
           title: 'Bonus UI  Toasts | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1478,6 +1630,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexRating,
         meta: {
           title: 'Bonus UI  Rating | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1486,6 +1639,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexDropzone,
         meta: {
           title: 'Bonus UI  Dropzone | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1494,6 +1648,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTour,
         meta: {
           title: 'Bonus UI  Tour | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1502,6 +1657,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexSweetalert,
         meta: {
           title: 'Bonus UI  SweetAlert | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1510,6 +1666,7 @@ const routes: Array<RouteRecordRaw> = [
         component: animationModal,
         meta: {
           title: 'Bonus UI  Animated Modal | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1518,6 +1675,7 @@ const routes: Array<RouteRecordRaw> = [
         component: owlCarousel,
         meta: {
           title: 'Bonus UI  Owl Carousel | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1526,6 +1684,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexRibbon,
         meta: {
           title: 'Bonus UI  Ribbons | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1534,6 +1693,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexPagenation,
         meta: {
           title: 'Bonus UI  Pagenation | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1542,6 +1702,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexBreadcrumb,
         meta: {
           title: 'Bonus UI  Breadcrumb | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1550,6 +1711,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexRange,
         meta: {
           title: 'Bonus UI  Range | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1558,6 +1720,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCropper,
         meta: {
           title: 'Bonus UI  imageCropper | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1566,6 +1729,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexBasiccard,
         meta: {
           title: 'Bonus UI  Basic Card | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1574,6 +1738,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCreative,
         meta: {
           title: 'Bonus UI  Creative Card | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1582,6 +1747,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexDraggable,
         meta: {
           title: 'Bonus UI  Draggable Card | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       },
       {
@@ -1590,25 +1756,74 @@ const routes: Array<RouteRecordRaw> = [
         component: indexTimeline,
         meta: {
           title: 'Bonus UI  Timeline | Mofi - Premium Vue Admin Template',
+          requiresAuth: true
         }
       }
     ]
   },
+  {
+    path: '/users_management',
+    component: BodyView,
+    meta: { 
+      requiresAuth: true,
+      requiresAdmin: true
+    },
+    beforeEnter: async (to, from, next) => {
+      const { checkAuth, isAdmin } = useAuth()
+      await checkAuth()
+      
+      if (!isAdmin.value) {
+        next('/dashboard/default')
+      } else {
+        next()
+      }
+    },
+    children: [
+      {
+        path: '',
+        name: 'UserManagement',
+        component: () => import('@/pages/users_management/indexUserManagement.vue')
+      }
+    ]
+  },
+  {
+    path: '/dashboards/Main_Dashboard',
+    name: 'MainDashboard',
+    component: () => import('@/pages/dashbords/indexHome.vue'),
+    meta: {
+      requiresAuth: true,
+      title: 'Main Dashboard'
+    }
+  }
 ]
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
-router.beforeEach((to, from, next) => {
-  if (typeof (to.meta.title) === 'string') {
-    document.title = to.meta.title;
+
+router.beforeEach(async (to, from, next) => {
+  const { checkAuth } = useAuth()
+  
+  // Allow access to login page without authentication
+  if (to.path === '/auth/login') {
+    const isAuthenticated = await checkAuth()
+    if (isAuthenticated) {
+      next('/')
+      return
+    }
+    next()
+    return
   }
-  const path = ['/auth/login', '/auth/register'];
-  if (path.includes(to.path) || localStorage.getItem('user')) {
-    return next();
+
+  // Check authentication for protected routes
+  const isAuthenticated = await checkAuth()
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/auth/login')
+    return
   }
-  next('/auth/login');
-});
+  
+  next()
+})
 
 export default router

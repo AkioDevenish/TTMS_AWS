@@ -1,8 +1,9 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 import json
 
 class Brand(models.Model):
-    name = models.CharField(max_length=255, unique=True) 
+    name = models.CharField(max_length=100)
 
     class Meta:
         db_table = 'brands'
@@ -136,7 +137,24 @@ class SystemLog(models.Model):
         return f"{self.module} - {self.type} - {self.created_at}"
 
 
-class User(models.Model):
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', 'admin')
+        return self.create_user(email, password, **extra_fields)
+
+class User(AbstractUser):
+    username = None  # Disable username field
     name = models.CharField(max_length=255)
     organization = models.TextField(null=True)
     package = models.CharField(max_length=50, null=True)
@@ -144,6 +162,13 @@ class User(models.Model):
     password = models.CharField(max_length=255)
     role = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
+
+    objects = UserManager()
 
     class Meta:
         db_table = 'users'

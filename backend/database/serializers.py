@@ -73,16 +73,42 @@ class SystemLogSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'name', 'email', 'role', 'organization',  'package', 'created_at')
+        fields = [
+            'id', 
+            'name', 
+            'email', 
+            'organization', 
+            'package', 
+            'role',
+            'is_staff',
+            'is_superuser',
+            'password'
+        ]
         extra_kwargs = {
-            'password': {'write_only': True}  # Hide password in responses
+            'password': {'write_only': True},
+            'is_staff': {'read_only': True},
+            'is_superuser': {'read_only': True}
         }
+
+    def create(self, validated_data):
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        user.save()
+        return user
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    remember_me = serializers.BooleanField(required=False, default=False)
 
 def process_and_save_data(raw_data):
     # Check if raw_data is a string and try to parse it
