@@ -1773,7 +1773,7 @@ const routes: Array<RouteRecordRaw> = [
       await checkAuth()
       
       if (!isAdmin.value) {
-        next('/dashboard/default')
+        next(from)
       } else {
         next()
       }

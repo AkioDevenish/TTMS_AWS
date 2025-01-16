@@ -84,7 +84,7 @@ const router = useRouter()
 onMounted(async () => {
     await checkAuth()
     if (!currentUser.value?.is_superuser) {
-        router.push('/dashboard/default')
+        router.go(-1)
         return
     }
     await fetchUsers()
