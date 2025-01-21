@@ -14,9 +14,8 @@
                     :key="station.id"
                     class="btn me-1 mb-1"
                     :class="{
-                        'bg-light-primary font-primary': station.status === 'Online',
-                        'bg-light-danger font-danger': station.status === 'Offline',
-                        'bg-light-warning font-warning': station.status === 'Maintenance'
+                        'bg-light-primary font-primary': station.status !== 'NoData',
+                        'bg-light-danger font-danger': station.status === 'NoData'
                     }"
                 >
                     {{ station.id }} {{ station.name }}
@@ -25,28 +24,22 @@
             <div class="ratting-button">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="flex-shrink-0">
-                        <p class="f-w-500">{{ stationStatus.online }}</p>
+                        <p class="f-w-500">{{ status.online }}</p>
                     </div>
-                    <div class="flex-grow-1"><span class="f-w-500">Online Stations</span></div>
+                    <div class="flex-grow-1"><span class="f-w-500">Active Stations</span></div>
                 </div>
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="flex-shrink-0">
-                        <p class="f-w-500">{{ stationStatus.offline }}</p>
+                        <p class="f-w-500">{{ status.noData }}</p>
                     </div>
-                    <div class="flex-grow-1"><span class="f-w-500">Offline Stations</span></div>
-                </div>
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="flex-shrink-0">
-                        <p class="f-w-500">{{ stationStatus.maintenance }}</p>
-                    </div>
-                    <div class="flex-grow-1"><span class="f-w-500">Under Maintenance</span></div>
+                    <div class="flex-grow-1"><span class="f-w-500">Inactive Stations</span></div>
                 </div>
             </div>
-            <h5 class="f-w-500 pb-2">Network Uptime: {{ stationStatus.uptime }}%</h5>
+            <h5 class="f-w-500 pb-2">Network Activity: {{ status.uptime }}%</h5>
             <div class="progress progress-striped-primary">
                 <div class="progress-bar" role="progressbar" 
-                    :style="{ width: stationStatus.uptime + '%' }" 
-                    :aria-valuenow="stationStatus.uptime" 
+                    :style="{ width: status.uptime + '%' }" 
+                    :aria-valuenow="status.uptime" 
                     aria-valuemin="0"
                     aria-valuemax="100">
                 </div>
@@ -56,11 +49,25 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted } from 'vue'
+import { defineAsyncComponent, onMounted, computed } from 'vue'
 import { useAWSStations } from '@/composables/useAWSStations'
+import { getStationStatus } from '@/core/data/aws'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-const { stations, stationStatus, fetchStations } = useAWSStations()
+const { stations, fetchStations } = useAWSStations()
+
+const status = computed(() => {
+    const total = stations.value.length
+    const noData = stations.value.filter(s => s.status === 'NoData').length
+    const online = total - noData
+    
+    return {
+        total,
+        online,
+        noData,
+        uptime: total ? ((online / total) * 100).toFixed(1) : '0'
+    }
+})
 
 onMounted(fetchStations)
 </script>

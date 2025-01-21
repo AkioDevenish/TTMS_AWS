@@ -108,29 +108,46 @@ export function useStationData() {
 
   const getStationStatus = async (stationId: number) => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}&limit=1`
-      );
-      
-      const latestMeasurement = response.data[0];
-      if (!latestMeasurement) return 'Offline';
+        // Get both station info and latest measurement
+        const [stationResponse, measurementResponse] = await Promise.all([
+            axios.get(`http://127.0.0.1:8000/stations/${stationId}/`),
+            axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}&limit=1`)
+        ]);
+        
+        const station = stationResponse.data;
+        const measurements = measurementResponse.data;
 
-      // Check for invalid measurements
-      const hasInvalidValues = Object.values(latestMeasurement)
-        .filter(value => typeof value === 'number')
-        .every(value => value <= -1 || value === 0);
+        // Check if station has any measurements
+        if (!measurements || measurements.length === 0) {
+            return 'NoData';
+        }
 
-      if (hasInvalidValues) return 'Offline';
+        const latestMeasurement = measurements[0];
+        const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
+        const lastUpdated = new Date(station.last_updated_at);
+        
+        // If last_updated_at is more than 30 minutes old
+        const timeDiff = Date.now() - lastUpdated.getTime();
+        if (timeDiff > 30 * 60 * 1000) {
+            return 'Offline';
+        }
 
-      // Check measurement time
-      const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
-      const timeDiff = Date.now() - measurementTime.getTime();
-      if (timeDiff > 30 * 60 * 1000) return 'Offline'; // 30 minutes
+        // Check measurement values
+        const measurementValues = Object.entries(latestMeasurement)
+            .filter(([key, value]) => 
+                typeof value === 'number' && 
+                !['id', 'station_id'].includes(key)
+            )
+            .map(([_, value]) => value as number);
 
-      return latestMeasurement.status === 'Successful' ? 'Online' : 'Offline';
+        if (measurementValues.length === 0) {
+            return 'NoData';
+        }
+
+        return 'Online';
     } catch (err) {
-      console.error('Error getting station status:', err);
-      return 'Offline';
+        console.error('Error getting station status:', err);
+        return 'NoData';
     }
   };
 
