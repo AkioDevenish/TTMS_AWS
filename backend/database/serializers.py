@@ -80,6 +80,7 @@ class UserSerializer(serializers.ModelSerializer):
             'organization', 
             'package', 
             'role',
+            'status',
             'is_staff',
             'is_superuser',
             'password'

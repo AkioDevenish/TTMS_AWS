@@ -40,10 +40,11 @@
                         <div class="action-buttons">
                             <button 
                                 class="action-btn pause-btn"
-                                :class="{ 'paused': user.isPaused }"
-                                @click="togglePauseUser(user.id)"
+                                :class="{ 'paused': user.status === 'Paused' }"
+                                @click="handlePauseUser(user.id)"
+                                :title="user.status === 'Paused' ? 'Resume user account' : 'Pause user account'"
                             >
-                                <i class="fa" :class="user.isPaused ? 'fa-play' : 'fa-pause'"></i>
+                                <i class="fa" :class="user.status === 'Paused' ? 'fa-play' : 'fa-pause'"></i>
                             </button>
                             <button 
                                 class="action-btn delete-btn"
@@ -186,6 +187,52 @@ const handleDeleteUser = async (userId: number) => {
         }
     } catch (error) {
         console.error('Error in handleDeleteUser:', error)
+        Swal.fire({
+            title: 'Error',
+            text: errorMessage.value || 'An unexpected error occurred',
+            icon: 'error',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        })
+    }
+}
+
+const handlePauseUser = async (userId: number) => {
+    const user = allData.value.find(u => u.id === userId)
+    const isPaused = user?.status === 'Paused'
+    
+    try {
+        const result = await Swal.fire({
+            title: `${isPaused ? 'Resume' : 'Pause'} User Account`,
+            text: `Are you sure you want to ${isPaused ? 'resume' : 'pause'} this user account?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: isPaused ? '#28a745' : '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Yes, ${isPaused ? 'resume' : 'pause'} account`,
+            cancelButtonText: 'Cancel'
+        })
+
+        if (result.isConfirmed) {
+            const success = await togglePauseUser(userId)
+            if (success) {
+                Swal.fire({
+                    title: 'Success',
+                    text: `User account ${isPaused ? 'resumed' : 'paused'} successfully`,
+                    icon: 'success',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                })
+            } else {
+                throw new Error(errorMessage.value)
+            }
+        }
+    } catch (error) {
+        console.error('Error in handlePauseUser:', error)
         Swal.fire({
             title: 'Error',
             text: errorMessage.value || 'An unexpected error occurred',

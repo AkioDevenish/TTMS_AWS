@@ -9,7 +9,7 @@
                 </div>
             </div>
             <div class="col-7 shifts-overview">
-                <div class="d-flex gap-2" v-for="(item, index) in overviewData" :key="index">
+                <div class="d-flex gap-2" v-for="(item, index) in availableData" :key="index">
                     <div class="flex-shrink-0"><span :class="item.bg"> </span></div>
                     <div class="flex-grow-1">
                         <h6>{{ item.title }}</h6>
@@ -22,122 +22,116 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, computed } from 'vue'
+import { ref, defineAsyncComponent, computed, onMounted, watch } from 'vue'
 import { BaraniOption } from "@/core/data/chart"
+import { useStationData } from '@/composables/useStationData'
 import axios from 'axios'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 
+const { measurements, stationInfo, fetchStationData } = useStationData()
 const stationTitle = ref('Barani Station')
-const overviewData = ref([
-    { bg: "bg-primary", title: "Wind Speed", value: "0 m/s" },
-    { bg: "bg-secondary", title: "Wind Direction", value: "0°" },
-    { bg: "bg-warning", title: "Dewpoint", value: "0°C" },
-    { bg: "bg-tertiary", title: "Irradiation", value: "0W/m2" }
-])
+const selectedStationId = ref<number | null>(null)
 
-const chartSeries = ref([0, 0, 0, 0])
+const colors = {
+    windSpeed: '#7366ff',
+    windDir: '#f73164',
+    temperature: '#51bb25',
+    humidity: '#f8d62b',
+    solar: '#7366ff',
+    pressure: '#f73164',
+    rainfall: '#51bb25',
+    rainIntensity: '#f8d62b'
+}
+
+// Only get available data
+const availableData = computed(() => {
+    if (!measurements.value?.length) return []
+    
+    const data = []
+    const sensorTypes = {
+        wind_ave10: { bg: "bg-primary", title: "Wind Speed", unit: "m/s" },
+        dir_ave10: { bg: "bg-secondary", title: "Wind Direction", unit: "°" },
+        temperature: { bg: "bg-warning", title: "Temperature", unit: "°C" },
+        humidity: { bg: "bg-tertiary", title: "Humidity", unit: "%" },
+        irradiation: { bg: "bg-primary", title: "Solar Radiation", unit: "W/m²" },
+        pressure: { bg: "bg-secondary", title: "Pressure", unit: "hPa" },
+        rain_counter: { bg: "bg-warning", title: "Rainfall", unit: "mm" },
+        rain_intensity_max: { bg: "bg-tertiary", title: "Rain Intensity", unit: "mm/h" }
+    }
+
+    for (const [sensorType, config] of Object.entries(sensorTypes)) {
+        const measurement = measurements.value.find(m => m.sensor_type === sensorType)
+        if (measurement?.value !== undefined) {
+            data.push({
+                bg: config.bg,
+                title: config.title,
+                value: `${parseFloat(measurement.value.toString()).toFixed(1)}${config.unit}`
+            })
+        }
+    }
+
+    return data
+})
+
+const chartSeries = computed(() => 
+    availableData.value.map(item => 
+        parseFloat(item.value.replace(/[^0-9.-]+/g, ""))
+    )
+)
 
 const chartOptions = computed(() => ({
     ...BaraniOption,
+    colors: Object.values(colors).slice(0, availableData.value.length),
     tooltip: {
         y: {
             formatter: (value: number, { seriesIndex }: { seriesIndex: number }) => {
-                const units = ['m/s', '°', '°C', 'W/m2']
-                return `${value.toFixed(1)} ${units[seriesIndex]}`
+                return availableData.value[seriesIndex]?.value || `${value.toFixed(1)}`
             }
         }
     },
-    labels: ['Wind Speed', 'Wind Direction', 'Dewpoint', 'Irradiation']
+    labels: availableData.value.map(item => item.title)
 }))
 
-const getDateTime = (date: string, time: string): number => {
-    return new Date(`${date}T${time}`).getTime()
-}
-
-const filterLastTwoDaysData = (measurements: any[]) => {
-    if (!measurements.length) return []
-    
-    // Sort measurements by date and time (newest first)
-    const sortedMeasurements = measurements.sort((a, b) => {
-        const dateA = getDateTime(a.date, a.time)
-        const dateB = getDateTime(b.date, b.time)
-        return dateB - dateA
-    })
-
-    // Get the latest timestamp
-    const latestTime = getDateTime(sortedMeasurements[0].date, sortedMeasurements[0].time)
-    
-    // Calculate timestamp for 2 days ago
-    const twoDaysAgo = latestTime - (2 * 24 * 60 * 60 * 1000)
-
-    // Filter measurements within the last 2 days
-    return sortedMeasurements.filter(measurement => {
-        const measurementTime = getDateTime(measurement.date, measurement.time)
-        return measurementTime >= twoDaysAgo
-    })
-}
-
-const fetchData = async () => {
+const fetchRandomStation = async () => {
     try {
-        // Get all stations
-        const stationResponse = await axios.get('http://127.0.0.1:8000/stations/')
-        const baraniStations = stationResponse.data.filter((station: any) => station.brand_name === "Allmeteo")
+        const response = await axios.get('http://127.0.0.1:8000/stations/')
+        const baraniStations = response.data.filter((station: any) => station.brand_name === "Allmeteo")
         
-        if (!baraniStations.length) {
-            console.log('No Barani stations found')
-            return
+        if (baraniStations.length) {
+            const randomStation = baraniStations[Math.floor(Math.random() * baraniStations.length)]
+            selectedStationId.value = randomStation.id
+            stationTitle.value = `Barani - ${randomStation.name}`
         }
-
-        // Select a random station
-        const randomStation = baraniStations[Math.floor(Math.random() * baraniStations.length)]
-        stationTitle.value = `Barani - ${randomStation.name}`
-
-        // Get measurements
-        const measurementsResponse = await axios.get('http://127.0.0.1:8000/measurements/')
-        
-        // Filter for this station's measurements
-        const stationMeasurements = measurementsResponse.data.filter(
-            (measurement: any) => measurement.station_name === randomStation.name
-        )
-
-        // Get last 2 days of data
-        const recentMeasurements = filterLastTwoDaysData(stationMeasurements)
-
-        // Get latest values for each measurement type
-        const latestValues = {
-            wind_speed: recentMeasurements.find((m: any) => m.sensor_type === 'wind_ave10')?.value || 0,
-            wind_direction: recentMeasurements.find((m: any) => m.sensor_type === 'dir_ave10')?.value || 0,
-            dewpoint: recentMeasurements.find((m: any) => m.sensor_type === 'dewpoint')?.value || 0,
-            irradiation: recentMeasurements.find((m: any) => m.sensor_type === 'solar_irradiance')?.value || 0
-        }
-
-        // Update overview data with latest values
-        overviewData.value = [
-            { bg: "bg-primary", title: "Wind Speed", value: `${latestValues.wind_speed} m/s` },
-            { bg: "bg-secondary", title: "Wind Direction", value: `${latestValues.wind_direction}°` },
-            { bg: "bg-warning", title: "Dewpoint", value: `${latestValues.dewpoint}°C` },
-            { bg: "bg-tertiary", title: "Irradiation", value: `${latestValues.irradiation}W/m2` }
-        ]
-
-        // Update chart series with moving window data
-        chartSeries.value = [
-            parseFloat(latestValues.wind_speed),
-            parseFloat(latestValues.wind_direction),
-            parseFloat(latestValues.dewpoint),
-            parseFloat(latestValues.irradiation)
-        ]
-
     } catch (error) {
-        console.error('Error fetching Barani data:', error)
+        console.error('Error fetching stations:', error)
     }
 }
 
-// Refresh data every minute
-const startDataRefresh = () => {
-    fetchData() // Initial fetch
-    setInterval(fetchData, 60000) // Refresh every minute
-}
+watch(() => selectedStationId.value, (newId) => {
+    if (newId) {
+        fetchStationData(newId)
+    }
+})
 
-onMounted(startDataRefresh)
+watch([() => measurements.value, () => stationInfo.value], () => {
+    // No need to update data as availableData is computed
+})
+
+onMounted(async () => {
+    await fetchRandomStation()
+    // Refresh data every minute
+    setInterval(async () => {
+        if (selectedStationId.value) {
+            await fetchStationData(selectedStationId.value)
+        }
+    }, 60000)
+})
 </script>
+
+<style scoped>
+.bg-primary { background-color: #7366ff !important; }
+.bg-secondary { background-color: #f73164 !important; }
+.bg-warning { background-color: #51bb25 !important; }
+.bg-tertiary { background-color: #f8d62b !important; }
+</style>

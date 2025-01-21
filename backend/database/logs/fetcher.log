@@ -1,0 +1,16 @@
+2025-01-18 18:38:30,933 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-01-18 18:38:30,933 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-18 18:38:30,934 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-01-18 18:46:14,229 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-01-18 18:46:14,230 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-18 20:08:14,615 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-01-18 20:08:14,615 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-18 20:33:04,128 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-18 20:46:41,210 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-19 20:02:16,269 - database.management.commands.data_fetcher - INFO - === Zentra Data Fetch Details ===
+2025-01-19 20:02:16,270 - database.management.commands.data_fetcher - INFO - Time range: 2025-01-19 04:02:16 to 2025-01-19 16:02:16
+2025-01-19 20:02:16,270 - database.management.commands.data_fetcher - INFO - Found sensor map: {'bt1': 1, 'mt1': 2, 'ws': 3, 'wd': 4, 'rg': 5, 'bp1': 6, 'sv1': 7, 'si1': 8, 'su1': 9, 'bpc': 10, 'css': 11, 'battery': 20, 'wind_ave10': 13, 'wind_max10': 14, 'wind_min10': 15, 'dir_ave10': 16, 'dir_max10': 17, 'dir_hi10': 18, 'dir_lo10': 19, 'humidity': 21, 'irradiation': 22, 'irr_max': 23, 'pressure': 24, 'temperature': 25, 'temperature_max': 26, 'temperature_min': 27, 'rain_counter': 28, 'rain_intensity_max': 29, 'sn': 30, 'device_id': 31, 'timestamp': 32}
+2025-01-19 20:02:16,272 - database.management.commands.data_fetcher - INFO - 
+Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
+2025-01-19 20:02:16,272 - database.management.commands.data_fetcher - INFO - Making API request with params: {'device_sn': 'z6-26732', 'start_date': '2025-01-19 04:02:16', 'end_date': '2025-01-19 16:02:16', 'output_format': 'json', 'per_page': 1000, 'sort_by': 'asc'}
+2025-01-20 20:30:42,045 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...

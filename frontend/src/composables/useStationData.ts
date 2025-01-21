@@ -106,6 +106,34 @@ export function useStationData() {
     }
   };
 
+  const getStationStatus = async (stationId: number) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}&limit=1`
+      );
+      
+      const latestMeasurement = response.data[0];
+      if (!latestMeasurement) return 'Offline';
+
+      // Check for invalid measurements
+      const hasInvalidValues = Object.values(latestMeasurement)
+        .filter(value => typeof value === 'number')
+        .every(value => value <= -1 || value === 0);
+
+      if (hasInvalidValues) return 'Offline';
+
+      // Check measurement time
+      const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
+      const timeDiff = Date.now() - measurementTime.getTime();
+      if (timeDiff > 30 * 60 * 1000) return 'Offline'; // 30 minutes
+
+      return latestMeasurement.status === 'Successful' ? 'Online' : 'Offline';
+    } catch (err) {
+      console.error('Error getting station status:', err);
+      return 'Offline';
+    }
+  };
+
   return {
     measurements,
     stationInfo,
@@ -114,6 +142,7 @@ export function useStationData() {
     fetchStationData,
     getLast24HoursMeasurements,
     getLatestMeasurement,
-    formatDateTime
+    formatDateTime,
+    getStationStatus
   };
 } 

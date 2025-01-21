@@ -67,6 +67,15 @@ class StationViewSet(viewsets.ModelViewSet):
         serializer = StationHealthLogSerializer(logs, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['get'])
+    def latest_health(self, request, pk=None):
+        station = self.get_object()
+        latest_health = station.health_logs.order_by('-created_at').first()
+        if latest_health:
+            serializer = StationHealthLogSerializer(latest_health)
+            return Response(serializer.data)
+        return Response({'error': 'No health data available'}, status=404)
+
 
 class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
@@ -228,6 +237,14 @@ def get_current_user(request):
         'is_staff': user.is_staff,
         'is_superuser': user.is_superuser
     })
+
+@api_view(['GET'])
+def get_latest_timestamp(request):
+    latest_measurement = Measurement.objects.order_by('-date', '-time').first()
+    if latest_measurement:
+        timestamp = f"{latest_measurement.date}T{latest_measurement.time}"
+        return Response({'timestamp': timestamp})
+    return Response({'timestamp': None}, status=404)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):

@@ -701,6 +701,15 @@ const routes: Array<RouteRecordRaw> = [
           requiresAuth: true,
           title: 'Create User | Mofi - Premium Vue Admin Template'
         }
+      },
+      {
+        path: "knowledgebase",
+        name: "knowledgebase",
+        component: indexKnowledgebase,
+        meta: {
+          title: 'Knowledge Base | Documentation',
+          requiresAuth: true
+        }
       }
     ]
   },
@@ -1578,8 +1587,9 @@ const routes: Array<RouteRecordRaw> = [
       }
     ]
   },
+  
   {
-    path: "/knowledgebase",
+    path: "/pages/knowledgebase",
     component: BodyView,
     children: [
       {
@@ -1593,6 +1603,7 @@ const routes: Array<RouteRecordRaw> = [
       },
     ]
   },
+  
   {
     path: "/advance",
     component: BodyView,

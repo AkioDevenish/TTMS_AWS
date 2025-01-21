@@ -25,6 +25,11 @@ class Station(models.Model):
     lat_lng = models.CharField(max_length=255, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     installation_date = models.DateField()
+    sensors = models.ManyToManyField(
+        'Sensor',
+        through='StationSensor',
+        related_name='stations'
+    )
 
     class Meta:
         db_table = 'stations'
@@ -161,6 +166,16 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     role = models.CharField(max_length=50)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('Active', 'Active'),
+            ('Inactive', 'Inactive'),
+            ('Pending', 'Pending'),
+            ('Paused', 'Paused')
+        ],
+        default='Active'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)

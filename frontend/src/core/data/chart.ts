@@ -6,7 +6,7 @@ export const series = [
         data: [22, 14, 23, 8, 14, 12, 2, 14, 18, 35, 18, 8, 24]
     }
 ]
-export const atmosseries = [89.2, 30, 90, 10]
+export const zentraseries = [89.2, 30, 90, 10]
 export const baraniseries = [63.2, 18, 1300, 15]
 export const pawsseries = [71.8, 18, 108, 8]
 export const pawsseries2 = [65.5, 30, 138, 1]
@@ -522,7 +522,7 @@ export const chartOptions = {
     }
 }
 
-export const AtmosOption = {
+export const ZentraOption = {
     labels: ["Humidity", "Wind Speed", "Wind Direction", "Rainfall"],
     chart: {
         type: "donut",

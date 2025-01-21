@@ -90,24 +90,35 @@ export function useUserManagement() {
     }
 
     // Toggle user pause state
-    const togglePauseUser = async (userId: number) => {
+    const togglePauseUser = async (userId: number): Promise<boolean> => {
         try {
-            const response = await axios.post(`http://127.0.0.1:8000/users/${userId}/toggle-pause/`, {}, {
+            loading.value = true
+            errorMessage.value = ''
+            successMessage.value = ''
+    
+            const user = allData.value.find(u => u.id === userId)
+            const newStatus = user?.status === 'Paused' ? 'Active' : 'Paused'
+    
+            const response = await axios.patch(`http://127.0.0.1:8000/users/${userId}/`, {
+                status: newStatus
+            }, {
                 headers: getHeaders()
             })
-
+    
             if (response.status === 200) {
                 const userIndex = allData.value.findIndex(user => user.id === userId)
                 if (userIndex !== -1) {
-                    allData.value[userIndex].isPaused = !allData.value[userIndex].isPaused
-                    allData.value[userIndex].status = allData.value[userIndex].isPaused ? 'Paused' : 'Active'
+                    allData.value[userIndex].status = newStatus
                 }
-                const action = allData.value[userIndex].isPaused ? 'paused' : 'resumed'
-                successMessage.value = `User has been ${action} successfully`
+                return true
             }
-        } catch (error) {
+            return false
+        } catch (error: any) {
             console.error('Error toggling user pause:', error)
-            errorMessage.value = 'Failed to toggle user pause status'
+            errorMessage.value = error.response?.data?.message || 'Failed to toggle user pause status'
+            return false
+        } finally {
+            loading.value = false
         }
     }
 

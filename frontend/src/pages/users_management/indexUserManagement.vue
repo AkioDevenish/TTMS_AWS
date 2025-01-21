@@ -2,7 +2,7 @@
     <div v-if="isAdmin" class="container-fluid">
         <div class="row">
             <div class="d-flex justify-content-end mb-3">
-                <router-link class="btn btn-primary" to="users_management/createuser">
+                <router-link class="btn btn-primary" to="/pages/users_management/createuser">
                     <i data-feather="plus-square"></i> Create New User
                 </router-link>
             </div>
