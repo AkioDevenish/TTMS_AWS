@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-l%!0eq!3094viw=^$z85-)mea!kp_8!q8!066tfpsf@_==l4+c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -65,8 +65,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
 	"http://localhost:3000",
     "http://localhost:5173",
-    "http://167.88.45.83"
-   ]
+    "http://167.88.45.83",
+    "https://metoffice.gov.tt"
+]
 
 
 REST_FRAMEWORK = {
