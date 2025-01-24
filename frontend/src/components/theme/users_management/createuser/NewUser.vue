@@ -225,7 +225,7 @@ const createUser = async () => {
         successMessage.value = ''
 
         // Configure axios
-        axios.defaults.baseURL = 'http://127.0.0.1:8000'
+        // axios.defaults.baseURL = 'http://127.0.0.1:8000'
 
         // Send POST request to Django API
         const response = await axios.post('/users/', formData)
