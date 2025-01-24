@@ -105,12 +105,12 @@ TEMPLATES = [
 
 DATABASES = {
    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aws_data',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',  # Or an IP Address that your DB is hosted on
-        'PORT': '3306',
+        'ENGINE': os.getenv('DB_ENGINE'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
