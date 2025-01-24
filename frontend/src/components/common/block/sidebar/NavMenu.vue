@@ -7,7 +7,7 @@
 			<h6>Pinned</h6>
 		</div>
 	</li>
-	<li v-for="(menuItem, index) in menu" :key="index" class="sidebar-list" :class="[{ ' sidebar-main-title': menuItem.type == 'headtitle' }, menuItem.isPinned ? 'pined' : '']">
+	<li v-for="(menuItem, index) in filteredMenu" :key="index" class="sidebar-list" :class="[{ ' sidebar-main-title': menuItem.type == 'headtitle' }, menuItem.isPinned ? 'pined' : '']">
 		<div v-if="menuItem.type == 'headtitle'">
 			<h6 class="lan-1">{{ $t(menuItem.headTitle1) }}</h6>
 		</div>
@@ -93,11 +93,25 @@
 import { ref, onMounted, computed } from 'vue';
 import { useMenuStore } from "@/store/menu";
 import { useRoute } from 'vue-router'
+import { useAuth } from '@/composables/useAuth';
 
-let menuItems = ref();
+const { currentUser, checkAuth } = useAuth();
+const store = useMenuStore();
+const menu = store.data;
 
-let store = useMenuStore();
-let menu = store.data
+onMounted(async () => {
+	await checkAuth();
+});
+
+const filteredMenu = computed(() => {
+	return menu.filter(item => {
+		if (item.headTitle1 === 'User Management' || item.title === 'User Management') {
+			const isAdmin = currentUser.value?.is_superuser === true;
+			return isAdmin;
+		}
+		return true;
+	});
+});
 
 const showPinTitle = computed(() => {
 	let show = false;

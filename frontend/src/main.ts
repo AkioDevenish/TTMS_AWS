@@ -45,6 +45,24 @@ import Deutsch from "@/core/locales/de.json"
 import Español from "@/core/locales/es.json"
 
 import { createI18n } from 'vue-i18n'
+import axios from 'axios'
+
+// Set base URL
+axios.defaults.baseURL = 'http://127.0.0.1:8000'
+
+// Add request interceptor to handle errors
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            router.push('/auth/login')
+        }
+        return Promise.reject(error)
+    }
+)
+
 const i18n = createI18n({
     legacy: false,
     locale: 'English',

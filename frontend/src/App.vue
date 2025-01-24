@@ -13,8 +13,11 @@
 import { onMounted, ref, watch, onUnmounted } from "vue"
 import { useRouter } from 'vue-router'
 import { useProductsStore } from "@/store/products"
+import { useAuth } from '@/composables/useAuth'
 let showLoader = ref<boolean>(false)
 let router = useRouter()
+
+const { checkAuth } = useAuth()
 
 watch(
   () => router,
@@ -48,6 +51,8 @@ onMounted(() => {
     }
   }, 0);
 
+  console.log('App mounted, checking auth...')
+  checkAuth()
 })
 onUnmounted(() => {
   window.removeEventListener('beforeunload', add)

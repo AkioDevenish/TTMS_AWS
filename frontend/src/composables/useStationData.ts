@@ -106,6 +106,51 @@ export function useStationData() {
     }
   };
 
+  const getStationStatus = async (stationId: number) => {
+    try {
+        // Get both station info and latest measurement
+        const [stationResponse, measurementResponse] = await Promise.all([
+            axios.get(`http://127.0.0.1:8000/stations/${stationId}/`),
+            axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}&limit=1`)
+        ]);
+        
+        const station = stationResponse.data;
+        const measurements = measurementResponse.data;
+
+        // Check if station has any measurements
+        if (!measurements || measurements.length === 0) {
+            return 'NoData';
+        }
+
+        const latestMeasurement = measurements[0];
+        const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
+        const lastUpdated = new Date(station.last_updated_at);
+        
+        // If last_updated_at is more than 30 minutes old
+        const timeDiff = Date.now() - lastUpdated.getTime();
+        if (timeDiff > 30 * 60 * 1000) {
+            return 'Offline';
+        }
+
+        // Check measurement values
+        const measurementValues = Object.entries(latestMeasurement)
+            .filter(([key, value]) => 
+                typeof value === 'number' && 
+                !['id', 'station_id'].includes(key)
+            )
+            .map(([_, value]) => value as number);
+
+        if (measurementValues.length === 0) {
+            return 'NoData';
+        }
+
+        return 'Online';
+    } catch (err) {
+        console.error('Error getting station status:', err);
+        return 'NoData';
+    }
+  };
+
   return {
     measurements,
     stationInfo,
@@ -114,6 +159,7 @@ export function useStationData() {
     fetchStationData,
     getLast24HoursMeasurements,
     getLatestMeasurement,
-    formatDateTime
+    formatDateTime,
+    getStationStatus
   };
 } 

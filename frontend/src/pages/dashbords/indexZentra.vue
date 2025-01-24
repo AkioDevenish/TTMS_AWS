@@ -65,20 +65,35 @@ const ZentraTempCard = defineAsyncComponent(() => import("@/components/theme/sta
 
 const stationNames = ref<Station[]>([]);
 const selectedStation = ref<number>(0);
+const isLoading = ref<boolean>(false);
+const error = ref<string | null>(null);
 
 const zentraData = useStationData();
 
 const fetchStationNames = async () => {
   try {
+    isLoading.value = true;
     const response = await axios.get<Station[]>('http://127.0.0.1:8000/stations/');
-    const zentraStations = response.data.filter(station => station.brand_name === "Zentra");
+    // Try both formats of the brand name
+    const zentraStations = response.data.filter(station => 
+      station.brand_name === "Zentra" || station.brand_name === "ZENTRA"
+    );
+    
+    console.log('All stations:', response.data); // Debug log
+    console.log('Filtered Zentra stations:', zentraStations); // Debug log
+    
     stationNames.value = zentraStations;
     
     if (zentraStations.length > 0 && !selectedStation.value) {
       selectedStation.value = zentraStations[0].id;
+    } else {
+      error.value = 'No Zentra stations available';
     }
   } catch (error) {
     console.error('Error fetching station names:', error);
+    error.value = 'Failed to fetch station data';
+  } finally {
+    isLoading.value = false;
   }
 };
 

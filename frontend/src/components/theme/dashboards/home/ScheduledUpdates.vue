@@ -15,13 +15,9 @@
                 </thead>
                 <tbody>
                     <tr v-for="station in filteredStations" :key="station.id">
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <h5>{{ station.name }}</h5>
-                            </div>
-                        </td>
+                        <td>{{ station.name }}</td>
                         <td>{{ station.brand_name }}</td>
-                        <td>{{ formatTime(station.nextUpdate) }}</td>
+                        <td>{{ formatTime(station.lastUpdate) }}</td>
                         <td>
                             <div class="progress progress-striped-primary">
                                 <div class="progress-bar" role="progressbar" 
@@ -37,38 +33,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import Card1 from '@/components/common/card/CardData1.vue';
 import axios from 'axios';
+import { useStationData } from '@/composables/useStationData';
 
-const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
-
-interface Station {
-    id: number;
-    name: string;
-    brand_name: string;
-    lastUpdate: Date;
-    nextUpdate: Date;
-    progress: number;
-}
-
-const stations = ref<Station[]>([]);
+const { measurements, stationInfo, getLatestMeasurement } = useStationData();
 const searchQuery = ref('');
+const stations = ref<any[]>([]);
 let updateInterval: number;
-
-// Computed property for filtered stations using Map for better performance
-const stationsMap = new Map<string, Station>();
-const filteredStations = computed(() => {
-    if (!searchQuery.value) return stations.value;
-    const query = searchQuery.value.toLowerCase();
-    return Array.from(stationsMap.values()).filter(station => 
-        station.name.toLowerCase().includes(query) ||
-        station.brand_name.toLowerCase().includes(query)
-    );
-});
-
-const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-};
 
 const calculateNextUpdate = (lastUpdate: Date): Date => {
     const next = new Date(lastUpdate);
@@ -76,63 +49,51 @@ const calculateNextUpdate = (lastUpdate: Date): Date => {
     return next;
 };
 
-// Optimized fetch using single endpoint and Promise.all
+const formatTime = (date: Date): string => {
+    return date.toLocaleTimeString();
+};
+
+const filteredStations = computed(() => {
+    return stations.value.filter(station => 
+        station.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+});
+
 const fetchStations = async () => {
     try {
         const response = await axios.get('http://127.0.0.1:8000/stations/');
         const stationsData = response.data;
         
-        // Pre-populate the stations with basic info
-        stations.value = stationsData.map((station: any) => ({
-            id: station.id,
-            name: station.name,
-            brand_name: station.brand_name,
-            lastUpdate: new Date(),
-            nextUpdate: calculateNextUpdate(new Date()),
-            progress: 0
-        }));
-
-        // Update the Map for faster lookups
-        stations.value.forEach(station => {
-            stationsMap.set(station.id.toString(), station);
-        });
-
-        // Fetch latest measurements in parallel
-        const measurementPromises = stationsData.map((station: any) => 
+        // Get latest measurement for each station
+        const measurementPromises = stationsData.map(station => 
             axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${station.id}&limit=1`)
         );
-
+        
         const measurements = await Promise.all(measurementPromises);
         
-        // Update stations with measurement data
-        measurements.forEach((response, index) => {
-            if (response.data.length > 0) {
-                const measurement = response.data[0];
-                const station = stationsMap.get(stationsData[index].id.toString());
-                if (station) {
-                    station.lastUpdate = new Date(`${measurement.date}T${measurement.time}`);
-                    station.nextUpdate = calculateNextUpdate(station.lastUpdate);
-                }
-            }
+        stations.value = stationsData.map((station: any, index: number) => {
+            const measurement = measurements[index].data[0];
+            const timestamp = measurement ? new Date(`${measurement.date}T${measurement.time}`) : new Date();
+            
+            return {
+                ...station,
+                lastUpdate: timestamp,
+                nextUpdate: calculateNextUpdate(timestamp),
+                progress: 0
+            };
         });
     } catch (error) {
         console.error('Error fetching stations:', error);
     }
 };
 
-const updateProgress = () => {
-    const now = new Date();
-    stations.value.forEach(station => {
-        const timeSinceLastUpdate = now.getTime() - station.lastUpdate.getTime();
-        const totalInterval = 3600000;
-        station.progress = Math.min((timeSinceLastUpdate / totalInterval) * 100, 100);
-    });
+// Start data refresh
+const startDataRefresh = () => {
+    fetchStations(); // Initial fetch
+    updateInterval = setInterval(fetchStations, 60000); // Refresh every minute
 };
 
-onMounted(() => {
-    fetchStations();
-    updateInterval = setInterval(updateProgress, 1000);
-});
+onMounted(startDataRefresh);
 
 onUnmounted(() => {
     clearInterval(updateInterval);

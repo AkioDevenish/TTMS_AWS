@@ -1,24 +1,24 @@
 <template>
     <div class="container-fluid default-dashboard">
         <div class="row widget-grid">
-          <div class="col-xl-5 col-md-6 proorder-xl-3 proorder-md-1">
-            <WelcomeView />
+         
+        <ScheduledUpdates />
+        <ZentraOverview />
+        <BaraniOverview />
+        <PawsOverview />
+        <PawsOverview2 />
+        <ActiveMembers /> 
+        <HighestRecord/>
+        <div class="col-xl-5 col-md-6 proorder-xl-3 proorder-md-1">
             <AWSstatus/>
         </div>
-            <ActiveMembers /> 
-            <AtmosOverview />
-            <BaraniOverview />
-            <PawsOverview />
-            <PawsOverview2 />
-            <HighestRecord/>
-            <ScheduledUpdates />
         </div>
     </div>
 </template>
 <script lang="ts" setup>
 
 import { defineAsyncComponent } from 'vue'
-const  AtmosOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/AtmosOverview.vue'))
+const  ZentraOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/ZentraOverview.vue'))
 const  BaraniOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/BaraniOverview.vue'))
 const  PawsOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/PawsOverview.vue'))
 const  PawsOverview2 = defineAsyncComponent(() => import('@/components/theme/dashboards/home/PawsOverview2.vue'))

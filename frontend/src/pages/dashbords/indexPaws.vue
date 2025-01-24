@@ -72,7 +72,7 @@ const pawsData = useStationData();
 const fetchStationNames = async () => {
   try {
     const response = await axios.get<Station[]>('http://127.0.0.1:8000/stations/');
-    const pawsStations = response.data.filter(station => station.brand_name === "3D Paws");
+    const pawsStations = response.data.filter(station => station.brand_name === "3D_Paws");
     stationNames.value = pawsStations;
     
     if (pawsStations.length > 0 && !selectedStation.value) {

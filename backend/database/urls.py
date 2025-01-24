@@ -4,7 +4,8 @@ from .views import (
     BrandViewSet, StationViewSet, SensorViewSet,
     MeasurementViewSet, StationViewSet, StationHealthLogViewSet,
     StationSensorViewSet, APIAccessTokenViewSet, SystemLogViewSet,
-    UserViewSet, NotificationViewSet
+    UserViewSet, NotificationViewSet, verify_token, get_current_user,
+    CustomTokenObtainPairView
 )
 
 router = DefaultRouter()
@@ -21,4 +22,7 @@ router.register(r'notifications', NotificationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('api/verify-token/', verify_token, name='verify-token'),
+    path('api/user/me/', get_current_user, name='current-user'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

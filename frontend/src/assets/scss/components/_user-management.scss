@@ -1,0 +1,702 @@
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.page-item {
+    cursor: pointer;
+}
+
+.page-item.active .page-link {
+    background-color: #7A70BA;
+    border-color: #7A70BA;
+}
+
+.dropdown-toggle::after {
+    margin-left: 0.5em;
+}
+
+.dropdown-menu {
+    min-width: 8rem;
+}
+
+.dropdown-item.active {
+    background-color: #7A70BA;
+    color: white;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.dropdown-toggle:hover {
+    opacity: 0.9;
+}
+
+.status-dropdown {
+    position: relative;
+}
+
+.status-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    min-width: 120px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-success { background-color: #28a745; }
+.dot-warning { background-color: #ffc107; }
+.dot-danger { background-color: #dc3545; }
+.dot-secondary { background-color: #6c757d; }
+
+.status-btn-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-btn-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.status-btn-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.status-btn-secondary {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
+.status-menu {
+    min-width: 140px;
+    padding: 0.5rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    margin: 2px 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    
+    &:hover {
+        background-color: #f8f9fa;
+    }
+    
+    &.active {
+        background-color: #f8f9fa;
+        font-weight: 500;
+    }
+}
+
+.status-item:hover {
+    background-color: #f8f9fa;
+}
+
+.status-item.active {
+    background-color: #f8f9fa;
+    font-weight: 500;
+}
+
+.dropdown-toggle::after {
+    margin-left: auto;
+}
+
+/* Status-specific hover effects */
+.status-Active:hover {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.status-Pending:hover {
+    color: #856404;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.status-Inactive:hover {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.status-Pending {
+    color: #997404 !important;
+    background-color: rgba(255, 193, 7, 0.05);
+    
+    .status-dot {
+        background-color: #ffc107;
+    }
+    
+    &:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.action-btn i {
+    font-size: 14px;
+}
+
+.pause-btn {
+    background-color: transparent;
+    border: none;
+    padding: 8px;
+    transition: all 0.2s ease;
+}
+
+.pause-btn:hover {
+    transform: scale(1.1);
+}
+
+.pause-btn.paused {
+    background-color: transparent;
+}
+
+.pause-btn .fa {
+    transition: all 0.2s ease;
+}
+
+.pause-btn:hover .fa-pause {
+    color: #dc3545 !important;
+}
+
+.pause-btn:hover .fa-play {
+    color: #28a745 !important;
+}
+
+.delete-btn {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Add hover effects */
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+.status-cell {
+    padding: 0.75rem !important;
+    min-width: 140px;
+}
+
+.status-group {
+    display: flex;
+    align-items: center;
+}
+
+.control-group {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-start;
+}
+
+/* Update existing status button styles */
+.status-btn {
+    min-width: 130px;
+    padding: 8px 16px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.status-menu {
+    padding: 0.5rem;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+}
+
+.status-item {
+    padding: 8px 16px;
+    margin: 2px 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+/* Add hover animations */
+.control-btn:active {
+    transform: translateY(0);
+}
+
+.status-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+/* Add these styles to align the table headers */
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1rem 0;
+    
+    th, td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+    }
+    
+    thead th {
+        font-weight: 600;
+        color: #495057;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
+        font-size: 0.95rem;
+    }
+
+    tbody td {
+        font-size: 0.95rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+}
+
+.table thead th:last-child {  /* Actions column header */
+    text-align: left;
+    padding-left: 0.75rem;
+}
+
+.table tbody td:last-child {  /* Actions column cells */
+    text-align: left;
+    padding-left: 0.75rem;
+}
+
+/* Control buttons (pause and delete) */
+.control-btn {
+    width: 32px;  /* Reduced from 36px */
+    height: 32px; /* Reduced from 36px */
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.control-btn i {
+    font-size: 14px;
+}
+
+/* Pause button */
+.pause-btn {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.pause-btn:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+/* Delete button */
+.delete-btn {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Hover effects */
+.control-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
+/* Status-specific styles */
+.status-Active {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.1);
+    
+    .status-dot {
+        background-color: #28a745;
+    }
+    
+    &:hover {
+        background-color: rgba(40, 167, 69, 0.15);
+    }
+}
+
+.status-Inactive {
+    color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1);
+    
+    .status-dot {
+        background-color: #dc3545;
+    }
+    
+    &:hover {
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+}
+
+.status-Pending {
+    color: #997404 !important;
+    background-color: rgba(255, 193, 7, 0.05);
+    
+    .status-dot {
+        background-color: #ffc107;
+    }
+    
+    &:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+}
+
+/* Hover states */
+.status-Active:hover {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+
+.status-Inactive:hover {
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
+.status-Pending:hover {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Remove dropdown arrow */
+.status-btn.dropdown-toggle::after {
+    display: none;
+}
+
+/* Status colors */
+.status-Active {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.status-Inactive {
+    color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.status-Pending {
+    color: #997404 !important;
+    background-color: rgba(255, 193, 7, 0.05);
+}
+
+/* Hover states */
+.status-Active:hover {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+
+.status-Inactive:hover {
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
+.status-Pending:hover {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Remove dropdown menu styles that affect visibility */
+.dropdown-menu .dropdown-item {
+    opacity: 1;
+    color: inherit;
+}
+
+/* Status button base */
+.status-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    min-width: 120px;
+    border: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Status dot */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Status-specific styles */
+.status-Active {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.1);
+    
+    .status-dot {
+        background-color: #28a745;
+    }
+    
+    &:hover {
+        background-color: rgba(40, 167, 69, 0.15);
+    }
+}
+
+.status-Inactive {
+    color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1);
+    
+    .status-dot {
+        background-color: #dc3545;
+    }
+    
+    &:hover {
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+}
+
+.status-Pending {
+    color: #997404 !important;
+    background-color: rgba(255, 193, 7, 0.05);
+    
+    .status-dot {
+        background-color: #ffc107;
+    }
+    
+    &:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+}
+
+/* Hover states */
+.status-Active:hover {
+    background-color: rgba(40, 167, 69, 0.15);
+}
+
+.status-Inactive:hover {
+    background-color: rgba(220, 53, 69, 0.15);
+}
+
+.status-Pending:hover {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.pagination-primary {
+    .page-item {
+        &.active .page-link {
+            background-color: $primary-color;
+            border-color: $primary-color;
+        }
+        
+        .page-link {
+            color: $primary-color;
+            
+            &:hover {
+                background-color: rgba($primary-color, 0.1);
+            }
+        }
+    }
+}
+
+.status-Paused {
+    color: #ffc107 !important;
+    background-color: rgba(255, 193, 7, 0.1);
+    
+    &:hover {
+        background-color: rgba(255, 193, 7, 0.15);
+    }
+    
+    .fa {
+        margin-right: 4px;
+    }
+}
+
+.status-Paused .status-dot {
+    background-color: #ffc107;
+}
+
+.status-Active {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.status-Inactive {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.status-Pending {
+    color: #997404 !important;
+    background-color: rgba(255, 193, 7, 0.05);
+    cursor: not-allowed;  /* Show that Pending status can't be clicked */
+}
+
+/* Status Cell Styling */
+.status-cell {
+    padding: 0.75rem !important;
+    min-width: 140px;
+}
+
+/* Status Button Base */
+.status-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    min-width: 130px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Status Dot */
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Status States */
+.status-pending {
+    color: #856404 !important;
+    background-color: rgba(255, 193, 7, 0.1);
+    
+    .status-dot {
+        background-color: #ffc107;
+    }
+    
+    &:hover {
+        background-color: rgba(255, 193, 7, 0.15);
+    }
+}
+
+.status-active {
+    color: #28a745 !important;
+    background-color: rgba(40, 167, 69, 0.1);
+    
+    .status-dot {
+        background-color: #28a745;
+    }
+    
+    &:hover {
+        background-color: rgba(40, 167, 69, 0.15);
+    }
+}
+
+.status-inactive {
+    color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1);
+    
+    .status-dot {
+        background-color: #dc3545;
+    }
+    
+    &:hover {
+        background-color: rgba(220, 53, 69, 0.15);
+    }
+}
+
+/* Table Styles */
+.table {
+    th, td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+    }
+    
+    thead th {
+        font-weight: 600;
+        color: #495057;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
+        font-size: 0.95rem;
+    }
+
+    tbody td {
+        font-size: 0.95rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    
+    .btn {
+        padding: 6px;
+        border-radius: 4px;
+        
+        &:hover {
+            opacity: 0.9;
+        }
+    }
+}

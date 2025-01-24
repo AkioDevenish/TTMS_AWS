@@ -1,6 +1,6 @@
 import requests
 from django.core.management.base import BaseCommand
-from database.models import Measurement, Station, Sensor, Brand
+from database.models import Measurement, Station, Sensor, Brand, StationSensor
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -82,7 +82,7 @@ class Command(BaseCommand):
         api_key = "sVALwcRMyQmjtwYpDPW-"
 
         # Get stations directly from database
-        paws_stations = self.get_stations_by_brand("3D Paws")
+        paws_stations = self.get_stations_by_brand("3D_Paws")
         if not paws_stations.exists():
             logger.warning("No stations found for brand '3D Paws'.")
             return
@@ -415,6 +415,9 @@ class Command(BaseCommand):
                     for sensor_type, readings in measurements_by_hour[rounded_hour].items():
                         sensor_id = sensor_map.get(sensor_type)
                         if sensor_id:
+                            # Ensure station-sensor relationship exists
+                            self.ensure_station_sensor_relationship(station_id, sensor_id)
+                            
                             # Get the reading closest to the rounded hour
                             closest_reading = min(readings, 
                                 key=lambda x: abs(x['timestamp'] - rounded_hour))
@@ -489,6 +492,9 @@ class Command(BaseCommand):
                 
                 sensor_id = sensor_map.get(sensor_type)
                 if sensor_id:
+                    # Ensure station-sensor relationship exists
+                    self.ensure_station_sensor_relationship(station_id, sensor_id)
+                    
                     try:
                         Measurement.objects.create(
                             station_id=station_id,
@@ -625,6 +631,7 @@ class Command(BaseCommand):
                     for sensor_type, sensor_id in sensor_map.items():
                         if field.lower() in sensor_type.lower():
                             try:
+                                self.ensure_station_sensor_relationship(station_id, sensor_id)
                                 Measurement.objects.create(
                                     station_id=station_id,
                                     sensor_id=sensor_id,
@@ -646,3 +653,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"Error processing Barani data: {e}"))
 
         return processed_data
+
+    def ensure_station_sensor_relationship(self, station_id, sensor_id):
+        """Ensure station-sensor relationship exists"""
+        try:
+            StationSensor.objects.get_or_create(
+                station_id=station_id,
+                sensor_id=sensor_id
+            )
+            self.stdout.write(f"Station-Sensor relationship verified for station {station_id} and sensor {sensor_id}")
+        except Exception as e:
+            logger.error(f"Error creating station-sensor relationship: {e}")

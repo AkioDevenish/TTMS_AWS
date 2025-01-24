@@ -96,13 +96,41 @@ export const menu: MenuItem[] = [
         title: "API Key",
         isPinned: false,
         icon: "stroke-support-tickets",
-        icon1: "fill-support-tickets",
+        icon1: "fill-",
         type: "link"
     },
     
+
     {
-        headTitle1: "User Management",
-        headTitle2: "Ready to use apps",
+        headTitle1: "Miscellaneous",
+        headTitle2: "Miscellaneous",
+        type: "headtitle"
+    },
+
+
+    {
+        path: "/pages/Support",
+        title: "Support",
+        isPinned: false,
+        icon: "stroke-contact",
+        icon1: "fill-contact",
+        type: "link"
+    },
+    
+
+    {
+        path: "/pages/knowledgebase",
+        title: "Documentation",
+        isPinned: false,
+        icon: "stroke-knowledgebase",
+        icon1: "fill-knowledgebase",
+        type: "link"
+    },
+
+
+    {
+        headTitle1: "System Management",
+        headTitle2: "Miscellaneous",
         type: "headtitle"
     },
 
@@ -113,5 +141,8 @@ export const menu: MenuItem[] = [
         icon: "stroke-support-tickets",
         icon1: "fill-support-tickets",
         type: "link"
-    }
+    },
+
+
+
 ]
