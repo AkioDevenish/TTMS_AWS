@@ -44,12 +44,12 @@ export function useAuth() {
   const login = async (credentials: LoginCredentials) => {
     try {
       loading.value = true
-      const response = await axios.post('http://127.0.0.1:8000/api/token/', credentials)
-      
+      const response = await axios.post('/api/token/', credentials)
+
       if (response.data.access) {
         setAuthToken(response.data.access)
         localStorage.setItem('refresh_token', response.data.refresh)
-        
+
         await refreshUserData()
         return { success: true, user: currentUser.value }
       }
@@ -64,8 +64,8 @@ export function useAuth() {
 
   const refreshUserData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/user/me/')
-      
+      const response = await axios.get('/api/user/me/')
+
       // Create a reactive user object with proper role handling
       currentUser.value = {
         id: response.data.id,
@@ -86,7 +86,7 @@ export function useAuth() {
   const checkAuth = async () => {
     const token = localStorage.getItem('access_token')
     console.log('Checking auth, token:', token ? 'exists' : 'not found')
-    
+
     if (!token) {
       clearAuth()
       return false
@@ -105,7 +105,7 @@ export function useAuth() {
 
   const requireAuth = async (requiredRole?: 'admin' | 'staff') => {
     const isAuthed = await checkAuth()
-    
+
     if (!isAuthed) {
       router.push('/auth/login')
       return false

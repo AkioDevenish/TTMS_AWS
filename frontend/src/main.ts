@@ -48,57 +48,58 @@ import { createI18n } from 'vue-i18n'
 import axios from 'axios'
 
 // Set base URL
-axios.defaults.baseURL = 'http://127.0.0.1:8000'
+axios.defaults.baseURL = process.env.VUE_APP_API_URL
+// 'http://127.0.0.1:8000'
 
 // Add request interceptor to handle errors
 axios.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token')
-            localStorage.removeItem('user')
-            router.push('/auth/login')
-        }
-        return Promise.reject(error)
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      router.push('/auth/login')
     }
+    return Promise.reject(error)
+  }
 )
 
 const i18n = createI18n({
-    legacy: false,
-    locale: 'English',
-    messages: {
-        English: English,
-        German: German,
-        Russian: Russian,
-        Arabic: Arabic,
-        Español: Español,
-        Deutsch: Deutsch,
-        Français: Français,
-        Português: Português,
-        简体中文: 简体中文,
-        لعربية: لعربية,
-    }
+  legacy: false,
+  locale: 'English',
+  messages: {
+    English: English,
+    German: German,
+    Russian: Russian,
+    Arabic: Arabic,
+    Español: Español,
+    Deutsch: Deutsch,
+    Français: Français,
+    Português: Português,
+    简体中文: 简体中文,
+    لعربية: لعربية,
+  }
 })
 
 createApp(App)
-    .use(router)
-    .use(createPinia())
-    .use(VueApexCharts)
-    .use(OpenLayersMap)
-    .use(quillEditor)
-    .use(rate)
-    .use(AosVue)
-    .use(vueChartist)
-    .use(VueMasonryPlugin)
-    .use(Lightbox)
-    .use(VueNumber)
-    .use(i18n)
-    .use(VueTour)
-    .use(VueJsTour)
-    .use(plugin)
-    .use(PerfectScrollbar)
-    .use(SimpleTypeahead)
-    .component(VueFeather.name, VueFeather)
-    .component('Datepicker', Datepicker)
-    .component('multiselect', Multiselect)
-    .mount('#app')
+  .use(router)
+  .use(createPinia())
+  .use(VueApexCharts)
+  .use(OpenLayersMap)
+  .use(quillEditor)
+  .use(rate)
+  .use(AosVue)
+  .use(vueChartist)
+  .use(VueMasonryPlugin)
+  .use(Lightbox)
+  .use(VueNumber)
+  .use(i18n)
+  .use(VueTour)
+  .use(VueJsTour)
+  .use(plugin)
+  .use(PerfectScrollbar)
+  .use(SimpleTypeahead)
+  .component(VueFeather.name, VueFeather)
+  .component('Datepicker', Datepicker)
+  .component('multiselect', Multiselect)
+  .mount('#app')

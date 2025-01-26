@@ -61,12 +61,12 @@ const filteredStations = computed(() => {
 
 const fetchStations = async () => {
     try {
-        const response = await axios.get('http://127.0.0.1:8000/stations/');
+        const response = await axios.get('/stations/');
         const stationsData = response.data;
         
         // Get latest measurement for each station
         const measurementPromises = stationsData.map(station => 
-            axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${station.id}&limit=1`)
+            axios.get(`/measurements/by_station/?station_id=${station.id}&limit=1`)
         );
         
         const measurements = await Promise.all(measurementPromises);

@@ -44,7 +44,7 @@ export function useAWSStations() {
         try {
             loading.value = true
             console.log('Fetching stations...')
-            const response = await axios.get('http://127.0.0.1:8000/stations/')
+            const response = await axios.get('/stations/')
             console.log('All stations:', response.data)
             
             const stationsData = response.data.filter((station: any) => 
