@@ -86,7 +86,7 @@
                             class="form-select"
                             v-model="formData.package"
                             :class="inputClasses.package"
-                            @change="validateField('package')">
+                            @change="onPackageSelected(($event.target as HTMLSelectElement).value)">
                             <option value="">Select Package</option>
                             <option value="Weekly">Weekly</option>
                             <option value="Monthly">Monthly</option>
@@ -96,7 +96,18 @@
                             Please select a package
                         </div>
                     </div>
-                </div>   
+                </div>
+                <div class="col-sm-12">
+                    <div class="mb-3">
+                        <label>Expires At</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            :value="formData.expires_at" 
+                            disabled
+                        />
+                    </div>
+                </div>
             </div>
 
             <div class="row mt-3">
@@ -132,7 +143,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import axios from 'axios'
@@ -147,7 +158,7 @@ const isAdminUser = computed(() => {
 onMounted(async () => {
     await checkAuth()
     if (!isAdminUser.value) {
-        router.push('/dashboard/default')
+        router.push('/dashboard/default') 
     }
 })
 
@@ -158,7 +169,8 @@ const formData = reactive({
     password: '',
     organization: '',
     role: '',
-    package: ''
+    package: '',
+    expires_at: ''
 })
 
 // Form state
@@ -208,31 +220,74 @@ const validateForm = (): boolean => {
     return isValid
 }
 
+const calculateExpiryDate = (packageType: string): string => {
+    const today = new Date()
+    let expiryDate = new Date(today)
+    
+    switch (packageType.toLowerCase()) {
+        case 'weekly':
+            expiryDate.setDate(today.getDate() + 7)
+            break
+        case 'monthly':
+            expiryDate.setMonth(today.getMonth() + 1)
+            break
+        case 'yearly':
+            expiryDate.setFullYear(today.getFullYear() + 1)
+            break
+        default:
+            return ''
+    }
+    
+    // Format date as YYYY-MM-DD
+    return expiryDate.toISOString().split('T')[0]
+}
+
+// Update formData when package changes
+watch(() => formData.package, (newPackage) => {
+    if (newPackage) {
+        formData.expires_at = calculateExpiryDate(newPackage)
+    }
+})
+
 const onPackageSelected = (packageType: string) => {
+    if (!packageType) return
+    
+    const expiryDate = calculateExpiryDate(packageType)
     formData.package = packageType
-    inputClasses.package = packageType ? 'is-valid' : 'is-invalid'
+    formData.expires_at = expiryDate
+    
+    console.log('Package selected:', packageType)
+    console.log('Expiry date set to:', expiryDate)
+    
+    inputClasses.package = 'is-valid'
 }
 
 // API interaction
 const createUser = async () => {
     try {
-        if (!validateForm()) {
-            return
-        }
-
+        if (!validateForm()) return
+        
         isSubmitting.value = true
         errorMessage.value = ''
         successMessage.value = ''
 
-        // Configure axios
-        axios.defaults.baseURL = 'http://127.0.0.1:8000'
+        const userData = {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            organization: formData.organization,
+            role: formData.role,
+            package: formData.package,
+            status: 'Active',
+            expires_at: formData.expires_at || calculateExpiryDate(formData.package)
+        }
 
-        // Send POST request to Django API
-        const response = await axios.post('/users/', formData)
+        console.log('Sending user data:', userData)
+
+        const response = await axios.post('http://127.0.0.1:8000/users/', userData)
         
         successMessage.value = 'User created successfully!'
         
-        // Wait for 1 second to show success message
         setTimeout(() => {
             router.push('/users_management')
         }, 1000)

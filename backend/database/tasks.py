@@ -5,8 +5,12 @@ from celery import Task
 from .models import Station, StationHealthLog, Measurement
 from django.utils import timezone
 from datetime import datetime
+from datetime import timedelta
+from django.utils import timezone
+from .models import User
+import logging
 
-logger = get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 
 class SingletonTask(Task):
     _is_running = False
@@ -81,3 +85,21 @@ def check_station_health():
             battery_status=battery_status,
             connectivity_status=connectivity_status,
         )
+
+def deactivate_expired_accounts():
+    try:
+        yesterday = timezone.now().date() - timedelta(days=1)
+        
+        # Find all active users whose accounts expired yesterday
+        expired_users = User.objects.filter(
+            status='Active',
+            expires_at__lte=yesterday
+        )
+        
+        count = expired_users.count()
+        expired_users.update(status='Inactive')
+        
+        logger.info(f"Deactivated {count} expired user accounts")
+        
+    except Exception as e:
+        logger.error(f"Error in deactivate_expired_accounts: {str(e)}")

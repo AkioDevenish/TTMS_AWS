@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     BrandViewSet, StationViewSet, SensorViewSet,
     MeasurementViewSet, StationViewSet, StationHealthLogViewSet,
-    StationSensorViewSet, APIAccessTokenViewSet, SystemLogViewSet,
+    StationSensorViewSet, ApiAccessKeyViewSet, SystemLogViewSet,
     UserViewSet, NotificationViewSet, verify_token, get_current_user,
     CustomTokenObtainPairView
 )
@@ -15,7 +15,7 @@ router.register(r'measurements', MeasurementViewSet)
 router.register(r'stations', StationViewSet)
 router.register(r'station-health-logs', StationHealthLogViewSet)
 router.register(r'station-sensors', StationSensorViewSet)
-router.register(r'api-tokens', APIAccessTokenViewSet)
+router.register(r'api-keys', ApiAccessKeyViewSet)
 router.register(r'system-logs', SystemLogViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'notifications', NotificationViewSet)

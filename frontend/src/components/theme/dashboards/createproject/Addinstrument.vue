@@ -220,7 +220,8 @@ async function add() {
             statusMessage.value = 'Device added successfully!';
             statusType.value = 'success';
             setTimeout(() => {
-                router.push('/pages/users_management');
+                const brandRoute = getBrandRoute(brandId.value);
+                router.push(brandRoute);
             }, 2000);
         }
     } catch (error: any) {

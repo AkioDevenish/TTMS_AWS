@@ -117,8 +117,8 @@ export function useStationData() {
 
       // Check for invalid measurements
       const hasInvalidValues = Object.values(latestMeasurement)
-        .filter(value => typeof value === 'number')
-        .every(value => value <= -1 || value === 0);
+        .filter((value): value is number => typeof value === 'number')
+        .every((value) => value <= -1 || value === 0);
 
       if (hasInvalidValues) return 'Offline';
 

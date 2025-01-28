@@ -1,11 +1,13 @@
 from rest_framework import serializers
 from .models import (
     Brand, Sensor, Measurement, Station,
-    StationHealthLog, StationSensor, APIAccessToken,
-    SystemLog, User, Notification
+    StationHealthLog, StationSensor, ApiAccessKey,
+    SystemLog, User, Notification, ApiAccessKeyStation
 )
 import urllib3
 import json
+from django.utils import timezone
+from datetime import datetime
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -55,47 +57,41 @@ class StationSensorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class APIAccessTokenSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = APIAccessToken
-        fields = '__all__'
-        extra_kwargs = {
-            'token': {'write_only': True}  # Hide token in list views
-        }
-
-
 class SystemLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemLog
         fields = '__all__'
 
 
+class DateTimeToDateField(serializers.DateField):
+    def to_representation(self, value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.date()
+        return value
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = [
-            'id', 
-            'name', 
-            'email', 
-            'organization', 
-            'package', 
-            'role',
-            'status',
-            'is_staff',
-            'is_superuser',
-            'password'
-        ]
-        extra_kwargs = {
-            'password': {'write_only': True},
-            'is_staff': {'read_only': True},
-            'is_superuser': {'read_only': True}
-        }
+        fields = ['id', 'username', 'email', 'organization', 'package', 
+                 'expires_at', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'organization', 
+                 'package', 'expires_at']
 
     def create(self, validated_data):
-        password = validated_data.pop('password', None)
+        password = validated_data.pop('password')
         user = User(**validated_data)
-        if password:
-            user.set_password(password)
+        user.set_password(password)
         user.save()
         return user
 
@@ -110,6 +106,21 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
     remember_me = serializers.BooleanField(required=False, default=False)
+
+
+class ApiAccessKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApiAccessKey
+        fields = ['id', 'uuid', 'token_name', 'created_at', 'last_used', 
+                 'expires_at', 'note', 'stations']
+        read_only_fields = ['id', 'uuid', 'created_at', 'last_used']
+
+
+class ApiAccessKeyStationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApiAccessKeyStation
+        fields = ['api_access_key', 'station']
+
 
 def process_and_save_data(raw_data):
     # Check if raw_data is a string and try to parse it

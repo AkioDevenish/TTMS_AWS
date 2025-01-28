@@ -12,6 +12,7 @@ interface User {
     package: string;
     status: 'Active' | 'Inactive' | 'Pending' | 'Paused';
     isPaused: boolean;
+    expires_at: string;
 }
 
 export function useUserManagement() {
@@ -43,8 +44,7 @@ export function useUserManagement() {
     const fetchUsers = async () => {
         try {
             loading.value = true
-            const headers = getHeaders()
-            const response = await axios.get('http://127.0.0.1:8000/users/', { headers })
+            const response = await axios.get('/users/', { headers: getHeaders() })
             
             if (Array.isArray(response.data)) {
                 allData.value = response.data.map((user: any) => ({
@@ -55,7 +55,8 @@ export function useUserManagement() {
                     role: user.role || 'user',
                     package: user.package,
                     status: user.status || 'Pending',
-                    isPaused: user.isPaused || false
+                    isPaused: user.isPaused || false,
+                    expires_at: user.expires_at || null
                 }))
             }
         } catch (error: any) {

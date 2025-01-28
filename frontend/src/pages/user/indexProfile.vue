@@ -3,10 +3,8 @@
         <div class="user-profile">
             <div class="row">
                 <ProfileHeader />
-                <ProfilePost />
-                <ProfilePost1 />
-                <ProfilePost2 />
-                <ProfilePost3 />
+                <UserTable />
+                <ApiTable />
             </div>
         </div>
     </div>
@@ -14,8 +12,6 @@
 <script lang="ts" setup>
 import { defineAsyncComponent } from 'vue';
 const ProfileHeader = defineAsyncComponent(() => import("@/components/theme/user/profile/ProfileHeader.vue"))
-const ProfilePost = defineAsyncComponent(() => import("@/components/theme/user/profile/ProfilePost.vue"))
-const ProfilePost1 = defineAsyncComponent(() => import("@/components/theme/user/profile/ProfilePost1.vue"))
-const ProfilePost2 = defineAsyncComponent(() => import("@/components/theme/user/profile/ProfilePost2.vue"))
-const ProfilePost3 = defineAsyncComponent(() => import("@/components/theme/user/profile/ProfilePost3.vue"))
+const UserTable = defineAsyncComponent(() => import("@/components/theme/user/profile/UserTable.vue"))
+const ApiTable = defineAsyncComponent(() => import("@/components/theme/user/profile/ApiTable.vue"))
 </script>

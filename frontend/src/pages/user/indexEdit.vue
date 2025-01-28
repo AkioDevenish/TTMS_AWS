@@ -4,7 +4,6 @@
             <div class="row">
                 <UserProfile />
                 <EditProfile />
-                <UserTable />
             </div>
         </div>
     </div>
@@ -13,5 +12,4 @@
 import { defineAsyncComponent } from 'vue';
 const UserProfile = defineAsyncComponent(() => import("@/components/theme/user/edit/UserProfile.vue"))
 const EditProfile = defineAsyncComponent(() => import("@/components/theme/user/edit/EditProfile.vue"))
-const UserTable = defineAsyncComponent(() => import("@/components/theme/user/edit/UserTable.vue"))
 </script>

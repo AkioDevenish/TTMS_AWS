@@ -67,41 +67,55 @@ export const country = [
 ]
 export const useredit = [
     {
-        title: "Untrammelled prevents",
-        date: "28 May 2024",
+        title: "Access to Weather Station Data",
+        date: "05/28/2024",
         class: "bg-success",
         status: "Completed",
         price: "$56,908"
     },
     {
-        title: "Untrammelled prevents",
-        date: "12 June 2024",
+        title: "Access to Weather Station Data",
+        date: "06/12/2024",
         class: "bg-danger",
-        status: "On going",
+        status: "Completed",
         price: "$45,087"
     },
     {
-        title: "Untrammelled prevents",
-        date: "12 July 2024",
+        title: "Access to Weather Station Data",
+        date: "07/12/2024",
         class: "bg-warning",
-        status: "Pending",
+        status: "Completed",
         price: "$60,123"
     },
     {
-        title: "Untrammelled prevents",
-        date: "14 June 2024",
+        title: "Access to Weather Station Data",
+        date: "06/14/2024",
         class: "bg-warning",
-        status: "Pending",
+        status: "Completed",
         price: "$70,435"
     },
     {
-        title: "Untrammelled prevents",
-        date: "25 June 2024",
+        title: "Access to Weather Station Data",
+        date: "06/25/2024",
         class: "bg-success",
         status: "Completed",
         price: "$15,987"
     }
 ]
+export const useapihistory = [
+    {
+        api_key: "ws_7f9c2d4e8a6b3djncsdc23sdp-vrn",
+        first_used: "05/28/2024",
+        last_used: "06/28/2024",
+        status: "Active"
+    },
+    {
+        api_key: "ws_3a8d5f2c9e4b7djncsdc230ef-sdc", 
+        first_used: "06/12/2024",
+        last_used: "07/12/2024",
+        status: "Inactive"
+    },
+]   
 export const data = [
     {
         img: "other-images/profile.png",

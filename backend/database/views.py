@@ -3,14 +3,14 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from .models import (
-    Brand, Station, Sensor, Measurement, Station,
-    StationHealthLog, StationSensor, APIAccessToken,
+    Brand, Station, Sensor, Measurement,
+    StationHealthLog, StationSensor, ApiAccessKey,
     SystemLog, User, Notification
 )
 from .serializers import (
     BrandSerializer, StationSerializer, SensorSerializer,
     MeasurementSerializer, StationSerializer, StationHealthLogSerializer,
-    StationSensorSerializer, APIAccessTokenSerializer, SystemLogSerializer,
+    StationSensorSerializer, ApiAccessKeySerializer, SystemLogSerializer,
     UserSerializer, NotificationSerializer
 )
 from django.utils import timezone
@@ -19,6 +19,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
+from datetime import timedelta
+import datetime
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
@@ -134,9 +136,9 @@ class StationSensorViewSet(viewsets.ModelViewSet):
     serializer_class = StationSensorSerializer
 
 
-class APIAccessTokenViewSet(viewsets.ModelViewSet):
-    queryset = APIAccessToken.objects.all()
-    serializer_class = APIAccessTokenSerializer
+class ApiAccessKeyViewSet(viewsets.ModelViewSet):
+    queryset = ApiAccessKey.objects.all()
+    serializer_class = ApiAccessKeySerializer
 
 
 class SystemLogViewSet(viewsets.ModelViewSet):
@@ -185,6 +187,29 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        
+        # Debug print
+        print("Received data:", data)
+
+        # Validate expires_at format
+        if 'expires_at' in data and data['expires_at']:
+            try:
+                # Ensure date is in correct format
+                datetime.datetime.strptime(data['expires_at'], '%Y-%m-%d')
+            except ValueError:
+                return Response(
+                    {"error": "Invalid date format for expires_at. Use YYYY-MM-DD"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
@@ -211,7 +236,7 @@ router.register(r'measurements', MeasurementViewSet)
 router.register(r'stations', StationViewSet)
 router.register(r'station-health-logs', StationHealthLogViewSet)
 router.register(r'station-sensors', StationSensorViewSet)
-router.register(r'api-tokens', APIAccessTokenViewSet)
+router.register(r'api-tokens', ApiAccessKeyViewSet)
 router.register(r'system-logs', SystemLogViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'notifications', NotificationViewSet)

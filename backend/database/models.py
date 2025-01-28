@@ -2,6 +2,56 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 import json
 
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', 'admin')
+        return self.create_user(email, password, **extra_fields)
+
+class User(AbstractUser):
+    username = None
+    name = models.CharField(max_length=255)
+    organization = models.CharField(max_length=255, null=True, blank=True)
+    package = models.CharField(max_length=100, null=True, blank=True)
+    email = models.EmailField(unique=True)
+    password = models.CharField(max_length=255)
+    role = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    api_access_key = models.OneToOneField(
+        'ApiAccessKey',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='user_key'
+    )
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
+
+    objects = UserManager()
+
+    class Meta:
+        db_table = 'users'
+
+    def __str__(self):
+        return f"{self.name} ({self.email})"
+
 class Brand(models.Model):
     name = models.CharField(max_length=100)
 
@@ -113,19 +163,25 @@ class StationSensor(models.Model):
         return f"{self.station} - {self.sensor}"
 
 
-class APIAccessToken(models.Model):
-    uuid = models.UUIDField(primary_key=True)
-    name = models.CharField(max_length=255)
-    token = models.CharField(max_length=255, unique=True)
+class ApiAccessKey(models.Model):
+    id = models.AutoField(primary_key=True)
+    uuid = models.UUIDField(unique=True)
+    token_name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     last_used = models.DateTimeField(null=True)
     expires_at = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
+    stations = models.ManyToManyField(Station, through='ApiAccessKeyStation')
+
+
+class ApiAccessKeyStation(models.Model):
+    api_access_key = models.ForeignKey(ApiAccessKey, on_delete=models.CASCADE)
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'api_access_tokens'
-
-    def __str__(self):
-        return self.name
+        unique_together = ('api_access_key', 'station')
 
 
 class SystemLog(models.Model):
@@ -140,56 +196,6 @@ class SystemLog(models.Model):
 
     def __str__(self):
         return f"{self.module} - {self.type} - {self.created_at}"
-
-
-class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email is required')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')
-        return self.create_user(email, password, **extra_fields)
-
-class User(AbstractUser):
-    username = None  # Disable username field
-    name = models.CharField(max_length=255)
-    organization = models.TextField(null=True)
-    package = models.CharField(max_length=50, null=True)
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)
-    role = models.CharField(max_length=50)
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('Active', 'Active'),
-            ('Inactive', 'Inactive'),
-            ('Pending', 'Pending'),
-            ('Paused', 'Paused')
-        ],
-        default='Active'
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_staff = models.BooleanField(default=False)
-    is_superuser = models.BooleanField(default=False)
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name']
-
-    objects = UserManager()
-
-    class Meta:
-        db_table = 'users'
-
-    def __str__(self):
-        return f"{self.name} ({self.email})"
 
 
 class Notification(models.Model):

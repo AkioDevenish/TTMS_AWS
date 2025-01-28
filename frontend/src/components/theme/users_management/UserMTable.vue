@@ -8,13 +8,14 @@
                     <th class="px-4">Email</th>
                     <th class="px-4">Role</th>
                     <th class="px-4">Package</th>
+                    <th class="px-4">Expires At</th>
                     <th class="px-4">Status</th>
                     <th class="px-4">Actions</th>
                 </tr>
             </thead>
             <tbody v-if="loading">
                 <tr>
-                    <td colspan="7" class="text-center py-4">Loading...</td>
+                    <td colspan="8" class="text-center py-4">Loading...</td>
                 </tr>
             </tbody>
             <tbody v-else>
@@ -24,6 +25,11 @@
                     <td class="px-4 py-3">{{ user.email }}</td>
                     <td class="px-4 py-3">{{ user.role }}</td>
                     <td class="px-4 py-3">{{ user.package }}</td>
+                    <td class="px-4 py-3">
+                        <span :class="{'text-danger': isExpiringSoon(user.expires_at)}">
+                            {{ formatDate(user.expires_at) }}
+                        </span>
+                    </td>
                     <td class="status-cell px-4 py-3">
                         <button 
                             :class="[
@@ -60,7 +66,7 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { useUserManagement } from '@/composables/useUserManagement'
 import { useAuth } from '@/composables/useAuth'
@@ -243,5 +249,28 @@ const handlePauseUser = async (userId: number) => {
             timer: 3000
         })
     }
+}
+
+const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'No expiry date'
+    // Remove any time component from the date string
+    const dateOnly = dateString.split('T')[0]
+    const date = new Date(dateOnly)
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    })
+}
+
+const isExpiringSoon = (dateString: string | null) => {
+    if (!dateString) return false
+    // Remove any time component from the date string
+    const dateOnly = dateString.split('T')[0]
+    const expiryDate = new Date(dateOnly)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time component
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return daysUntilExpiry <= 7 && daysUntilExpiry > 0
 }
 </script>
