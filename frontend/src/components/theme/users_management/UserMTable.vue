@@ -3,7 +3,7 @@
         <table class="table">
             <thead>
                 <tr>
-                    <th class="px-4">Username</th>
+                    <th class="px-4">Name</th>
                     <th class="px-4">Organization</th>
                     <th class="px-4">Email</th>
                     <th class="px-4">Role</th>
@@ -20,11 +20,12 @@
             </tbody>
             <tbody v-else>
                 <tr v-for="user in allData" :key="user.id">
-                    <td class="px-4 py-3">{{ user.name }}</td>
-                    <td class="px-4 py-3">{{ user.organization }}</td>
-                    <td class="px-4 py-3">{{ user.email }}</td>
-                    <td class="px-4 py-3">{{ user.role }}</td>
-                    <td class="px-4 py-3">{{ user.package }}</td>
+
+                    <td class="px-4 py-3">{{ user.username || '-' }}</td>
+                    <td class="px-4 py-3">{{ user.organization || '-' }}</td>
+                    <td class="px-4 py-3">{{ user.email || 'N/A' }}</td>
+                    <td class="px-4 py-3">{{ user.role || 'User' }}</td>
+                    <td class="px-4 py-3">{{ user.package || '-' }}</td>
                     <td class="px-4 py-3">
                         <span :class="{'text-danger': isExpiringSoon(user.expires_at)}">
                             {{ formatDate(user.expires_at) }}
@@ -34,23 +35,23 @@
                         <button 
                             :class="[
                                 'status-btn',
-                                `status-${user.status}`
+                                `status-${(user.status || 'Active').toLowerCase()}`
                             ]"
                             @click="cycleStatus(user)"
                         >
                             <span class="status-dot"></span>
-                            {{ user.status }}
+                            {{ user.status || 'Active' }}
                         </button>
                     </td>
                     <td class="px-4 py-3">
                         <div class="action-buttons">
                             <button 
-                                class="action-btn pause-btn"
-                                :class="{ 'paused': user.status === 'Paused' }"
-                                @click="handlePauseUser(user.id)"
-                                :title="user.status === 'Paused' ? 'Resume user account' : 'Pause user account'"
+                                class="action-btn suspend-btn"
+                                :class="{ 'suspended': user.status === 'Suspended' }"
+                                @click="handleSuspendUser(user.id)"
+                                :title="user.status === 'Suspended' ? 'Reactivate user account' : 'Suspend user account'"
                             >
-                                <i class="fa" :class="user.status === 'Paused' ? 'fa-play' : 'fa-pause'"></i>
+                                <i class="fa" :class="user.status === 'Suspended' ? 'fa-play' : 'fa-ban'"></i>
                             </button>
                             <button 
                                 class="action-btn delete-btn"
@@ -76,7 +77,7 @@ import Swal from 'sweetalert2'
 const { 
     loading, 
     filterQuery, 
-    togglePauseUser, 
+    toggleSuspendUser, 
     deleteUser, 
     updateUserStatus, 
     fetchUsers, 
@@ -205,28 +206,28 @@ const handleDeleteUser = async (userId: number) => {
     }
 }
 
-const handlePauseUser = async (userId: number) => {
+const handleSuspendUser = async (userId: number) => {
     const user = allData.value.find(u => u.id === userId)
-    const isPaused = user?.status === 'Paused'
+    const isSuspended = user?.status === 'Suspended'
     
     try {
         const result = await Swal.fire({
-            title: `${isPaused ? 'Resume' : 'Pause'} User Account`,
-            text: `Are you sure you want to ${isPaused ? 'resume' : 'pause'} this user account?`,
+            title: `${isSuspended ? 'Reactivate' : 'Suspend'} User Account`,
+            text: `Are you sure you want to ${isSuspended ? 'reactivate' : 'suspend'} this user account?`,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: isPaused ? '#28a745' : '#dc3545',
+            confirmButtonColor: isSuspended ? '#28a745' : '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: `Yes, ${isPaused ? 'resume' : 'pause'} account`,
+            confirmButtonText: `Yes, ${isSuspended ? 'reactivate' : 'suspend'} account`,
             cancelButtonText: 'Cancel'
         })
 
         if (result.isConfirmed) {
-            const success = await togglePauseUser(userId)
+            const success = await toggleSuspendUser(userId)
             if (success) {
                 Swal.fire({
                     title: 'Success',
-                    text: `User account ${isPaused ? 'resumed' : 'paused'} successfully`,
+                    text: `User account ${isSuspended ? 'reactivated' : 'suspended'} successfully`,
                     icon: 'success',
                     toast: true,
                     position: 'top-end',
@@ -238,7 +239,7 @@ const handlePauseUser = async (userId: number) => {
             }
         }
     } catch (error) {
-        console.error('Error in handlePauseUser:', error)
+        console.error('Error in handleSuspendUser:', error)
         Swal.fire({
             title: 'Error',
             text: errorMessage.value || 'An unexpected error occurred',
@@ -274,3 +275,14 @@ const isExpiringSoon = (dateString: string | null) => {
     return daysUntilExpiry <= 7 && daysUntilExpiry > 0
 }
 </script>
+
+<style scoped>
+.suspend-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.suspend-btn.suspended {
+    background-color: #28a745;
+}
+</style>

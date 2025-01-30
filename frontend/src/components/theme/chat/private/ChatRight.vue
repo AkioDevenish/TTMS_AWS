@@ -1,69 +1,176 @@
 <template>
     <div class="col-xxl-9 col-xl-8 col-md-7 box-col-7">
         <div class="card right-sidebar-chat">
-            <div class="right-sidebar-title">
+            <div v-if="currentChat" class="right-sidebar-title">
                 <div class="common-space">
                     <div class="chat-time">
-                        <div class="active-profile"><img class="img-fluid rounded-circle" v-if="currentChat.thumb"
-                                :src="getImages(currentChat.thumb)" alt="user">
-                            <div class="status " :class="currentChat.StatusClass"></div>
+                        <div class="active-profile">
+                            <div class="status" :class="userPresenceClass"></div>
                         </div>
-                        <div> <span>{{ currentChat.name }}</span>
-                            <p>Online </p>
+                        <div> 
+                            <span>{{ currentChat.user?.first_name }} {{ currentChat.user?.last_name }}</span>
+                            <p>{{ isOnline ? 'Online' : 'Offline' }}</p>
                         </div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <div class="contact-edit chat-alert"><i class="icon-info-alt"></i></div>
-                        <div class="contact-edit chat-alert">
-                            <svg class="dropdown-toggle" role="menu" data-bs-toggle="dropdown" aria-expanded="false">
-                                <use href="@/assets/svg/icon-sprite.svg#menubar"></use>
-                            </svg>
-                            <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="#!">View
-                                    details</a><a class="dropdown-item" href="#!">
-                                    Send messages</a><a class="dropdown-item" href="#!">
-                                    Add to favorites</a></div>
+                </div>
+            </div>
+            <div v-else class="right-sidebar-title">
+                <div class="common-space">
+                    <p>Select a chat to start messaging</p>
+                </div>
+            </div>
+            
+            <div v-if="currentChat" class="chat-body">
+                <div class="messages-container" ref="messagesContainer">
+                    <div v-for="message in currentChat.messages" :key="message.id" 
+                         :class="['message', {
+                             'sent': message.sender.id === (isSupportChat ? supportUserId : currentUserId),
+                             'received': message.sender.id !== (isSupportChat ? supportUserId : currentUserId)
+                         }]">
+                        <div class="message-content">{{ message.content }}</div>
+                        <div class="message-info">
+                            <span class="message-time">{{ formatMessageTime(message.created_at) }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="right-sidebar-Chats">
-                <div class="msger">
-                    <div class="msger-chat">
-                        <div class="msg " v-for="(chat, index) in currentChat.chat?.messages" :key="index" v-bind:class="[{ clearfix: chat.sender == 0 }, {
-                            'right-msg': chat.sender != 0, 'left-msg': chat.sender == 0,
-                        }]">
-                            <div class="msg-img">
-                                <img class="rounded-circle float-start chat-user-img img-30"
-                                    v-if="currentChat.thumb && chat.sender != 0" v-bind:src="getImages(currentChat.thumb)"
-                                    alt="">
-                                <img class="rounded-circle float-end chat-user-img img-30" alt="" v-if="chat.sender == 0"
-                                    v-bind:src="getImages('user/1.jpg')" />
-                            </div>
-                            <div class="msg-bubble">
-                                <div class="msg-info" v-bind:class="{ 'text-start': chat.sender == 0 }">
-                                    <div class="msg-info-name" v-if="chat.sender == 0">{{ currentChat.name }}</div>
-                                    <div class="msg-info-name" v-if="chat.sender != 0">Theresa Webb</div>
-                                    <div class="msg-info-time">{{ chat.time }}</div>
-                                </div>
-                                <div class="msg-text">{{ chat.text }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <AddChat />
-                </div>
+            <div v-if="currentChat" class="chat-footer">
+                <form @submit.prevent="sendMessage" class="message-form">
+                    <input v-model="newMessage" 
+                           type="text" 
+                           placeholder="Type a message..." 
+                           class="form-control"
+                           @keyup.enter="sendMessage">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-paper-plane"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </template>
-<script lang="ts" setup>
-import { chat, } from "@/core/data/chat"
-import { storeToRefs } from "pinia";
-import { getImages } from "@/composables/common/getImages"
-import { ref, defineAsyncComponent, computed } from 'vue'
-import { useChatStore } from "@/store/chat"
-const AddChat = defineAsyncComponent(() => import("@/components/theme/chat/private/AddChat.vue"))
-const { currentChat } = storeToRefs(useChatStore())
-let currenat = ref(currentChat.value)
+
+<script setup lang="ts">
+import { ref, computed, watch, nextTick } from 'vue'
+import { useChatStore } from '@/store/chat'
+import { useAuth } from '@/composables/useAuth'
+
+const chatStore = useChatStore()
+const auth = useAuth()
+const messagesContainer = ref<HTMLElement | null>(null)
+
+const newMessage = ref('')
+const currentUserId = computed(() => auth.currentUser.value?.id)
+const currentChat = computed(() => chatStore.currentChat)
+
+const isOnline = computed(() => {
+    if (!currentChat.value?.user?.id) return false
+    const presence = chatStore.userPresences.get(currentChat.value.user.id)
+    return presence?.is_online || false
+})
+
+const userPresenceClass = computed(() => 
+    isOnline.value ? 'bg-success' : 'bg-secondary'
+)
+
+const isSupportChat = computed(() => currentChat.value?.support_chat ?? false)
+const supportUserId = computed(() => chatStore.SUPPORT_USER?.id)
+
+function formatMessageTime(timestamp: string) {
+    return new Date(timestamp).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    })
+}
+
+async function sendMessage() {
+    if (!newMessage.value.trim()) return
+    
+    await chatStore.addMessage(newMessage.value)
+    newMessage.value = ''
+    await scrollToBottom()
+}
+
+async function scrollToBottom() {
+    await nextTick()
+    if (messagesContainer.value) {
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+}
+
+// Auto-scroll when new messages arrive
+watch(() => currentChat.value?.messages, async () => {
+    await scrollToBottom()
+}, { deep: true })
+
+// Initial scroll when chat loads
+watch(currentChat, async () => {
+    await scrollToBottom()
+})
 </script>
+
+<style scoped>
+.messages-container {
+    height: calc(100vh - 300px);
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    margin-bottom: 1rem;
+    max-width: 70%;
+    word-wrap: break-word;
+}
+
+.message.sent {
+    margin-left: auto;
+    background-color: #007bff;
+    color: white;
+    border-radius: 15px 15px 0 15px;
+    padding: 10px 15px;
+}
+
+.message.received {
+    margin-right: auto;
+    background-color: #f1f1f1;
+    border-radius: 15px 15px 15px 0;
+    padding: 10px 15px;
+}
+
+.message-info {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.chat-footer {
+    padding: 1rem;
+    border-top: 1px solid #eee;
+    background: white;
+}
+
+.message-form {
+    display: flex;
+    gap: 1rem;
+}
+
+.message-form input {
+    flex: 1;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+}
+
+.message-form button {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>

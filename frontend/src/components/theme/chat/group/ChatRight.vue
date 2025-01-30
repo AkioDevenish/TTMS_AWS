@@ -1,7 +1,7 @@
 <template>
     <div class="col-xxl-9 col-xl-8 col-md-7 box-col-7">
         <div class="card right-sidebar-chat">
-            <div class="right-sidebar-title">
+            <div v-if="currentChat" class="right-sidebar-title">
                 <div class="common-space">
                     <div class="chat-time group-chat">
                         <ul>
@@ -31,12 +31,19 @@
                     </div>
                 </div>
             </div>
+            <div v-else class="right-sidebar-title">
+                <div class="common-space">
+                    <p>Select a group to start messaging</p>
+                </div>
+            </div>
             <div class="right-sidebar-Chats">
                 <div class="msger">
                     <div class="msger-chat">
-                        <div class="msg " v-for="(chat, index) in currentChat.chat?.messages" :key="index" v-bind:class="[{ clearfix: chat.sender == 0 }, {
-                            'right-msg': chat.sender != 0, 'left-msg': chat.sender == 0,
-                        }]">
+                        <div class="msg" v-for="(chat, index) in currentChat?.messages" :key="index" 
+                            v-bind:class="[{ clearfix: chat.sender == 0 }, {
+                                'right-msg': chat.sender != 0, 
+                                'left-msg': chat.sender == 0,
+                            }]">
                             <div class="msg-img"><img class="rounded-circle float-start chat-user-img img-30"
                                     v-if="currentChat.thumb && chat.sender != 0" v-bind:src="getImages(currentChat.thumb)"
                                     alt=""></div>
@@ -58,12 +65,19 @@
     </div>
 </template>
 <script lang="ts" setup>
+import { onMounted } from 'vue'
 import { group } from "@/core/data/chat"
-import { storeToRefs } from "pinia";
+import { storeToRefs } from "pinia"
 import { getImages } from "@/composables/common/getImages"
-import { ref, defineAsyncComponent, computed } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 import { useChatStore } from "@/store/chat"
+
+const chatStore = useChatStore()
+const { currentChat } = storeToRefs(chatStore)
+
+onMounted(async () => {
+    await chatStore.init()
+})
+
 const AddChat = defineAsyncComponent(() => import("@/components/theme/chat/private/AddChat.vue"))
-const { currentChat } = storeToRefs(useChatStore())
-let currenat = ref(currentChat.value)
 </script>

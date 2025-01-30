@@ -5,22 +5,30 @@ from django.shortcuts import get_object_or_404
 from .models import (
     Brand, Station, Sensor, Measurement,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification
+    SystemLog, User, Notification, Message, Chat, UserPresence
 )
 from .serializers import (
     BrandSerializer, StationSerializer, SensorSerializer,
     MeasurementSerializer, StationSerializer, StationHealthLogSerializer,
     StationSensorSerializer, ApiAccessKeySerializer, SystemLogSerializer,
-    UserSerializer, NotificationSerializer
+    UserSerializer, NotificationSerializer, MessageSerializer,
+    UserCreateSerializer, LoginSerializer, ChatSerializer, UserPresenceSerializer
 )
 from django.utils import timezone
 from rest_framework import serializers
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from datetime import timedelta
 import datetime
+from django.db.models import Q
+from rest_framework import generics
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
+
+User = get_user_model()
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
@@ -159,7 +167,20 @@ class SystemLogViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            permission_classes = [IsAuthenticated]
+        elif self.action == 'destroy':
+            permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserCreateSerializer
+        return UserSerializer
 
     def destroy(self, request, *args, **kwargs):
         try:
@@ -210,6 +231,30 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'])
+    def presence(self, request, pk=None):
+        if int(pk) != request.user.id:
+            return Response(
+                {"error": "Cannot update other user's presence"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        try:
+            user_presence, _ = UserPresence.objects.get_or_create(user_id=pk)
+            user_presence.is_online = request.data.get('is_online', False)
+            user_presence.save()
+            
+            return Response({
+                'id': pk,
+                'is_online': user_presence.is_online,
+                'last_seen': user_presence.last_seen
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class NotificationViewSet(viewsets.ModelViewSet):
     queryset = Notification.objects.all()
@@ -251,17 +296,20 @@ def verify_token(request):
     return Response({'valid': True})
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_current_user(request):
-    user = request.user
-    return Response({
-        'id': user.id,
-        'email': user.email,
-        'name': user.name,
-        'role': user.role,
-        'is_staff': user.is_staff,
-        'is_superuser': user.is_superuser
-    })
+    if request.user.is_authenticated:
+        user = request.user
+        return Response({
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser
+        })
+    return Response({'detail': 'Not authenticated'}, status=401)
 
 @api_view(['GET'])
 def get_latest_timestamp(request):
@@ -281,3 +329,155 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 {'detail': 'Invalid credentials'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+class MessageListCreate(generics.ListCreateAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Message.objects.filter(
+            Q(chat__user=self.request.user) | Q(sender=self.request.user)
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(sender=self.request.user)
+
+class MessageDetail(generics.RetrieveAPIView):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+class ConversationList(generics.ListAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        other_user = self.kwargs['user_id']
+        return Message.objects.filter(
+            Q(chat__user_id=other_user, sender=self.request.user) |
+            Q(chat__user=self.request.user, sender_id=other_user)
+        ).order_by('created_at')
+
+class MarkMessageRead(generics.UpdateAPIView):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        message = self.get_object()
+        if message.recipient == request.user and not message.read_at:
+            message.read_at = timezone.now()
+            message.save()
+        return Response(self.get_serializer(message).data)
+
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.all().order_by('-created_at')
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'username': user.username,
+                    'role': user.role,
+                    'is_staff': user.is_staff,
+                    'is_superuser': user.is_superuser
+                }
+            })
+        return Response(serializer.errors, status=401)
+
+class ChatListCreate(generics.ListCreateAPIView):
+    serializer_class = ChatSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get('user_id')
+        support_chat = self.request.query_params.get('support_chat', False)
+
+        queryset = Chat.objects.all()
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        if support_chat:
+            queryset = queryset.filter(support_chat=True)
+        return queryset
+
+class ChatDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
+    permission_classes = [IsAuthenticated]
+
+class ChatMessages(generics.ListAPIView):
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        chat_id = self.kwargs['pk']
+        return Message.objects.filter(chat_id=chat_id)
+
+class UserPresenceUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, user_id):
+        # First check if user is authenticated
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "User not authenticated"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Then check if user is updating their own presence
+        if request.user.id != user_id:
+            return Response(
+                {"error": "Cannot update other user's presence"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        try:
+            user_presence, _ = UserPresence.objects.get_or_create(user_id=user_id)
+            user_presence.is_online = request.data.get('is_online', False)
+            user_presence.save()
+            
+            return Response({
+                'id': user_id,
+                'is_online': user_presence.is_online,
+                'last_seen': user_presence.last_seen
+            })
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class ChatViewSet(viewsets.ModelViewSet):
+    queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class MessageViewSet(viewsets.ModelViewSet):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(sender=self.request.user)

@@ -2,7 +2,7 @@
     <div class="d-flex profile-media align-items-center">
         <img class="img-30" src="@/assets/images/dashboard/profile.png" alt="">
         <div class="flex-grow-1">
-            <span>{{ currentUser?.name || 'Guest' }}</span>
+            <span>{{ currentUser?.username || 'Guest' }}</span>
             <p class="mb-0 font-outfit">{{ userRole }}<i class="fa fa-angle-down"></i></p>
         </div>
     </div>

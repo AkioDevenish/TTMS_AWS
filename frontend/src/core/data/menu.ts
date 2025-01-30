@@ -109,11 +109,11 @@ export const menu: MenuItem[] = [
 
 
     {
-        path: "/pages/Support",
-        title: "Support",
+        path: "/app/private_chat",
+        title: "Chat",
         isPinned: false,
-        icon: "stroke-contact",
-        icon1: "fill-contact",
+        icon: "stroke-chat",
+        icon1: "fill-chat",
         type: "link"
     },
     

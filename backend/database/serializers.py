@@ -2,13 +2,17 @@ from rest_framework import serializers
 from .models import (
     Brand, Sensor, Measurement, Station,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification, ApiAccessKeyStation
+    SystemLog, User, Notification, ApiAccessKeyStation,
+    Message, Chat, UserPresence
 )
 import urllib3
 import json
 from django.utils import timezone
 from datetime import datetime
+from django.contrib.auth import get_user_model, authenticate
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+User = get_user_model()
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -75,18 +79,42 @@ class DateTimeToDateField(serializers.DateField):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'organization', 'package', 
-                 'expires_at', 'is_active', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'username',
+            'email',
+            'organization',
+            'role',
+            'package',
+            'status',
+            'expires_at',
+        ]
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'organization', 
-                 'package', 'expires_at']
+        fields = [
+            'id', 
+            'email', 
+            'password',
+            'first_name',
+            'last_name', 
+            'organization', 
+            'package', 
+            'expires_at'
+        ]
+
+    def validate(self, data):
+        if not data.get('first_name') or not data.get('last_name'):
+            raise serializers.ValidationError({
+                'error': 'First name and last name are required'
+            })
+        return data
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -106,6 +134,20 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
     remember_me = serializers.BooleanField(required=False, default=False)
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+        
+        if email and password:
+            user = authenticate(email=email, password=password)
+            if not user:
+                raise serializers.ValidationError('Invalid email or password')
+            if not user.is_active:
+                raise serializers.ValidationError('User account is disabled')
+            data['user'] = user
+            return data
+        raise serializers.ValidationError('Must include "email" and "password"')
 
 
 class ApiAccessKeySerializer(serializers.ModelSerializer):
@@ -153,3 +195,24 @@ def process_and_save_data(raw_data):
             continue
 
         # Existing processing logic...
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ['id', 'content', 'chat', 'sender', 'created_at', 'read_at']
+
+
+class ChatSerializer(serializers.ModelSerializer):
+    messages = MessageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Chat
+        fields = ['id', 'name', 'user', 'support_chat', 'messages', 'created_at']
+
+
+class UserPresenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPresence
+        fields = ['id', 'user', 'is_online', 'last_seen']
+        read_only_fields = ['last_seen']

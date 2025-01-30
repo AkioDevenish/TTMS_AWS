@@ -10,11 +10,13 @@ interface LoginCredentials {
 
 interface User {
   id: number
-  name: string
+  username: string
   email: string
   role: string
   is_superuser: boolean
   is_staff: boolean
+  first_name: string | null
+  last_name: string | null
 }
 
 export function useAuth() {
@@ -65,16 +67,19 @@ export function useAuth() {
   const refreshUserData = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/api/user/me/')
+      console.log('API Response:', response.data)
       
-      // Create a reactive user object with proper role handling
       currentUser.value = {
         id: response.data.id,
-        name: response.data.name,
+        username: `${response.data.first_name} ${response.data.last_name}`.trim(),
         email: response.data.email,
         role: response.data.is_superuser ? 'Admin' : response.data.is_staff ? 'Staff' : 'User',
         is_superuser: response.data.is_superuser,
-        is_staff: response.data.is_staff
+        is_staff: response.data.is_staff,
+        first_name: response.data.first_name,
+        last_name: response.data.last_name
       }
+      console.log('Current User:', currentUser.value)
       isAuthenticated.value = true
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -85,16 +90,19 @@ export function useAuth() {
 
   const checkAuth = async () => {
     const token = localStorage.getItem('access_token')
-    console.log('Checking auth, token:', token ? 'exists' : 'not found')
+    console.log('Token from localStorage:', token)
     
     if (!token) {
+      console.log('No token found, clearing auth')
       clearAuth()
       return false
     }
 
     try {
+      console.log('Setting auth token and fetching user data...')
       setAuthToken(token)
       await refreshUserData()
+      console.log('Auth check successful, currentUser:', currentUser.value)
       return true
     } catch (err) {
       console.error('Auth check failed:', err)

@@ -1,100 +1,108 @@
 <template>
     <div class="col-xxl-3 col-xl-4 col-md-5 box-col-5">
         <div class="left-sidebar-wrapper card">
-            <div class="left-sidebar-chat">
-                <div class="input-group"><span class="input-group-text"><vue-feather class="search-icon text-gray"
-                            type="search"></vue-feather> </span>
-                    <input class="form-control" type="text" placeholder="Search here.." v-model="search"
-                        v-on:keyup="setSerchUsers">
-                </div>
-            </div>
             <div class="advance-options">
                 <ul class="nav border-tab" id="chat-options-tab" role="tablist">
-                    <li class="nav-item"><a class="nav-link active" id="chats-tab" data-bs-toggle="tab" href="#chats"
-                            role="tab" aria-controls="chats" aria-selected="true">Chats</a></li>
-                    <li class="nav-item"><a class="nav-link" id="contacts-tab" data-bs-toggle="tab" href="#contacts"
-                            role="tab" aria-controls="contacts" aria-selected="false">Contacts</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link active" id="chats-tab" data-bs-toggle="tab" href="#chats"
+                            role="tab" aria-controls="chats" aria-selected="true">Support Chats</a>
+                    </li>
                 </ul>
                 <div class="tab-content" id="chat-options-tabContent">
                     <div class="tab-pane fade show active" id="chats" role="tabpanel" aria-labelledby="chats-tab">
-                        <div class="common-space">
-                            <p>Recent chats</p>
-                            <div class="header-top"><a class="btn badge-light-primary f-w-500" href="#!"><i
-                                        class="fa fa-plus"></i></a></div>
+                        <!-- Search box -->
+                        <div class="search-box">
+                            <div class="input-group">
+                                <input type="text" class="form-control" v-model="searchQuery" 
+                                       placeholder="Search users...">
+                            </div>
                         </div>
-                        <ul class="chats-user" v-if="search == ''">
-                            <li class="common-space" v-for="(item, index) in activeusers" :key="index"
-                                @click="setActiveuser(item)">
-                                <div class="chat-time">
-                                    <div class="active-profile"><img class="img-fluid rounded-circle"
-                                            :src="getImages(item.thumb)" alt="user">
-                                        <div class="status " :class="item.StatusClass"></div>
-                                    </div>
-                                    <div> <span>{{ item.name }}</span>
-                                        <p>{{ item.status }}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p>{{ item.time }} </p>
-                                    <div class="badge badge-light-success" v-if="item.badge">{{ item.badge }}</div>
-                                </div>
-                            </li>
-                        </ul>
-                        <ul class="chats-user " v-if="search != ''">
-                            <li class="common-space custom-scrollbar" v-for="(item, index) in store.serchUser" :key="index"
-                                @click="setActiveuserSerch(item)">
+                        
+                        <ul class="chats-user">
+                            <li v-for="user in filteredUsers" :key="user.id" 
+                                class="common-space" 
+                                @click="setActiveuser(user)">
                                 <div class="chat-time">
                                     <div class="active-profile">
-                                        <img class="img-fluid rounded-circle" :src="getImages(item.thumb)" alt="user">
-                                        <div class="status " :class="item.StatusClass"></div>
+                                        <img class="img-fluid rounded-circle"
+                                            :src="user.avatar || getImages('user/1.jpg')" 
+                                            :alt="user.first_name">
+                                        <div class="status" 
+                                             :class="userPresenceClass(user)">
+                                        </div>
                                     </div>
-                                    <div> <span>{{ item.name }}</span>
-                                        <p>{{ item.status }}</p>
+                                    <div>
+                                        <span>{{ user.first_name }} {{ user.last_name }}</span>
+                                        <p>{{ isUserOnline(user) ? 'Online' : 'Offline' }}</p>
                                     </div>
                                 </div>
                                 <div>
-                                    <p>{{ item.time }} </p>
-                                    <div class="badge badge-light-success" v-if="item.badge">{{ item.badge }}</div>
+                                    <div v-if="user.unread_count" 
+                                         class="badge badge-light-primary">
+                                        {{ user.unread_count }}
+                                    </div>
                                 </div>
                             </li>
-                            <div v-if="!store.serchUser.length">
-                                <div class="search-not-found chat-search text-center">
-                                    <p> Sorry, We didn't find any results matching this search </p>
-                                </div>
-                            </div>
                         </ul>
                     </div>
-                    <ChatContacts />
                 </div>
             </div>
         </div>
     </div>
 </template>
+
 <script lang="ts" setup>
-import { chat } from "@/core/data/chat"
-import { getImages } from "@/composables/common/getImages"
-import { ref, defineAsyncComponent, computed } from 'vue'
-import { useChatStore } from "@/store/chat"
-const ChatContacts = defineAsyncComponent(() => import("@/components/common/ChatContacts.vue"))
-const store = useChatStore()
-const search = ref<string>('')
-const serchUser = store.serchUser
+import { ref, computed, onMounted } from 'vue'
+import { useChatStore } from '@/store/chat'
+import { getImages } from '@/composables/common/getImages'
+import { useAuth } from '@/composables/useAuth'
 
-const activeusers = computed(() =>
+const chatStore = useChatStore()
+const { currentUser } = useAuth()
+const searchQuery = ref('')
 
-    store.users.filter(function (user) {
-        if (user.active === 'active' && user.id !== 0) return user;
-    }))
+onMounted(async () => {
+  await chatStore.init()
+})
 
-function setSerchUsers() {
-    if (search.value !== '')
-        store.setSerchUsers(search.value);
+// Get all users that have contacted support
+const filteredUsers = computed(() => {
+  // If current user is not support, only show support user
+  if (currentUser.value?.email !== 'mdpssupport@metoffice.gov.tt') {
+    return chatStore.SUPPORT_USER ? [chatStore.SUPPORT_USER] : []
+  }
+
+  // For support user, show all users who have chats
+  const uniqueUserIds = new Set<number>()
+  const userMap = new Map<number, User>()
+
+  chatStore.chats.forEach(chat => {
+    if (!uniqueUserIds.has(chat.user.id) && chat.user.id !== chatStore.SUPPORT_USER?.id) {
+      uniqueUserIds.add(chat.user.id)
+      userMap.set(chat.user.id, chat.user)
+    }
+  })
+
+  const users = Array.from(userMap.values())
+  
+  if (!searchQuery.value) return users
+  
+  return users.filter(user => 
+    user.first_name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    user.last_name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
+
+const isUserOnline = (user) => {
+  const presence = chatStore.userPresences.get(user.id)
+  return presence?.is_online || false
 }
-function setActiveuser(user: any) {
-    store.setActiveuser(user);
-}
-function setActiveuserSerch(id: any) {
-    store.setActiveuser(id);
-    search.value = '';
+
+const userPresenceClass = (user) => 
+  isUserOnline(user) ? 'bg-success' : 'bg-secondary'
+
+const setActiveuser = (user) => {
+  chatStore.setActiveuser(user)
 }
 </script>

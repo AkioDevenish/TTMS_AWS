@@ -2,16 +2,28 @@
     <div v-if="isAdminUser">
         <div class="form theme-form h-100">
             <div class="row">
-                <div class="col">
+                <div class="col-sm-6">
                     <div class="mb-3">
-                        <label>Name</label>
+                        <label>First Name</label>
                         <input 
                             class="form-control" 
                             type="text" 
-                            :class="inputClasses.name"
-                            placeholder="Name"
-                            v-model="formData.name"
-                            @input="validateField('name')">
+                            :class="inputClasses.first_name"
+                            placeholder="First Name"
+                            v-model="formData.first_name"
+                            @input="validateField('first_name')">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="mb-3">
+                        <label>Last Name</label>
+                        <input 
+                            class="form-control" 
+                            type="text" 
+                            :class="inputClasses.last_name"
+                            placeholder="Last Name"
+                            v-model="formData.last_name"
+                            @input="validateField('last_name')">
                     </div>
                 </div>
             </div>
@@ -164,7 +176,8 @@ onMounted(async () => {
 
 // Form data
 const formData = reactive({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     organization: '',
@@ -175,7 +188,8 @@ const formData = reactive({
 
 // Form state
 const inputClasses = reactive({
-    name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
     organization: '',
@@ -200,7 +214,8 @@ const validateForm = (): boolean => {
     let isValid = true
     
     // Validate all fields
-    validateField('name')
+    validateField('first_name')
+    validateField('last_name')
     validateField('email')
     validateField('password')
     validateField('organization')
@@ -271,8 +286,11 @@ const createUser = async () => {
         errorMessage.value = ''
         successMessage.value = ''
 
+        const token = localStorage.getItem('access_token')
+        
         const userData = {
-            name: formData.name,
+            first_name: formData.first_name,
+            last_name: formData.last_name,
             email: formData.email,
             password: formData.password,
             organization: formData.organization,
@@ -284,7 +302,12 @@ const createUser = async () => {
 
         console.log('Sending user data:', userData)
 
-        const response = await axios.post('http://127.0.0.1:8000/users/', userData)
+        const response = await axios.post('http://127.0.0.1:8000/api/users/', userData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
         
         successMessage.value = 'User created successfully!'
         
