@@ -32,8 +32,8 @@ export function useStationData() {
 
     try {
       const [stationResponse, measurementsResponse] = await Promise.all([
-        axios.get(`http://127.0.0.1:8000/stations/${stationId}/`),
-        axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}`)
+        axios.get(`/stations/${stationId}/`),
+        axios.get(`/measurements/by_station/?station_id=${stationId}`)
       ]);
 
       stationInfo.value = stationResponse.data;
@@ -109,7 +109,7 @@ export function useStationData() {
   const getStationStatus = async (stationId: number) => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}&limit=1`
+        `/measurements/by_station/?station_id=${stationId}&limit=1`
       );
 
       const latestMeasurement = response.data[0];

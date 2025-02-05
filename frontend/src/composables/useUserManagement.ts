@@ -72,7 +72,7 @@ export function useUserManagement() {
   // Update user status
   const updateUserStatus = async (userId: number, newStatus: 'Active' | 'Inactive' | 'Pending' | 'Paused' | 'Suspended') => {
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/users/${userId}/`, {
+      const response = await axios.patch(`/users/${userId}/`, {
         status: newStatus
       }, {
         headers: getHeaders()
@@ -101,7 +101,7 @@ export function useUserManagement() {
       const user = allData.value.find(u => u.id === userId)
       const newStatus = user?.status === 'Suspended' ? 'Active' : 'Suspended'
 
-      const response = await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, {
+      const response = await axios.patch(`/users/${userId}/`, {
         status: newStatus
       }, {
         headers: getHeaders()

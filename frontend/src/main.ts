@@ -49,7 +49,6 @@ import axios from 'axios'
 
 // Set base URL
 axios.defaults.baseURL = process.env.VUE_APP_API_URL
-// 'http://127.0.0.1:8000'
 
 // Add request interceptor to handle errors
 axios.interceptors.response.use(

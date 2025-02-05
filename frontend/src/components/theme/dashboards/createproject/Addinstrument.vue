@@ -107,9 +107,6 @@ const format = (date: Date | null): string => {
 	return `${day}/${month}/${year}`;
 };
 
-// Configure axios defaults
-// axios.defaults.baseURL = 'http://127.0.0.1:8000';
-
 // Fetch available brands
 const fetchBrands = async () => {
 	try {

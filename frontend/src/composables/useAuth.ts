@@ -46,7 +46,7 @@ export function useAuth() {
   const login = async (credentials: LoginCredentials) => {
     try {
       loading.value = true
-      const response = await axios.post('/api/token/', credentials)
+      const response = await axios.post('/token/', credentials)
 
       if (response.data.access) {
         setAuthToken(response.data.access)
@@ -66,7 +66,7 @@ export function useAuth() {
 
   const refreshUserData = async () => {
     try {
-      const response = await axios.get('/api/user/me/')
+      const response = await axios.get('/user/me/')
       console.log('API Response:', response.data)
 
       currentUser.value = {
