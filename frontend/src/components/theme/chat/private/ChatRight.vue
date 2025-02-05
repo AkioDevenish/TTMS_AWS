@@ -1,79 +1,62 @@
 <template>
     <div class="col-xxl-9 col-xl-8 col-md-7 box-col-7">
         <div class="card right-sidebar-chat">
-            <div v-if="currentChat" class="right-sidebar-title">
-                <div class="common-space">
-                    <div class="chat-time">
-                        <div class="active-profile">
-                            <div class="status" :class="userPresenceClass"></div>
-                        </div>
-                        <div> 
-                            <span>{{ currentChat.user?.first_name }} {{ currentChat.user?.last_name }}</span>
-                            <p>{{ isOnline ? 'Online' : 'Offline' }}</p>
+            <div v-if="currentChat" class="card-header chat-header">
+                <div class="d-flex align-items-center">
+                    <div class="status-indicator" :class="userPresenceClass"></div>
+                    <div class="ms-3">
+                        <h5 class="mb-0">{{ formatUserName(currentChat.user) }}</h5>
+                        <small class="text-muted">{{ isOnline ? 'Online' : 'Offline' }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div v-if="currentChat" class="card-body chat-body p-3">
+                <div class="messages-container" ref="messagesContainer">
+                    <div v-for="message in sortedMessages" 
+                         :key="message.id"
+                         class="d-flex mb-3"
+                         :class="{'justify-content-end': isCurrentUserMessage(message)}">
+                        <div class="message" 
+                             :class="{
+                                 'message-sent': isCurrentUserMessage(message),
+                                 'message-received': !isCurrentUserMessage(message)
+                             }">
+                            <div class="message-bubble">
+                                <div class="message-sender small text-muted">
+                                    {{ formatSenderName(message.sender) }}
+                                </div>
+                                <div class="message-content">{{ message.content }}</div>
+                                <div class="message-time small text-end">
+                                    {{ formatMessageTime(message.time || message.created_at) }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-else class="right-sidebar-title">
-                <div class="common-space">
-                    <p>Select a chat to start messaging</p>
-                </div>
-            </div>
-            
-            <div v-if="currentChat" class="chat-body">
-                <div class="messages-container" ref="messagesContainer">
-                    <template v-for="(message, index) in currentChat?.messages" :key="message.id">
-                        <div class="message"
-                            :class="{
-                                'sent': message.sender?.id === currentUserId,
-                                'received': message.sender?.id !== currentUserId,
-                                'message-group': index > 0 && 
-                                    currentChat.messages[index - 1].sender?.id === message.sender?.id
-                            }">
-                            <div class="message-bubble">
-                                <div v-if="index === 0 || currentChat.messages[index - 1].sender?.id !== message.sender?.id" 
-                                     class="message-sender">
-                                    {{ message.sender?.id === currentUserId ? 'You' : 
-                                       (message.sender?.first_name ? 
-                                        `${message.sender.first_name} ${message.sender.last_name || ''}` : 
-                                        'MDPS Support') }}
-                                </div>
-                                <div class="message-content">{{ message.content }}</div>
-                                <div class="message-time">{{ formatMessageTime(message.time || message.created_at) }}</div>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
 
-            <div v-if="currentChat" class="chat-footer">
-                <form @submit.prevent="sendMessage" class="message-form">
+            <div v-if="currentChat" class="card-footer chat-footer">
+                <form @submit.prevent="sendMessage" class="d-flex gap-2">
                     <input 
                         v-model="newMessage"
                         type="text"
                         placeholder="Type your message..."
-                        class="form-control"
+                        class="form-control rounded-pill"
                     />
-                    <button type="button" class="btn btn-secondary emoji-btn" @click="toggleEmojiPicker">
-                        <i class="fa fa-smile-o"></i>
-                    </button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary rounded-circle">
                         <i class="fa fa-paper-plane"></i>
                     </button>
                 </form>
-                <div v-if="showEmojiPicker" class="emoji-picker">
-                    <EmojiChat @selectEmoji="onSelectEmoji" />
-                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useChatStore } from '@/store/chat'
 import { useAuth } from '@/composables/useAuth'
-import { ProcessedMessage } from '@/store/chat'
 
 interface Message {
     id: number;
@@ -86,6 +69,7 @@ interface Message {
         first_name?: string;
         last_name?: string;
         username?: string;
+        email: string;
     };
 }
 
@@ -97,23 +81,16 @@ const newMessage = ref('')
 const currentUserId = computed(() => auth.currentUser.value?.id)
 const currentChat = computed(() => {
     const chat = chatStore.currentChat
-    if (chat?.messages) {
-        return {
-            ...chat,
-            messages: chat.messages.map((msg: ProcessedMessage) => ({
-                ...msg,
-                sender: msg.sender || {},
-                content: msg.content || msg.text,
-                senderName: msg.senderName,
-                time: msg.time || new Date(msg.created_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: true 
-                })
-            }))
-        }
-    }
-    return chat
+    if (!chat) return null;
+
+    return {
+        ...chat,
+        messages: chat.messages.map(msg => ({
+            ...msg,
+            sender: msg.sender || {},
+            content: msg.content || msg.text
+        }))
+    };
 })
 
 const isOnline = computed(() => {
@@ -123,14 +100,24 @@ const isOnline = computed(() => {
 })
 
 const userPresenceClass = computed(() => 
-    isOnline.value ? 'bg-success' : 'bg-secondary'
+    isOnline.value ? 'online' : 'offline'
 )
 
 const isSupportChat = computed(() => currentChat.value?.support_chat ?? false)
 const supportUserId = computed(() => chatStore.SUPPORT_USER?.id)
 
-const EmojiChat = defineAsyncComponent(() => import("@/components/theme/chat/private/EmojiChat.vue"))
-const showEmojiPicker = ref(false)
+const chatName = computed(() => {
+    if (!currentChat.value) return '';
+    
+    const isSupportUser = auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt';
+    const otherParticipant = currentChat.value.user;
+    
+    if (isSupportUser) {
+        return `${otherParticipant?.first_name || ''} ${otherParticipant?.last_name || otherParticipant?.username || ''}`.trim();
+    } else {
+        return 'MDPS Support';
+    }
+});
 
 function formatMessageTime(timestamp: string) {
     if (!timestamp) return ''
@@ -145,6 +132,17 @@ function formatMessageTime(timestamp: string) {
     } catch (e) {
         return ''
     }
+}
+
+function formatSenderName(sender: MessageSender | undefined) {
+    if (!sender) return '';
+    
+    const isSupportUser = sender.email === 'mdpssupport@metoffice.gov.tt';
+    if (isSupportUser) {
+        return 'MDPS Support';
+    }
+    
+    return `${sender.first_name || ''} ${sender.last_name || sender.username || ''}`.trim();
 }
 
 async function sendMessage() {
@@ -172,117 +170,206 @@ watch(currentChat, async () => {
     await scrollToBottom()
 })
 
-function toggleEmojiPicker() {
-    showEmojiPicker.value = !showEmojiPicker.value
+const formatUserName = (user) => {
+    if (!user) return '';
+    
+    const isSupportUser = user.email === 'mdpssupport@metoffice.gov.tt';
+    if (isSupportUser) {
+        return 'MDPS Support';
+    }
+    
+    return `${user.first_name || ''} ${user.last_name || user.username || ''}`.trim();
 }
 
-function onSelectEmoji(emoji: string) {
-    newMessage.value += emoji
-    showEmojiPicker.value = false
+const sortedMessages = computed(() => {
+    if (!currentChat.value?.messages) return [];
+    
+    console.log('Current Chat Messages:', currentChat.value.messages);
+    console.log('Current User:', auth.currentUser.value);
+    console.log('Is Support User:', auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt');
+    
+    const messages = [...currentChat.value.messages].sort((a, b) => 
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    
+    console.log('Sorted Messages:', messages);
+    console.log('Message Senders:', messages.map(m => ({
+        senderId: m.sender?.id,
+        senderEmail: m.sender?.email,
+        content: m.content
+    })));
+    
+    return messages;
+})
+
+const isCurrentUserMessage = (message: Message) => {
+    console.log('Checking message ownership:', {
+        messageId: message.id,
+        senderId: message.sender?.id,
+        currentUserId: currentUserId.value,
+        content: message.content,
+        isSupportUser: auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt'
+    });
+    
+    if (!currentUserId.value) return false;
+    
+    // For MDPS Support, show all messages in the chat
+    if (auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
+        return true;
+    }
+    
+    return message.sender?.id === currentUserId.value;
 }
 </script>
 
-<style scoped>
-.messages-container {
-    height: calc(100vh - 300px);
-    overflow-y: auto;
+<style lang="scss" scoped>
+.chat-header {
     padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    background: white;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    
+    &.online {
+        background-color: #28a745;
+    }
+    
+    &.offline {
+        background-color: #dc3545;
+    }
+}
+
+.chat-body {
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+}
+
+.messages-container {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
 .message {
-    margin: 8px 0;
     display: flex;
-    flex-direction: column;
-}
-
-.sent {
-    align-items: flex-end;
-}
-
-.received {
-    align-items: flex-start;
-}
-
-.message-group {
-    margin-top: 2px;
+    max-width: 80%;
+    
+    &.message-sent {
+        margin-left: auto;
+        
+        .message-bubble {
+            background-color: #6f42c1;
+            color: white;
+            border-radius: 15px 15px 0 15px;
+            
+            .message-time, .message-sender {
+                color: rgba(255, 255, 255, 0.8);
+            }
+        }
+    }
+    
+    &.message-received {
+        margin-right: auto;
+        
+        .message-bubble {
+            background-color: white;
+            color: #212529;
+            border-radius: 15px 15px 15px 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+    }
 }
 
 .message-bubble {
-    max-width: 70%;
-    padding: 8px 12px;
-    border-radius: 12px;
-}
-
-.sent .message-bubble {
-    background-color: #007bff;
-    color: white;
-}
-
-.received .message-bubble {
-    background-color: #f1f1f1;
-    color: black;
+    padding: 0.8rem 1rem;
+    min-width: 120px;
 }
 
 .message-sender {
-    font-weight: bold;
-    margin-bottom: 4px;
-    font-size: 0.9em;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.message-content {
+    word-break: break-word;
+    line-height: 1.4;
 }
 
 .message-time {
-    font-size: 0.8em;
-    opacity: 0.7;
-    margin-top: 4px;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    opacity: 0.8;
 }
 
 .chat-footer {
     padding: 1rem;
-    border-top: 1px solid #eee;
     background: white;
+    border-top: 1px solid #e9ecef;
+    
+    form {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .form-control {
+        border-radius: 20px;
+        padding: 0.5rem 1rem;
+        border: 1px solid #e9ecef;
+        
+        &:focus {
+            box-shadow: none;
+            border-color: #6f42c1;
+        }
+    }
+    
+    .btn-primary {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        
+        &:hover {
+            background-color: darken(#6f42c1, 5%);
+            border-color: darken(#6f42c1, 5%);
+        }
+        
+        i {
+            font-size: 1.2rem;
+        }
+    }
 }
 
-.message-form {
-    display: flex;
-    gap: 1rem;
-}
-
-.message-form input {
-    flex: 1;
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
-}
-
-.message-form button {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.emoji-btn {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 0.5rem;
-}
-
-.emoji-picker {
-    position: absolute;
-    bottom: 100%;
-    right: 1rem;
-    z-index: 1000;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+// Custom scrollbar
+.chat-body {
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: #c5c5c5;
+        border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
 }
 </style>

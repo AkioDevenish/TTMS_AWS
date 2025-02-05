@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, onBeforeUnmount, watch, onMounted, Ref } from "vue"
+import { ref, computed, onBeforeUnmount, watch, onMounted } from "vue"
 import { useAuth } from '@/composables/useAuth'
 import axios from 'axios'
 
@@ -7,11 +7,9 @@ interface User {
     id: number;
     username: string;
     email: string;
-    first_name: string | null;
-    last_name: string | null;
-    is_staff: boolean;
-    is_superuser: boolean;
-    role: string;
+    first_name?: string;
+    last_name?: string;
+    support_chat?: boolean;
 }
 
 interface Participant extends User {
@@ -22,31 +20,23 @@ interface MessageSender {
     id: number;
     username: string;
     email: string;
-    first_name: string | null;
-    last_name: string | null;
+    first_name?: string;
+    last_name?: string;
 }
 
 interface Message {
     id: number;
-    chat: number;
-    chat_id: number;
     content: string;
+    chat_id: number;
+    sender: MessageSender;
     created_at: string;
     read_at: string | null;
-    sender: {
-        id: number;
-        email: string;
-        first_name?: string;
-        last_name?: string;
-        username?: string;
-    };
+    time?: string;
 }
 
-export interface ProcessedMessage extends Message {
+interface ProcessedMessage extends Message {
     isCurrentUser: boolean;
-    alignment: 'left' | 'right';
-    senderName?: string;
-    time: string;
+    alignment: string;
 }
 
 interface Chat {
@@ -148,7 +138,6 @@ export const useChatStore = defineStore('chat', () => {
         if (currentUser.value?.id) {
             await updateUserPresence(currentUser.value.id, false)
         }
-        stopPolling()
     }
 
     async function init() {
@@ -184,18 +173,10 @@ export const useChatStore = defineStore('chat', () => {
             chat.messages.forEach(message => {
                 if (message.sender.id !== SUPPORT_USER.value?.id && !uniqueUserIds.has(message.sender.id)) {
                     uniqueUserIds.add(message.sender.id)
+                    // Get full user data from the chat's user property
                     const chatUser = chats.value.find(c => c.user.id === message.sender.id)?.user
-                    if (chatUser && chatUser.email) {
-                        userMap.set(message.sender.id, {
-                            id: chatUser.id,
-                            username: chatUser.username,
-                            email: chatUser.email,
-                            first_name: chatUser.first_name || null,
-                            last_name: chatUser.last_name || null,
-                            is_staff: false,
-                            is_superuser: false,
-                            role: ''
-                        })
+                    if (chatUser) {
+                        userMap.set(message.sender.id, chatUser)
                     }
                 }
             })
@@ -209,11 +190,10 @@ export const useChatStore = defineStore('chat', () => {
     const currentChat = computed(() => {
         if (!activeChat.value) return null
         
+        // Don't filter messages, show all messages for the active chat
         return {
             ...activeChat.value,
-            messages: messages.value.filter(m => 
-                activeChat.value && m.chat_id === activeChat.value.id
-            )
+            messages: messages.value
         }
     })
 
@@ -234,14 +214,11 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     function processMessage(msg: Message): ProcessedMessage {
-        const isMDPS = currentUser.value?.email === 'mdpssupport@metoffice.gov.tt';
+        const isCurrentUser = msg.sender.id === currentUser.value?.id;
         return {
             ...msg,
-            isCurrentUser: msg.sender.email === currentUser.value?.email,
-            alignment: msg.sender.email === currentUser.value?.email ? 'right' : 'left',
-            senderName: isMDPS ? 
-                (msg.sender.email === 'mdpssupport@metoffice.gov.tt' ? 'You' : msg.sender.username) :
-                (msg.sender.email === 'mdpssupport@metoffice.gov.tt' ? 'MDPS Support' : 'You'),
+            isCurrentUser,
+            alignment: isCurrentUser ? 'right' : 'left',
             time: new Date(msg.created_at).toLocaleTimeString([], { 
                 hour: '2-digit', 
                 minute: '2-digit',
@@ -250,39 +227,32 @@ export const useChatStore = defineStore('chat', () => {
         };
     }
 
-    function getSenderDisplayName(sender: MessageSender): string {
-        if (sender.email === 'mdpssupport@metoffice.gov.tt') {
-            return 'MDPS Support';
-        }
-        return `${sender.first_name || ''} ${sender.last_name || ''}`.trim() || sender.username || 'Unknown';
-    }
-
     function processChat(chat: Chat): ProcessedChat {
         const processedMessages = processMessages(chat.messages || []);
         const lastMessage = processedMessages[processedMessages.length - 1];
         
-        let otherParticipant: MessageSender;
+        let otherParticipant;
         const isMDPSSupport = currentUser.value?.email === 'mdpssupport@metoffice.gov.tt';
         
-        const participant = isMDPSSupport
-            ? chat.participants.find(p => p.email !== 'mdpssupport@metoffice.gov.tt')
-            : chat.participants.find(p => p.email === 'mdpssupport@metoffice.gov.tt');
+        if (isMDPSSupport) {
+            // For MDPS support, show the other user's info
+            otherParticipant = chat.participants.find(p => 
+                p.email !== 'mdpssupport@metoffice.gov.tt'
+            ) || chat.user;
+        } else {
+            // For regular users, show MDPS support info
+            otherParticipant = chat.participants.find(p => 
+                p.email === 'mdpssupport@metoffice.gov.tt'
+            );
+        }
 
-        otherParticipant = participant || {
-            id: -1,
-            username: 'Unknown',
-            email: '',
-            first_name: '',
-            last_name: ''
-        };
-
-        const chatName = isMDPSSupport 
-            ? `${otherParticipant.first_name || ''} ${otherParticipant.last_name || ''}`.trim() || otherParticipant.username
-            : 'MDPS Support';
+        if (!otherParticipant) {
+            otherParticipant = chat.user;
+        }
 
         return {
             id: chat.id,
-            name: chatName,
+            name: formatParticipantName(otherParticipant, isMDPSSupport),
             messages: processedMessages,
             lastMessageTime: lastMessage 
                 ? new Date(lastMessage.created_at)
@@ -294,119 +264,84 @@ export const useChatStore = defineStore('chat', () => {
         };
     }
 
-    let pollInterval: number | null = null;
-    const POLL_INTERVAL = 5000; // 5 seconds
-
-    async function startPolling() {
-        if (pollInterval) return;
-
-        // Initial fetch
-        await Promise.all([
-            fetchAllChats(),
-            fetchAllUsers()
-        ]);
-
-        // Start polling
-        pollInterval = window.setInterval(async () => {
-            if (activeChat.value?.id) {
-                await handleChatUpdate(activeChat.value.id);
-            }
-            await fetchAllChats();
-        }, POLL_INTERVAL);
-    }
-
-    function stopPolling() {
-        if (pollInterval) {
-            window.clearInterval(pollInterval);
-            pollInterval = null;
+    function formatParticipantName(participant: MessageSender, isMDPSSupport: boolean): string {
+        if (!isMDPSSupport) {
+            return 'MDPS Support';
         }
+        
+        const firstName = participant.first_name || '';
+        const lastName = participant.last_name || '';
+        const username = participant.username || '';
+        
+        return `${firstName} ${lastName}`.trim() || username;
     }
 
-    // Add cleanup on component unmount
-    onBeforeUnmount(() => {
-        stopPolling();
-    });
-
-    // Modify handleChatUpdate to handle polling updates
     async function handleChatUpdate(chatId: number) {
         try {
-            const messagesResponse = await axios.get<Message[]>(`http://127.0.0.1:8000/api/messages/`, {
+            const messagesResponse = await axios.get('http://127.0.0.1:8000/api/messages/', {
                 headers: getHeaders()
             });
             
-            if (!messagesResponse.data) return;
+            const chatResponse = await axios.get<Chat>(
+                `http://127.0.0.1:8000/api/chats/${chatId}/`, 
+                { headers: getHeaders() }
+            );
+            
+            if (chatResponse.data && messagesResponse.data) {
+                // Get all messages for this chat without filtering
+                const chatMessages = messagesResponse.data.filter((msg: any) => msg.chat === chatId);
+                const processedMessages = chatMessages.map((msg: any) => ({
+                    id: msg.id,
+                    content: msg.content,
+                    chat_id: msg.chat,
+                    sender: msg.sender,
+                    created_at: msg.created_at,
+                    read_at: msg.read_at,
+                    time: new Date(msg.created_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    }),
+                    isCurrentUser: msg.sender.id === currentUser.value?.id,
+                    alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
+                }));
 
-            // Get all messages for this chat, including both chat and chat_id matches
-            const chatMessages = messagesResponse.data.filter((msg: Message) => {
-                const isChatMatch = msg.chat === chatId || msg.chat_id === chatId;
-                if (isChatMatch) {
-                    console.log('Matched message:', msg);
+                const processedChat = processChat(chatResponse.data);
+                
+                if (activeChat.value?.id === chatId) {
+                    messages.value = processedMessages;
+                    activeChat.value = {
+                        ...processedChat,
+                        messages: processedMessages
+                    };
                 }
-                return isChatMatch;
-            });
 
-            if (!chatMessages.length) return;
-
-            const processedMessages = chatMessages
-                .map((msg: Message) => ({
-                    ...msg,
-                    ...processMessage(msg)
-                }))
-                .sort((a: ProcessedMessage, b: ProcessedMessage) => 
-                    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                );
-
-            // Force update the messages array
-            messages.value = [...processedMessages];
-            
-            if (activeChat.value?.id === chatId) {
-                activeChat.value = {
-                    ...activeChat.value,
-                    messages: [...processedMessages],
-                    lastMessageTime: processedMessages.length ? 
-                        new Date(processedMessages[processedMessages.length - 1].created_at) :
-                        activeChat.value.lastMessageTime
-                };
+                const chatIndex = chats.value.findIndex(c => c.id === chatId);
+                if (chatIndex !== -1) {
+                    chats.value[chatIndex] = {
+                        ...processedChat,
+                        messages: processedMessages
+                    };
+                }
+                
+                chats.value.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
             }
         } catch (error) {
-            console.error('Error updating chat:', error);
+            console.error('Error in handleChatUpdate:', error);
         }
     }
 
-    async function setActiveChat(chat: Chat) {
-        try {
-            const processedChat = processChat(chat);
-            activeChat.value = processedChat;
-
-            const messagesResponse = await axios.get<Message[]>(`http://127.0.0.1:8000/api/messages/`, {
-                headers: getHeaders()
-            });
-
-            if (messagesResponse.data) {
-                const chatMessages = messagesResponse.data.filter((msg: Message) => 
-                    msg.chat === chat.id || msg.chat_id === chat.id
-                );
-
-                const processedMessages = chatMessages
-                    .map((msg: Message) => processMessage(msg))
-                    .sort((a: ProcessedMessage, b: ProcessedMessage) => 
-                        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                    );
-
-                messages.value = processedMessages;
-                activeChat.value = {
-                    ...processedChat,
-                    messages: processedMessages,
-                    lastMessageTime: processedMessages.length ? 
-                        new Date(processedMessages[processedMessages.length - 1].created_at) :
-                        new Date(chat.created_at)
-                };
+    // Add this new function to handle scrolling
+    function scrollToLatestMessage() {
+        setTimeout(() => {
+            const container = document.querySelector(".chat-body");
+            if (container) {
+                container.scrollTop = container.scrollHeight;
             }
-        } catch (error) {
-            console.error('Error setting active chat:', error);
-        }
+        }, 100); // Small delay to ensure content is rendered
     }
 
+    // Modify handleNewMessage to include scrolling
     async function handleNewMessage(newMessage: Message) {
         try {
             const processedMessage = processMessage(newMessage);
@@ -428,11 +363,40 @@ export const useChatStore = defineStore('chat', () => {
                 }
             }
             
+            // Scroll to latest message
+            scrollToLatestMessage();
+            
             if (activeChat.value?.id) {
                 await handleChatUpdate(activeChat.value.id);
             }
         } catch (error) {
             console.error('Error handling new message:', error);
+        }
+    }
+
+    // Also modify setActiveChat to scroll when opening a chat
+    async function setActiveChat(chat: Chat) {
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/chats/${chat.id}/`, {
+                headers: getHeaders()
+            });
+
+            if (response.data) {
+                const chatMessages = response.data.messages || [];
+                const processedMessages = chatMessages.map((msg: Message) => ({
+                    ...msg,
+                    isCurrentUser: msg.sender.id === currentUser.value?.id,
+                    alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
+                }));
+
+                activeChat.value = response.data;
+                messages.value = processedMessages;
+                
+                // Scroll to latest message after setting chat
+                scrollToLatestMessage();
+            }
+        } catch (error) {
+            console.error('Error setting active chat:', error);
         }
     }
 
@@ -479,69 +443,66 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
+    // Add this function to handle message updates
+    async function updateMessages(chatId: number) {
+        // Wait 2 seconds before fetching updates
+        setTimeout(async () => {
+            try {
+                const response = await axios.get(`http://127.0.0.1:8000/api/messages/`, {
+                    headers: getHeaders()
+                });
+
+                if (response.data) {
+                    // Filter and process messages for current chat
+                    const chatMessages = response.data.filter((msg: any) => msg.chat === chatId);
+                    const processedMessages = chatMessages.map((msg: any) => ({
+                        id: msg.id,
+                        content: msg.content,
+                        chat_id: msg.chat,
+                        sender: msg.sender,
+                        created_at: msg.created_at,
+                        time: new Date(msg.created_at).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: true 
+                        }),
+                        isCurrentUser: msg.sender.id === currentUser.value?.id,
+                        alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
+                    }));
+
+                    if (activeChat.value?.id === chatId) {
+                        messages.value = processedMessages;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating messages:', error);
+            }
+        }, 2000);
+    }
+
+    // Modify the addMessage function to include the update
     async function addMessage(content: string) {
-        if (!activeChat.value?.id || !currentUser.value?.email) return;
-
-        const tempMessage: ProcessedMessage = {
-            id: Date.now(),
-            content: content,
-            chat_id: activeChat.value.id,
-            chat: activeChat.value.id,
-            sender: {
-                id: currentUser.value.id || 0,
-                username: currentUser.value.username || '',
-                first_name: currentUser.value.first_name || undefined,
-                last_name: currentUser.value.last_name || undefined,
-                email: currentUser.value.email
-            },
-            created_at: new Date().toISOString(),
-            read_at: null,
-            isCurrentUser: true,
-            alignment: 'right',
-            time: new Date().toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-            })
-        };
-
         try {
-            messages.value = [...messages.value, tempMessage];
-
-            if (activeChat.value) {
-                activeChat.value.messages = [...activeChat.value.messages, tempMessage];
-                activeChat.value.lastMessageTime = new Date();
+            if (!activeChat.value?.id) {
+                console.error('No active chat ID');
+                return;
             }
 
-            const response = await axios.post('http://127.0.0.1:8000/api/messages/', {
-                content: content,
+            const messageData = {
+                content,
                 chat: activeChat.value.id
-            }, {
+            };
+
+            const response = await axios.post('http://127.0.0.1:8000/api/messages/', messageData, {
                 headers: getHeaders()
             });
 
             if (response.data) {
-                const realMessage = processMessage(response.data);
-                messages.value = messages.value.map(msg => 
-                    msg.id === tempMessage.id ? realMessage : msg
-                );
-
-                if (activeChat.value) {
-                    activeChat.value.messages = activeChat.value.messages.map(msg =>
-                        msg.id === tempMessage.id ? realMessage : msg
-                    );
-                }
-
-                await handleChatUpdate(activeChat.value.id);
+                // After sending message, update messages after 2 seconds
+                updateMessages(activeChat.value.id);
             }
         } catch (error) {
-            console.error('Error sending message:', error);
-            messages.value = messages.value.filter(msg => msg.id !== tempMessage.id);
-            if (activeChat.value) {
-                activeChat.value.messages = activeChat.value.messages.filter(msg => 
-                    msg.id !== tempMessage.id
-                );
-            }
+            console.error('Error adding message:', error);
         }
     }
 
@@ -661,8 +622,23 @@ export const useChatStore = defineStore('chat', () => {
                 headers: getHeaders()
             });
 
-            const processedChats = response.data
-                .filter(chat => chat.participants.some(p => p.id === currentUser.value?.id))
+            const isSupportUser = currentUser.value?.email === 'mdpssupport@metoffice.gov.tt';
+            
+            let filteredChats = response.data;
+            if (!isSupportUser) {
+                // Regular users only see their support chat
+                filteredChats = response.data.filter(chat => 
+                    chat.support_chat && 
+                    chat.participants.some(p => p.id === currentUser.value?.id)
+                );
+            }
+
+            // Process all messages for each chat
+            const processedChats = filteredChats
+                .map(chat => ({
+                    ...chat,
+                    messages: chat.messages || [] // Ensure messages array exists
+                }))
                 .map(processChat)
                 .filter((chat): chat is ProcessedChat => chat !== null)
                 .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
@@ -737,7 +713,7 @@ export const useChatStore = defineStore('chat', () => {
         handleNewMessage,
         handleChatUpdate,
         handleNewChat,
-        startPolling,
-        stopPolling
+        updateMessages,
+        scrollToLatestMessage
     }
 })
