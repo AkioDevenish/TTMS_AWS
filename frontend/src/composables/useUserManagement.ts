@@ -44,7 +44,7 @@ export function useUserManagement() {
     const fetchUsers = async () => {
         try {
             loading.value = true
-            const response = await axios.get('/users/', { headers: getHeaders() })
+            const response = await axios.get('/users/')
             console.log(response.data)
             
             if (Array.isArray(response.data)) {
