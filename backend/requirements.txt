@@ -13,4 +13,4 @@ django-celery-beat
 redis
 python-dateutil
 requests
-APScheduler==3.10.4ß
+APScheduler==3.10.4
