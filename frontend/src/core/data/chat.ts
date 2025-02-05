@@ -5,10 +5,11 @@ interface User {
     status: string;
     lastSeenDate: string;
     active: string;
-    icon: string;
+    icon?: string;
     time?: string;
     badge?: string;
     StatusClass?: string;
+    isSuper?: boolean;
 }
 
 interface Message {

@@ -7,7 +7,7 @@
         </div>
         <div class="search-contacts">
             <input class="form-control" type="text" placeholder="Name and phone number" v-model="search"
-                v-on:keyup="setSerchUsers">
+                v-on:keyup="setSearchUsers">
             <svg>
                 <use href="@/assets/svg/icon-sprite.svg#stroke-search"></use>
             </svg><vue-feather class="mic-search" type="mic"></vue-feather>
@@ -48,13 +48,16 @@ import { ref, defineAsyncComponent, computed } from 'vue'
 import { useChatStore } from "@/store/chat"
 const store = useChatStore()
 const search = ref<string>('')
-const activeusers = computed(() =>
-    store.data.filter(function (user) {
-
-        if (user.active === 'active' && user.id !== 0) return user;
-    }))
-function setSerchUsers() {
-    if (search.value !== '')
-        store.setSerchUsers(search.value);
+const activeUsers = computed(() => {
+    if (!store.chats.length) return []
+    
+    return store.chats.filter(chat => 
+        chat.user && chat.user.id !== store.currentUser?.value?.id
+    )
+})
+function setSearchUsers() {
+    if (search.value !== '') {
+        store.setSearchUsers(search.value)
+    }
 }
 </script>

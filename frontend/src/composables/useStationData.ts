@@ -117,12 +117,14 @@ export function useStationData() {
       const station = stationResponse.data;
       const measurements = measurementResponse.data;
 
-      // Check if station has any measurements
-      if (!measurements || measurements.length === 0) {
-        return 'NoData';
-      }
+      // Check for invalid measurements
+      const hasInvalidValues = Object.values(latestMeasurement)
+        .filter((value): value is number => typeof value === 'number')
+        .every((value) => value <= -1 || value === 0);
 
-      const latestMeasurement = measurements[0];
+      if (hasInvalidValues) return 'Offline';
+
+      // Check measurement time
       const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
       const lastUpdated = new Date(station.last_updated_at);
 

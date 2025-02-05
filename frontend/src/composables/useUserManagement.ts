@@ -5,13 +5,14 @@ import { useAuth } from './useAuth'
 
 interface User {
   id: number;
-  name: string;
+  username: string;
   email: string;
   organization: string;
   role: string;
   package: string;
-  status: 'Active' | 'Inactive' | 'Pending' | 'Paused';
+  status: 'Active' | 'Inactive' | 'Pending' | 'Paused' | 'Suspended';
   isPaused: boolean;
+  expires_at: string | null;
 }
 
 export function useUserManagement() {
@@ -43,19 +44,20 @@ export function useUserManagement() {
   const fetchUsers = async () => {
     try {
       loading.value = true
-      const headers = getHeaders()
-      const response = await axios.get('/users/', { headers })
+      const response = await axios.get('/users/')
+      console.log(response.data)
 
       if (Array.isArray(response.data)) {
         allData.value = response.data.map((user: any) => ({
           id: user.id,
-          name: user.name,
+          username: user.username,
           email: user.email,
-          organization: user.organization,
-          role: user.role || 'user',
-          package: user.package,
+          organization: user.organization || 'N/A',
+          role: user.role || 'User',
+          package: user.package || 'N/A',
           status: user.status || 'Pending',
-          isPaused: user.isPaused || false
+          isPaused: user.isPaused || false,
+          expires_at: user.expires_at || null
         }))
       }
     } catch (error: any) {
@@ -68,9 +70,9 @@ export function useUserManagement() {
   }
 
   // Update user status
-  const updateUserStatus = async (userId: number, newStatus: 'Active' | 'Inactive' | 'Pending' | 'Paused') => {
+  const updateUserStatus = async (userId: number, newStatus: 'Active' | 'Inactive' | 'Pending' | 'Paused' | 'Suspended') => {
     try {
-      const response = await axios.patch(`/users/${userId}/`, {
+      const response = await axios.patch(`http://127.0.0.1:8000/users/${userId}/`, {
         status: newStatus
       }, {
         headers: getHeaders()
@@ -89,17 +91,17 @@ export function useUserManagement() {
     }
   }
 
-  // Toggle user pause state
-  const togglePauseUser = async (userId: number): Promise<boolean> => {
+  // Toggle user suspend state
+  const toggleSuspendUser = async (userId: number): Promise<boolean> => {
     try {
       loading.value = true
       errorMessage.value = ''
       successMessage.value = ''
 
       const user = allData.value.find(u => u.id === userId)
-      const newStatus = user?.status === 'Paused' ? 'Active' : 'Paused'
+      const newStatus = user?.status === 'Suspended' ? 'Active' : 'Suspended'
 
-      const response = await axios.patch(`/users/${userId}/`, {
+      const response = await axios.patch(`http://127.0.0.1:8000/api/users/${userId}/`, {
         status: newStatus
       }, {
         headers: getHeaders()
@@ -114,8 +116,8 @@ export function useUserManagement() {
       }
       return false
     } catch (error: any) {
-      console.error('Error toggling user pause:', error)
-      errorMessage.value = error.response?.data?.message || 'Failed to toggle user pause status'
+      console.error('Error toggling user suspend:', error)
+      errorMessage.value = error.response?.data?.message || 'Failed to toggle user suspend status'
       return false
     } finally {
       loading.value = false
@@ -166,6 +168,17 @@ export function useUserManagement() {
     return Math.ceil(allData.value.length / elementsPerPage.value)
   })
 
+  // Update the status cycle function
+  const cycleStatus = async (user: any) => {
+    const statusMap = {
+      'Active': 'Inactive',
+      'Inactive': 'Active',
+      'Suspended': 'Active'
+    } as const
+
+    // ... rest of the function remains the same
+  }
+
   return {
     allData,
     loading,
@@ -176,7 +189,7 @@ export function useUserManagement() {
     totalPages,
     fetchUsers,
     updateUserStatus,
-    togglePauseUser,
+    toggleSuspendUser,
     deleteUser,
     successMessage,
     errorMessage,

@@ -14,3 +14,9 @@
 Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-01-19 20:02:16,272 - database.management.commands.data_fetcher - INFO - Making API request with params: {'device_sn': 'z6-26732', 'start_date': '2025-01-19 04:02:16', 'end_date': '2025-01-19 16:02:16', 'output_format': 'json', 'per_page': 1000, 'sort_by': 'asc'}
 2025-01-20 20:30:42,045 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-01-28 03:47:50,018 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-01-28 03:47:50,020 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-01-28 03:47:50,020 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-28 04:47:49,943 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-01-28 04:47:49,943 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-01-28 04:47:49,943 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
