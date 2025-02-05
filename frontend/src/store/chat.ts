@@ -13,7 +13,7 @@ interface User {
 }
 
 interface Participant extends User {
-    id: number;
+  id: number;
 }
 
 interface MessageSender {
@@ -40,99 +40,99 @@ interface ProcessedMessage extends Message {
 }
 
 interface Chat {
-    id: number;
-    name: string;
-    user: MessageSender;
-    support_chat: boolean;
-    created_at: string;
-    messages: Message[];
-    participants: MessageSender[];
+  id: number;
+  name: string;
+  user: MessageSender;
+  support_chat: boolean;
+  created_at: string;
+  messages: Message[];
+  participants: MessageSender[];
 }
 
 interface UserPresence {
-    id: number;
-    is_online: boolean;
-    last_seen: string;
+  id: number;
+  is_online: boolean;
+  last_seen: string;
 }
 
 interface CurrentUser {
-    id: number;
-    username: string;
-    email: string;
-    role: string;
-    is_superuser: boolean;
-    is_staff: boolean;
-    first_name: string | null;
-    last_name: string | null;
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  is_superuser: boolean;
+  is_staff: boolean;
+  first_name: string | null;
+  last_name: string | null;
 }
 
 interface ProcessedChat {
-    id: number;
-    name: string;
-    messages: ProcessedMessage[];
-    lastMessageTime: Date;
-    participants: MessageSender[];
-    support_chat: boolean;
-    created_at: string;
-    user: MessageSender;
+  id: number;
+  name: string;
+  messages: ProcessedMessage[];
+  lastMessageTime: Date;
+  participants: MessageSender[];
+  support_chat: boolean;
+  created_at: string;
+  user: MessageSender;
 }
 
 export const useChatStore = defineStore('chat', () => {
-    const auth = useAuth()
-    
-    // Wait for auth to be ready
-    onMounted(async () => {
-        await auth.checkAuth()
-    })
+  const auth = useAuth()
 
-    const currentUser = computed(() => auth.currentUser?.value)
-    
-    // Initialize auth state
-    let authInitialized = ref(false)
-    
-    async function waitForAuth() {
-        if (!auth.currentUser.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(() => auth.currentUser.value, (user) => {
-                    if (user) {
-                        authInitialized.value = true
-                        unwatch()
-                        resolve()
-                    }
-                })
-            })
-        } else {
+  // Wait for auth to be ready
+  onMounted(async () => {
+    await auth.checkAuth()
+  })
+
+  const currentUser = computed(() => auth.currentUser?.value)
+
+  // Initialize auth state
+  let authInitialized = ref(false)
+
+  async function waitForAuth() {
+    if (!auth.currentUser.value) {
+      await new Promise<void>((resolve) => {
+        const unwatch = watch(() => auth.currentUser.value, (user) => {
+          if (user) {
             authInitialized.value = true
-        }
+            unwatch()
+            resolve()
+          }
+        })
+      })
+    } else {
+      authInitialized.value = true
     }
+  }
 
-    const SUPPORT_USER = ref<User | null>(null)
-    const chats = ref<ProcessedChat[]>([])
-    const activeChat = ref<ProcessedChat | null>(null)
-    const messages = ref<ProcessedMessage[]>([])
-    const searchUser = ref<User[]>([])
-    const userPresences = ref<Map<number, UserPresence>>(new Map())
-    const users = ref<User[]>([])
+  const SUPPORT_USER = ref<User | null>(null)
+  const chats = ref<ProcessedChat[]>([])
+  const activeChat = ref<ProcessedChat | null>(null)
+  const messages = ref<ProcessedMessage[]>([])
+  const searchUser = ref<User[]>([])
+  const userPresences = ref<Map<number, UserPresence>>(new Map())
+  const users = ref<User[]>([])
 
-    // Helper function to get headers
-    function getHeaders() {
-        return {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json'
-        }
+  // Helper function to get headers
+  function getHeaders() {
+    return {
+      'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+      'Content-Type': 'application/json'
     }
+  }
 
-    async function updateUserPresence(userId: number, isOnline: boolean) {
-        try {
-            await axios.post(`http://127.0.0.1:8000/api/users/${userId}/presence/`, {
-                is_online: isOnline
-            }, {
-                headers: getHeaders()
-            })
-        } catch (error) {
-            console.error('Error updating user presence:', error)
-        }
+  async function updateUserPresence(userId: number, isOnline: boolean) {
+    try {
+      await axios.post(`/users/${userId}/presence/`, {
+        is_online: isOnline
+      }, {
+        headers: getHeaders()
+      })
+    } catch (error) {
+      console.error('Error updating user presence:', error)
     }
+  }
 
     async function handleLogout() {
         if (currentUser.value?.id) {
@@ -140,34 +140,34 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    async function init() {
-        try {
-            // Get support user without requiring auth
-            const supportResponse = await axios.get<User[]>('http://127.0.0.1:8000/api/users/', {
-                params: { 
-                    email: 'mdpssupport@metoffice.gov.tt'
-                }
-            })
-
-            const supportUser = supportResponse.data.find(user => 
-                user.email === 'mdpssupport@metoffice.gov.tt' && 
-                user.username === 'mdps.support'
-            )
-
-            if (supportUser) {
-                SUPPORT_USER.value = supportUser
-            }
-
-            return true
-        } catch (error) {
-            console.error('Error in init:', error)
-            return false
+  async function init() {
+    try {
+      // Get support user without requiring auth
+      const supportResponse = await axios.get<User[]>('/users/', {
+        params: {
+          email: 'mdpssupport@metoffice.gov.tt'
         }
-    }
+      })
 
-    function setSearchUsers(searchTerm: string) {
-        const uniqueUserIds = new Set<number>()
-        const userMap = new Map<number, User>()
+      const supportUser = supportResponse.data.find(user =>
+        user.email === 'mdpssupport@metoffice.gov.tt' &&
+        user.username === 'mdps.support'
+      )
+
+      if (supportUser) {
+        SUPPORT_USER.value = supportUser
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error in init:', error)
+      return false
+    }
+  }
+
+  function setSearchUsers(searchTerm: string) {
+    const uniqueUserIds = new Set<number>()
+    const userMap = new Map<number, User>()
 
         chats.value.forEach(chat => {
             chat.messages.forEach(message => {
@@ -182,9 +182,9 @@ export const useChatStore = defineStore('chat', () => {
             })
         })
 
-        searchUser.value = Array.from(userMap.values())
-            .filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
-    }
+    searchUser.value = Array.from(userMap.values())
+      .filter(user => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
+  }
 
 
     const currentChat = computed(() => {
@@ -197,21 +197,21 @@ export const useChatStore = defineStore('chat', () => {
         }
     })
 
-    function processMessages(chatMessages: Message[]): ProcessedMessage[] {
-        return chatMessages.map(msg => {
-            const isCurrentUser = msg.sender.id === currentUser.value?.id;
-            return {
-                ...msg,
-                isCurrentUser,
-                alignment: isCurrentUser ? 'right' : 'left',
-                time: new Date(msg.created_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: true 
-                })
-            };
-        });
-    }
+  function processMessages(chatMessages: Message[]): ProcessedMessage[] {
+    return chatMessages.map(msg => {
+      const isCurrentUser = msg.sender.id === currentUser.value?.id;
+      return {
+        ...msg,
+        isCurrentUser,
+        alignment: isCurrentUser ? 'right' : 'left',
+        time: new Date(msg.created_at).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })
+      };
+    });
+  }
 
     function processMessage(msg: Message): ProcessedMessage {
         const isCurrentUser = msg.sender.id === currentUser.value?.id;
@@ -400,48 +400,48 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    async function fetchChatMessages(chatId: number) {
-        try {
-            const token = localStorage.getItem('access_token')
-            if (!token) {
-                console.error('No auth token found')
-                return
-            }
+  async function fetchChatMessages(chatId: number) {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        console.error('No auth token found')
+        return
+      }
 
-            // Use the messages endpoint instead of chat messages
-            const response = await axios.get('http://127.0.0.1:8000/api/messages/', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-
-            if (response.data) {
-                // Filter messages for current chat
-                const chatMessages = response.data.filter((msg: any) => msg.chat === chatId)
-                const processedMessages = chatMessages.map((msg: any) => ({
-                    id: msg.id,
-                    content: msg.content,
-                    chat_id: msg.chat,
-                    sender: msg.sender,
-                    created_at: msg.created_at,
-                    time: msg.time || new Date(msg.created_at).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: true 
-                    }),
-                    isCurrentUser: msg.sender.id === currentUser.value?.id,
-                    alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
-                }))
-
-                if (activeChat.value && activeChat.value.id === chatId) {
-                    messages.value = processedMessages
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching messages:', error)
+      // Use the messages endpoint instead of chat messages
+      const response = await axios.get('/messages/', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      })
+
+      if (response.data) {
+        // Filter messages for current chat
+        const chatMessages = response.data.filter((msg: any) => msg.chat === chatId)
+        const processedMessages = chatMessages.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          chat_id: msg.chat,
+          sender: msg.sender,
+          created_at: msg.created_at,
+          time: msg.time || new Date(msg.created_at).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }),
+          isCurrentUser: msg.sender.id === currentUser.value?.id,
+          alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
+        }))
+
+        if (activeChat.value && activeChat.value.id === chatId) {
+          messages.value = processedMessages
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error)
     }
+  }
 
     // Add this function to handle message updates
     async function updateMessages(chatId: number) {
@@ -506,121 +506,121 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    function isCurrentUserMessage(message: Message) {
-        return message.sender.id === currentUser.value?.id
+  function isCurrentUserMessage(message: Message) {
+    return message.sender.id === currentUser.value?.id
+  }
+
+  async function setActiveuser(user: User) {
+    try {
+      console.log('Setting active user:', user)
+
+      if (!auth.isAuthenticated.value) {
+        console.error('User not authenticated')
+        return
+      }
+
+      // Check if chat already exists
+      const existingChat = chats.value.find(chat =>
+        chat.participants.some(p => p.id === user.id)
+      );
+
+      if (existingChat) {
+        console.log('Found existing chat:', existingChat);
+        return existingChat;
+      }
+
+      // Create new chat
+      const chatData = {
+        name: `Chat with ${user.username}`,
+        support_chat: SUPPORT_USER.value?.id === user.id,
+        user_id: user.id
+      }
+
+      const chatResponse = await axios.post('/chats/', chatData, {
+        headers: getHeaders()
+      })
+
+      if (chatResponse.data) {
+        // Add to chats list
+        chats.value.push(chatResponse.data);
+
+        // Set as active chat
+        activeChat.value = chatResponse.data;
+        messages.value = processMessages(chatResponse.data.messages || []);
+
+        return chatResponse.data;
+      }
+    } catch (error) {
+      console.error('Error setting active user:', error)
     }
+  }
 
-    async function setActiveuser(user: User) {
-        try {
-            console.log('Setting active user:', user)
-            
-            if (!auth.isAuthenticated.value) {
-                console.error('User not authenticated')
-                return
-            }
+  async function fetchSupportUser() {
+    try {
+      const response = await axios.get<User[]>('/users/', {
+        params: {
+          email: 'mdpssupport@metoffice.gov.tt'
+        },
+        headers: getHeaders()
+      });
 
-            // Check if chat already exists
-            const existingChat = chats.value.find(chat => 
-                chat.participants.some(p => p.id === user.id)
-            );
+      const supportUser = response.data.find(user =>
+        user.email === 'mdpssupport@metoffice.gov.tt' &&
+        user.username === 'mdps.support'
+      );
 
-            if (existingChat) {
-                console.log('Found existing chat:', existingChat);
-                return existingChat;
-            }
-
-            // Create new chat
-            const chatData = {
-                name: `Chat with ${user.username}`,
-                support_chat: SUPPORT_USER.value?.id === user.id,
-                user_id: user.id
-            }
-
-            const chatResponse = await axios.post('http://127.0.0.1:8000/api/chats/', chatData, {
-                headers: getHeaders()
-            })
-
-            if (chatResponse.data) {
-                // Add to chats list
-                chats.value.push(chatResponse.data);
-                
-                // Set as active chat
-                activeChat.value = chatResponse.data;
-                messages.value = processMessages(chatResponse.data.messages || []);
-                
-                return chatResponse.data;
-            }
-        } catch (error) {
-            console.error('Error setting active user:', error)
-        }
+      if (supportUser) {
+        SUPPORT_USER.value = supportUser;
+      }
+    } catch (error) {
+      console.error('Error fetching support user:', error);
     }
+  }
 
-    async function fetchSupportUser() {
-        try {
-            const response = await axios.get<User[]>('http://127.0.0.1:8000/api/users/', {
-                params: { 
-                    email: 'mdpssupport@metoffice.gov.tt'
-                },
-                headers: getHeaders()
-            });
+  async function fetchAllUsers() {
+    try {
+      const response = await axios.get<User[]>('/users/', {
+        headers: getHeaders()
+      });
 
-            const supportUser = response.data.find(user => 
-                user.email === 'mdpssupport@metoffice.gov.tt' && 
-                user.username === 'mdps.support'
-            );
+      if (currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
+        // Get all users who have sent messages
+        const usersWithMessages = new Set();
 
-            if (supportUser) {
-                SUPPORT_USER.value = supportUser;
+        chats.value.forEach(chat => {
+          // Get unique users who have sent messages
+          chat.messages.forEach(message => {
+            if (message.sender.email !== 'mdpssupport@metoffice.gov.tt') {
+              usersWithMessages.add(message.sender.id);
             }
-        } catch (error) {
-            console.error('Error fetching support user:', error);
-        }
-    }
+          });
+        });
 
-    async function fetchAllUsers() {
-        try {
-            const response = await axios.get<User[]>('http://127.0.0.1:8000/api/users/', {
-                headers: getHeaders()
-            });
-            
-            if (currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
-                // Get all users who have sent messages
-                const usersWithMessages = new Set();
-                
-                chats.value.forEach(chat => {
-                    // Get unique users who have sent messages
-                    chat.messages.forEach(message => {
-                        if (message.sender.email !== 'mdpssupport@metoffice.gov.tt') {
-                            usersWithMessages.add(message.sender.id);
-                        }
-                    });
-                });
-                
-                // Filter users who have sent messages
-                users.value = response.data.filter(user => {
-                    const hasMessages = usersWithMessages.has(user.id);
-                    const isNotSupport = user.email !== 'mdpssupport@metoffice.gov.tt';
-                    
-                    return isNotSupport && hasMessages;
-                });
-                
-                console.log('Users with messages:', users.value);
-            } else {
-                // Regular user logic
-                users.value = response.data.filter(user => 
-                    user.email !== 'mdpssupport@metoffice.gov.tt'
-                );
-            }
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        }
-    }
+        // Filter users who have sent messages
+        users.value = response.data.filter(user => {
+          const hasMessages = usersWithMessages.has(user.id);
+          const isNotSupport = user.email !== 'mdpssupport@metoffice.gov.tt';
 
-    async function fetchAllChats() {
-        try {
-            const response = await axios.get<Chat[]>('http://127.0.0.1:8000/api/chats/', {
-                headers: getHeaders()
-            });
+          return isNotSupport && hasMessages;
+        });
+
+        console.log('Users with messages:', users.value);
+      } else {
+        // Regular user logic
+        users.value = response.data.filter(user =>
+          user.email !== 'mdpssupport@metoffice.gov.tt'
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }
+
+  async function fetchAllChats() {
+    try {
+      const response = await axios.get<Chat[]>('/chats/', {
+        headers: getHeaders()
+      });
 
             const isSupportUser = currentUser.value?.email === 'mdpssupport@metoffice.gov.tt';
             
@@ -643,50 +643,50 @@ export const useChatStore = defineStore('chat', () => {
                 .filter((chat): chat is ProcessedChat => chat !== null)
                 .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
 
-            chats.value = processedChats;
-        } catch (error) {
-            console.error('Error in fetchAllChats:', error);
-        }
+      chats.value = processedChats;
+    } catch (error) {
+      console.error('Error in fetchAllChats:', error);
+    }
+  }
+
+  // Update fetchChats to process messages
+  async function fetchChats() {
+    try {
+      const response = await axios.get<Chat[]>('/chats/', {
+        headers: getHeaders()
+      });
+
+      const processedChats = response.data
+        .map(processChat)
+        .filter(chat => chat !== null)
+        .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
+
+      chats.value = processedChats;
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+    }
+  }
+
+  async function handleNewChat(chat: Chat) {
+    const processedChat: ProcessedChat = {
+      ...chat,
+      messages: processMessages(chat.messages || []),
+      lastMessageTime: chat.messages?.length
+        ? new Date(chat.messages[chat.messages.length - 1].created_at)
+        : new Date(chat.created_at)
+    };
+
+    // Add to chats if not exists
+    const existingIndex = chats.value.findIndex(c => c.id === chat.id);
+    if (existingIndex === -1) {
+      chats.value.push(processedChat);
+    } else {
+      chats.value[existingIndex] = processedChat;
     }
 
-    // Update fetchChats to process messages
-    async function fetchChats() {
-        try {
-            const response = await axios.get<Chat[]>('http://127.0.0.1:8000/api/chats/', {
-                headers: getHeaders()
-            });
-            
-            const processedChats = response.data
-                .map(processChat)
-                .filter(chat => chat !== null)
-                .sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
-
-            chats.value = processedChats;
-        } catch (error) {
-            console.error('Error fetching chats:', error);
-        }
-    }
-
-    async function handleNewChat(chat: Chat) {
-        const processedChat: ProcessedChat = {
-            ...chat,
-            messages: processMessages(chat.messages || []),
-            lastMessageTime: chat.messages?.length 
-                ? new Date(chat.messages[chat.messages.length - 1].created_at)
-                : new Date(chat.created_at)
-        };
-
-        // Add to chats if not exists
-        const existingIndex = chats.value.findIndex(c => c.id === chat.id);
-        if (existingIndex === -1) {
-            chats.value.push(processedChat);
-        } else {
-            chats.value[existingIndex] = processedChat;
-        }
-
-        // Sort chats by latest message
-        chats.value.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
-    }
+    // Sort chats by latest message
+    chats.value.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
+  }
 
     return {
         currentUser,

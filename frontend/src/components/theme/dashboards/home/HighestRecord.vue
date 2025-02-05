@@ -127,9 +127,9 @@ const formatTime = (time: string) => {
 const fetchHighestRecords = async () => {
     try {
         const [stationsResponse, measurementsResponse, sensorsResponse] = await Promise.all([
-            axios.get<Station[]>('http://127.0.0.1:8000/stations/'),
-            axios.get<Measurement[]>('http://127.0.0.1:8000/measurements/'),
-            axios.get<Sensor[]>('http://127.0.0.1:8000/sensors/')
+            axios.get<Station[]>('/stations/'),
+            axios.get<Measurement[]>('/measurements/'),
+            axios.get<Sensor[]>('/sensors/')
         ]);
 
         // Create maps for quick lookup

@@ -26,14 +26,14 @@ export function useStationData() {
 
   const fetchStationData = async (stationId: number) => {
     if (!stationId) return;
-    
+
     isLoading.value = true;
     error.value = null;
 
     try {
       const [stationResponse, measurementsResponse] = await Promise.all([
-        axios.get(`http://127.0.0.1:8000/stations/${stationId}/`),
-        axios.get(`http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}`)
+        axios.get(`/stations/${stationId}/`),
+        axios.get(`/measurements/by_station/?station_id=${stationId}`)
       ]);
 
       stationInfo.value = stationResponse.data;
@@ -49,10 +49,10 @@ export function useStationData() {
 
   const getLast24HoursMeasurements = computed(() => {
     if (!measurements.value?.length) return [];
-    
+
     const now = Date.now();
     const oneDayAgo = now - (24 * 60 * 60 * 1000);
-    
+
     return measurements.value
       .filter(measurement => {
         const measurementTime = new Date(`${measurement.date}T${measurement.time}`).getTime();
@@ -67,7 +67,7 @@ export function useStationData() {
 
   const getLatestMeasurement = computed(() => {
     if (!measurements.value?.length) return null;
-    
+
     return [...measurements.value].sort((a, b) => {
       const dateA = new Date(`${a.date}T${a.time}`);
       const dateB = new Date(`${b.date}T${b.time}`);
@@ -109,9 +109,9 @@ export function useStationData() {
   const getStationStatus = async (stationId: number) => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/measurements/by_station/?station_id=${stationId}&limit=1`
+        `/measurements/by_station/?station_id=${stationId}&limit=1`
       );
-      
+
       const latestMeasurement = response.data[0];
       if (!latestMeasurement) return 'Offline';
 
