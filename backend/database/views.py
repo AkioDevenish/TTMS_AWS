@@ -27,6 +27,7 @@ from rest_framework import generics
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
+from rest_framework.exceptions import PermissionDenied, NotFound
 
 User = get_user_model()
 
@@ -371,12 +372,15 @@ class MarkMessageRead(generics.UpdateAPIView):
         return Response(self.get_serializer(message).data)
 
 class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return User.objects.all().order_by('-created_at')
+        # If support user, get all users except support
+        if self.request.user.email == 'mdpssupport@metoffice.gov.tt':
+            return User.objects.exclude(email='mdpssupport@metoffice.gov.tt').order_by('-created_at')
+        # For regular users, only get support user
+        return User.objects.filter(email='mdpssupport@metoffice.gov.tt')
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
@@ -409,15 +413,33 @@ class ChatListCreate(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user_id = self.request.query_params.get('user_id')
-        support_chat = self.request.query_params.get('support_chat', False)
+        user = self.request.user
+        
+        # If support user, get all chats
+        if user.email == 'mdpssupport@metoffice.gov.tt':
+            return Chat.objects.all()\
+                .select_related('user')\
+                .prefetch_related('messages', 'participants')\
+                .order_by('-created_at')
+        
+        # For regular users, get their chats with support
+        return Chat.objects.filter(
+            Q(user=user) | 
+            Q(participants=user) |
+            Q(support_chat=True)
+        ).select_related('user')\
+         .prefetch_related('messages', 'participants')\
+         .order_by('-created_at')
 
-        queryset = Chat.objects.all()
-        if user_id:
-            queryset = queryset.filter(user_id=user_id)
-        if support_chat:
-            queryset = queryset.filter(support_chat=True)
-        return queryset
+    def perform_create(self, serializer):
+        chat = serializer.save(user=self.request.user)
+        # Add both users as participants
+        chat.participants.add(self.request.user)
+        
+        # If this is a support chat, add the support user as participant
+        if self.request.data.get('support_chat'):
+            support_user = User.objects.get(email='mdpssupport@metoffice.gov.tt')
+            chat.participants.add(support_user)
 
 class ChatDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Chat.objects.all()
@@ -471,13 +493,83 @@ class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def get_queryset(self):
+        return Chat.objects.filter(
+            Q(user=self.request.user) | 
+            Q(participants=self.request.user)
+        ).distinct()
+
+    def create(self, request, *args, **kwargs):
+        try:
+            print("Creating chat with data:", request.data)
+            
+            # Check if a chat already exists
+            other_user_id = request.data.get('user_id')
+            if other_user_id:
+                existing_chat = Chat.objects.filter(
+                    Q(user=request.user, participants__id=other_user_id) |
+                    Q(user_id=other_user_id, participants=request.user)
+                ).first()
+                
+                if existing_chat:
+                    print(f"Found existing chat: {existing_chat.id}")
+                    return Response(self.get_serializer(existing_chat).data)
+
+            # Create new chat without user in request data
+            chat_data = request.data.copy()
+            chat_data.pop('user_id', None)  # Remove user_id from data
+            
+            serializer = self.get_serializer(data=chat_data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Save without committing to add participants
+            chat = serializer.save()
+            
+            # Add participants
+            chat.participants.add(request.user)
+            if other_user_id:
+                chat.participants.add(other_user_id)
+            
+            print(f"Created new chat: {chat.id}")
+            return Response(serializer.data, status=201)
+            
+        except Exception as e:
+            print(f"Error creating chat: {str(e)}")
+            return Response({"error": str(e)}, status=400)
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
-        serializer.save(sender=self.request.user)
+    def get_queryset(self):
+        return Message.objects.filter(
+            Q(chat__user=self.request.user) | 
+            Q(sender=self.request.user)
+        ).select_related('sender', 'chat')
+
+    def create(self, request, *args, **kwargs):
+        print("Received message data:", request.data)  # Debug print
+        
+        try:
+            chat_id = request.data.get('chat')
+            if not chat_id:
+                return Response({"error": "Chat ID is required"}, status=400)
+                
+            chat = get_object_or_404(Chat, id=chat_id)
+            
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            message = serializer.save(
+                chat=chat,
+                sender=request.user,
+                time=timezone.now().time()
+            )
+            
+            print(f"Message created: {message.id}")  # Debug print
+            return Response(serializer.data, status=201)
+            
+        except Exception as e:
+            print(f"Error creating message: {str(e)}")  # Debug print
+            return Response({"error": str(e)}, status=400)

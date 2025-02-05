@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     Brand, Station, Sensor, Measurement,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification
+    SystemLog, User, Notification, Chat, Message, UserPresence
 )
 
 # Register your models
@@ -16,4 +16,23 @@ admin.site.register(StationSensor)
 admin.site.register(ApiAccessKey)
 admin.site.register(SystemLog)
 admin.site.register(User)
-admin.site.register(Notification)
+admin.site.register(Notification)   
+
+@admin.register(Chat)
+class ChatAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'user', 'support_chat', 'created_at')
+    list_filter = ('support_chat', 'created_at')
+    search_fields = ('name', 'user__username')
+    date_hierarchy = 'created_at'
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'content', 'chat', 'sender', 'created_at', 'read_at')
+    list_filter = ('chat', 'sender', 'created_at')
+    search_fields = ('content', 'sender__username')
+    date_hierarchy = 'created_at'
+
+@admin.register(UserPresence)
+class UserPresenceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'is_online', 'last_seen')
+    list_filter = ('is_online',)

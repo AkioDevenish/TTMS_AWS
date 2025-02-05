@@ -78,17 +78,9 @@ class DateTimeToDateField(serializers.DateField):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = [
-            'id',
-            'username',
-            'email',
-            'organization',
-            'role',
-            'package',
-            'status',
-            'expires_at',
-        ]
+        model = get_user_model()
+        fields = ['id', 'username', 'email', 'role', 'is_superuser', 
+                 'is_staff', 'first_name', 'last_name']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -197,22 +189,57 @@ def process_and_save_data(raw_data):
         # Existing processing logic...
 
 
+class MessageSenderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 
+                 'role', 'is_superuser', 'is_staff']
+
+
 class MessageSerializer(serializers.ModelSerializer):
+    sender = MessageSenderSerializer(read_only=True)
+    time = serializers.TimeField(format='%I:%M %p', required=False)
+
     class Meta:
         model = Message
-        fields = ['id', 'content', 'chat', 'sender', 'created_at', 'read_at']
+        fields = ['id', 'content', 'chat', 'sender', 'created_at', 'read_at', 'time']
+        read_only_fields = ['sender', 'created_at', 'read_at', 'time']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        chat = validated_data.get('chat')
+        
+        current_time = timezone.now()
+        message = Message.objects.create(
+            content=validated_data.get('content'),
+            chat=chat,
+            sender=user,
+            time=current_time.time(),
+            created_at=current_time
+        )
+        return message
 
 
 class ChatSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
-
+    participants = UserSerializer(many=True, read_only=True)
+    
     class Meta:
         model = Chat
-        fields = ['id', 'name', 'user', 'support_chat', 'messages', 'created_at']
+        fields = ['id', 'name', 'user', 'support_chat', 'created_at', 'messages', 'participants']
+        read_only_fields = ['created_at', 'user']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        chat = Chat.objects.create(
+            user=user,
+            name=validated_data.get('name'),
+            support_chat=validated_data.get('support_chat', False)
+        )
+        return chat
 
 
 class UserPresenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPresence
-        fields = ['id', 'user', 'is_online', 'last_seen']
-        read_only_fields = ['last_seen']
+        fields = ['id', 'is_online', 'last_seen']

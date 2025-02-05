@@ -25,6 +25,7 @@ router.register(r'notifications', NotificationViewSet)
 router.register(r'chats', ChatViewSet)
 router.register(r'messages', MessageViewSet)
 
+
 urlpatterns = [
     path('api/', include(router.urls)),
     path('api/token/', LoginView.as_view(), name='token_obtain_pair'),

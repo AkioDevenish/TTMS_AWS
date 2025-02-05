@@ -4,6 +4,7 @@ from django.conf import settings
 import json
 from django.core.exceptions import ValidationError
 import uuid
+from django.utils import timezone
 
 # User Management
 class UserManager(BaseUserManager):
@@ -202,32 +203,44 @@ class Notification(models.Model):
 
 class Chat(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_chats')
     support_chat = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.name:
-            self.name = self.user.username  # Set the name to the username
-        super().save(*args, **kwargs)
+    participants = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        related_name='participated_chats'
+    )
 
     class Meta:
         db_table = 'chats'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['support_chat']),
+        ]
 
     def __str__(self):
         return f"Chat with {self.user.get_full_name()} ({'Support' if self.support_chat else 'Regular'})"
 
 class Message(models.Model):
     content = models.TextField()
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages', null=True)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True)
+    time = models.TimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.time and not self.id:
+            self.time = timezone.now().time()
+        super().save(*args, **kwargs)
 
     class Meta:
         db_table = 'messages'
         ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['chat', 'created_at']),
+        ]
 
     def __str__(self):
         return f"Message from {self.sender} at {self.created_at}"
