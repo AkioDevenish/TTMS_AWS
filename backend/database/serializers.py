@@ -240,6 +240,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 class UserPresenceSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id')
+    
     class Meta:
         model = UserPresence
-        fields = ['id', 'is_online', 'last_seen']
+        fields = ['user_id', 'is_online', 'last_seen']

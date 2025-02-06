@@ -67,8 +67,7 @@ export function useAuth() {
   const refreshUserData = async () => {
     try {
       const response = await axios.get('/user/me/')
-      console.log('API Response:', response.data)
-
+   
       currentUser.value = {
         id: response.data.id,
         username: `${response.data.first_name} ${response.data.last_name}`.trim(),
@@ -79,7 +78,6 @@ export function useAuth() {
         first_name: response.data.first_name,
         last_name: response.data.last_name
       }
-      console.log('Current User:', currentUser.value)
       isAuthenticated.value = true
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -90,21 +88,17 @@ export function useAuth() {
 
   const checkAuth = async () => {
     const token = localStorage.getItem('access_token')
-    console.log('Checking auth, token:', token ? 'exists' : 'not found')
-
-    console.log('Token from localStorage:', token)
+   
 
     if (!token) {
-      console.log('No token found, clearing auth')
+
       clearAuth()
       return false
     }
 
     try {
-      console.log('Setting auth token and fetching user data...')
       setAuthToken(token)
       await refreshUserData()
-      console.log('Auth check successful, currentUser:', currentUser.value)
       return true
     } catch (err) {
       console.error('Auth check failed:', err)

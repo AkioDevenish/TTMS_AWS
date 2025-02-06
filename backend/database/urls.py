@@ -8,7 +8,7 @@ from .views import (
     UserViewSet, NotificationViewSet, verify_token, get_current_user,
     CustomTokenObtainPairView, MessageListCreate, MessageDetail, ConversationList,
     MarkMessageRead, UserList, LoginView, ChatListCreate, ChatDetail, ChatMessages,
-    UserPresenceUpdate, ChatViewSet, MessageViewSet
+    UserPresenceUpdate, ChatViewSet, MessageViewSet, UserPresenceList
 )
 
 router = DefaultRouter()
@@ -41,4 +41,5 @@ urlpatterns = [
     path('api/chats/<int:pk>/', ChatDetail.as_view(), name='chat-detail'),
     path('api/chats/<int:pk>/messages/', ChatMessages.as_view(), name='chat-messages'),
     path('api/users/<int:user_id>/presence/', UserPresenceUpdate.as_view(), name='user-presence'),
+    path('api/user-presences/', UserPresenceList.as_view(), name='user-presence-list'),
 ]

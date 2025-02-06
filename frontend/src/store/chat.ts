@@ -113,6 +113,7 @@ export const useChatStore = defineStore('chat', () => {
   const searchUser = ref<User[]>([])
   const userPresences = ref<Map<number, UserPresence>>(new Map())
   const users = ref<User[]>([])
+  const pollingInterval = ref<number | null>(null)
 
   // Helper function to get headers
   function getHeaders() {
@@ -135,6 +136,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
     async function handleLogout() {
+        stopMessagePolling();
         if (currentUser.value?.id) {
             await updateUserPresence(currentUser.value.id, false)
         }
@@ -142,6 +144,10 @@ export const useChatStore = defineStore('chat', () => {
 
   async function init() {
     try {
+      await waitForAuth();
+      if (currentUser.value?.id) {
+        await updateUserPresence(currentUser.value.id, true);
+      }
       // Get support user without requiring auth
       const supportResponse = await axios.get<User[]>('/users/', {
         params: {
@@ -157,6 +163,14 @@ export const useChatStore = defineStore('chat', () => {
       if (supportUser) {
         SUPPORT_USER.value = supportUser
       }
+
+      setInterval(() => {
+        if (currentUser.value?.id) {
+          updateUserPresence(currentUser.value.id, true);
+        }
+      }, 30000); // Update every 30 seconds
+
+      await startPresencePolling();
 
       return true
     } catch (error) {
@@ -238,7 +252,7 @@ export const useChatStore = defineStore('chat', () => {
             // For MDPS support, show the other user's info
             otherParticipant = chat.participants.find(p => 
                 p.email !== 'mdpssupport@metoffice.gov.tt'
-            ) || chat.user;
+            );
         } else {
             // For regular users, show MDPS support info
             otherParticipant = chat.participants.find(p => 
@@ -246,13 +260,13 @@ export const useChatStore = defineStore('chat', () => {
             );
         }
 
-        if (!otherParticipant) {
-            otherParticipant = chat.user;
-        }
+        const chatName = isMDPSSupport 
+            ? `${otherParticipant?.first_name || ''} ${otherParticipant?.last_name || ''}`.trim() || otherParticipant?.username || 'Unknown User'
+            : 'MDPS Support';
 
         return {
             id: chat.id,
-            name: formatParticipantName(otherParticipant, isMDPSSupport),
+            name: chatName,
             messages: processedMessages,
             lastMessageTime: lastMessage 
                 ? new Date(lastMessage.created_at)
@@ -260,7 +274,7 @@ export const useChatStore = defineStore('chat', () => {
             participants: chat.participants,
             support_chat: chat.support_chat,
             created_at: chat.created_at,
-            user: otherParticipant
+            user: otherParticipant || chat.user
         };
     }
 
@@ -278,53 +292,24 @@ export const useChatStore = defineStore('chat', () => {
 
     async function handleChatUpdate(chatId: number) {
         try {
-            const messagesResponse = await axios.get('http://127.0.0.1:8000/api/messages/', {
-                headers: getHeaders()
-            });
-            
             const chatResponse = await axios.get<Chat>(
                 `http://127.0.0.1:8000/api/chats/${chatId}/`, 
                 { headers: getHeaders() }
             );
             
-            if (chatResponse.data && messagesResponse.data) {
-                // Get all messages for this chat without filtering
-                const chatMessages = messagesResponse.data.filter((msg: any) => msg.chat === chatId);
-                const processedMessages = chatMessages.map((msg: any) => ({
-                    id: msg.id,
-                    content: msg.content,
-                    chat_id: msg.chat,
-                    sender: msg.sender,
-                    created_at: msg.created_at,
-                    read_at: msg.read_at,
-                    time: new Date(msg.created_at).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: true 
-                    }),
-                    isCurrentUser: msg.sender.id === currentUser.value?.id,
-                    alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
-                }));
-
+            if (chatResponse.data) {
                 const processedChat = processChat(chatResponse.data);
                 
                 if (activeChat.value?.id === chatId) {
-                    messages.value = processedMessages;
-                    activeChat.value = {
-                        ...processedChat,
-                        messages: processedMessages
-                    };
+                    activeChat.value = processedChat;
+                    messages.value = processedChat.messages;
                 }
 
+                // Update in chats list
                 const chatIndex = chats.value.findIndex(c => c.id === chatId);
                 if (chatIndex !== -1) {
-                    chats.value[chatIndex] = {
-                        ...processedChat,
-                        messages: processedMessages
-                    };
+                    chats.value[chatIndex] = processedChat;
                 }
-                
-                chats.value.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
             }
         } catch (error) {
             console.error('Error in handleChatUpdate:', error);
@@ -382,18 +367,16 @@ export const useChatStore = defineStore('chat', () => {
             });
 
             if (response.data) {
-                const chatMessages = response.data.messages || [];
-                const processedMessages = chatMessages.map((msg: Message) => ({
-                    ...msg,
-                    isCurrentUser: msg.sender.id === currentUser.value?.id,
-                    alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
-                }));
-
-                activeChat.value = response.data;
-                messages.value = processedMessages;
+                // Process the chat data
+                const processedChat = processChat(response.data);
+                activeChat.value = processedChat;
+                messages.value = processedChat.messages;
                 
                 // Scroll to latest message after setting chat
                 scrollToLatestMessage();
+
+                // Start polling for this chat
+                startMessagePolling(chat.id);
             }
         } catch (error) {
             console.error('Error setting active chat:', error);
@@ -445,39 +428,34 @@ export const useChatStore = defineStore('chat', () => {
 
     // Add this function to handle message updates
     async function updateMessages(chatId: number) {
-        // Wait 2 seconds before fetching updates
-        setTimeout(async () => {
-            try {
-                const response = await axios.get(`http://127.0.0.1:8000/api/messages/`, {
-                    headers: getHeaders()
-                });
+        try {
+            const response = await axios.get(`http://127.0.0.1:8000/api/chats/${chatId}/`, {
+                headers: getHeaders()
+            });
 
-                if (response.data) {
-                    // Filter and process messages for current chat
-                    const chatMessages = response.data.filter((msg: any) => msg.chat === chatId);
-                    const processedMessages = chatMessages.map((msg: any) => ({
-                        id: msg.id,
-                        content: msg.content,
-                        chat_id: msg.chat,
-                        sender: msg.sender,
-                        created_at: msg.created_at,
-                        time: new Date(msg.created_at).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit',
-                            hour12: true 
-                        }),
-                        isCurrentUser: msg.sender.id === currentUser.value?.id,
-                        alignment: msg.sender.id === currentUser.value?.id ? 'right' : 'left'
-                    }));
-
-                    if (activeChat.value?.id === chatId) {
-                        messages.value = processedMessages;
-                    }
+            if (response.data) {
+                const processedChat = processChat(response.data);
+                
+                // Update active chat if it matches
+                if (activeChat.value?.id === chatId) {
+                    activeChat.value = processedChat;
+                    messages.value = processedChat.messages;
                 }
-            } catch (error) {
-                console.error('Error updating messages:', error);
+                
+                // Update in chats list
+                const chatIndex = chats.value.findIndex(c => c.id === chatId);
+                if (chatIndex !== -1) {
+                    chats.value[chatIndex] = processedChat;
+                }
+                
+                // Sort chats by latest message
+                chats.value.sort((a, b) => 
+                    b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
+                );
             }
-        }, 2000);
+        } catch (error) {
+            console.error('Error updating messages:', error);
+        }
     }
 
     // Modify the addMessage function to include the update
@@ -688,6 +666,50 @@ export const useChatStore = defineStore('chat', () => {
     chats.value.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
   }
 
+  function startMessagePolling(chatId: number) {
+    if (pollingInterval.value) return;
+    
+    pollingInterval.value = window.setInterval(() => {
+        updateMessages(chatId);
+    }, 3000); // Poll every 3 seconds
+  }
+
+  function stopMessagePolling() {
+    if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+    }
+  }
+
+  async function startPresencePolling() {
+    if (currentUser.value?.id) {
+        // Set initial presence
+        await updateUserPresence(currentUser.value.id, true);
+        
+        // Poll every 30 seconds
+        setInterval(async () => {
+            await fetchUserPresences();
+        }, 30000);
+    }
+  }
+
+  async function fetchUserPresences() {
+    try {
+        const response = await axios.get('/user-presences/', {
+            headers: getHeaders()
+        });
+        
+        // Update the presence map
+        const presences = new Map<number, UserPresence>();
+        response.data.forEach((presence: UserPresence) => {
+            presences.set(presence.id, presence);
+        });
+        userPresences.value = presences;
+    } catch (error) {
+        console.error('Error fetching user presences:', error);
+    }
+  }
+
     return {
         currentUser,
         SUPPORT_USER,
@@ -714,6 +736,10 @@ export const useChatStore = defineStore('chat', () => {
         handleChatUpdate,
         handleNewChat,
         updateMessages,
-        scrollToLatestMessage
+        scrollToLatestMessage,
+        startMessagePolling,
+        stopMessagePolling,
+        startPresencePolling,
+        fetchUserPresences
     }
 })
