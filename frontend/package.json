@@ -29,6 +29,7 @@
     "core-js": "^3.8.3",
     "dropzone-vue": "^0.1.11",
     "form-wizard-vue3": "^1.1.0",
+    "nprogress": "^0.2.0",
     "pinia": "^2.1.7",
     "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.10.2",
@@ -69,6 +70,7 @@
     "vue3-treeview": "^0.4.2"
   },
   "devDependencies": {
+    "@types/nprogress": "^0.2.3",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-babel": "~5.0.0",
