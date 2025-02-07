@@ -1,12 +1,11 @@
 <template>
-    .
-    <div class="container-fluid">
-        <div class="row">
-            <Card3 colClass="col-sm-12">
-                <Addinstrument />
-            </Card3>
-        </div>
-    </div>
+	<div class="container-fluid">
+		<div class="row">
+			<Card3 colClass="col-sm-12">
+				<Addinstrument />
+			</Card3>
+		</div>
+	</div>
 </template>
 <script lang="ts" setup>
 import { ref, defineAsyncComponent } from 'vue'

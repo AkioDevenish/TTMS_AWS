@@ -172,7 +172,7 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "",
-    redirect: "/dashboards/Main_Dashboard"
+    redirect: "/dashboard"
   },
   {
     path: '/',
@@ -208,6 +208,31 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
+    path: "/dashboard",
+    component: BodyView,
+    children: [
+      {
+        path: "",
+        name: "Dashboard",
+        component: indexHome,
+        meta: {
+          title: 'Dashboards | MDPS',
+          requiresAuth: true
+        }
+      },
+      // {
+      //   path: "Create_New_AWS",
+      //   name: "createProject",
+      //   component: indexCreateProject,
+      //   meta: {
+      //     title: 'Create Project| Mofi - Premium Vue Admin Template',
+      //     requiresAuth: true
+      //   }
+      // },
+
+    ]
+  },
+  {
     path: "/dashboards",
     component: BodyView,
     children: [
@@ -238,16 +263,16 @@ const routes: Array<RouteRecordRaw> = [
           requiresAuth: true
         }
       },
-      {
-        path: "Create_New_AWS",
-        name: "createProject",
-        component: indexCreateProject,
-        meta: {
-          title: 'Create Project| Mofi - Premium Vue Admin Template',
-          requiresAuth: true
-        }
-      },
-      
+      // {
+      //   path: "Create_New_AWS",
+      //   name: "createProject",
+      //   component: indexCreateProject,
+      //   meta: {
+      //     title: 'Create Project| Mofi - Premium Vue Admin Template',
+      //     requiresAuth: true
+      //   }
+      // },
+
     ]
   },
 
@@ -255,7 +280,16 @@ const routes: Array<RouteRecordRaw> = [
     path: "/stations",
     component: BodyView,
     children: [
- 
+      {
+        path: "create",
+        name: "createProject",
+        component: indexCreateProject,
+        meta: {
+          title: 'Create Project| Mofi - Premium Vue Admin Template',
+          requiresAuth: true
+        }
+      },
+
       {
         path: "AWS_Barani",
         name: "Barani",
@@ -1587,7 +1621,7 @@ const routes: Array<RouteRecordRaw> = [
       }
     ]
   },
-  
+
   {
     path: "/pages/knowledgebase",
     component: BodyView,
@@ -1603,7 +1637,7 @@ const routes: Array<RouteRecordRaw> = [
       },
     ]
   },
-  
+
   {
     path: "/advance",
     component: BodyView,
@@ -1775,14 +1809,14 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/users_management',
     component: BodyView,
-    meta: { 
+    meta: {
       requiresAuth: true,
       requiresAdmin: true
     },
     beforeEnter: async (to, from, next) => {
       const { checkAuth, isAdmin } = useAuth()
       await checkAuth()
-      
+
       if (!isAdmin.value) {
         next(from)
       } else {
@@ -1815,7 +1849,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const { checkAuth } = useAuth()
-  
+
   // Allow access to login page without authentication
   if (to.path === '/auth/login') {
     const isAuthenticated = await checkAuth()
@@ -1833,7 +1867,7 @@ router.beforeEach(async (to, from, next) => {
     next('/auth/login')
     return
   }
-  
+
   next()
 })
 

@@ -89,6 +89,11 @@
 		</ul>
 	</li>
 </template>
+<style scoped>
+.page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links>li .sidebar-link.active {
+	margin-bottom: 0;
+}
+</style>
 <script lang="ts" setup>
 import { ref, onMounted, computed } from 'vue';
 import { useMenuStore } from "@/store/menu";

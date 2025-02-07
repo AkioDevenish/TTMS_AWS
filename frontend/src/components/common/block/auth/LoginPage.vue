@@ -30,11 +30,7 @@
 										Forgot password?
 									</router-link>
 									<div class="text-end mt-3">
-										<button 
-											class="btn btn-primary btn-block w-100" 
-											type="submit"
-											:disabled="loading"
-										>
+										<button class="btn btn-primary btn-block w-100" type="submit" :disabled="loading">
 											{{ loading ? 'Signing in...' : 'Sign in' }}
 										</button>
 									</div>
@@ -103,7 +99,7 @@ async function doLogin() {
 			if (rememberMe.value) {
 				localStorage.setItem('rememberedEmail', email.value)
 			}
-			router.push('/dashboards/Main_Dashboard')
+			router.push('/dashboard')
 		}
 	} catch (error: any) {
 		console.error('Login error:', error)
