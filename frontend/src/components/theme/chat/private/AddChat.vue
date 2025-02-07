@@ -15,11 +15,13 @@
                 </div>
             </div>
         </div>
-        <input class="msger-input two uk-textarea" placeholder="Type Message here.." v-model="text"
+        <input class="msger-input form-control rounded-pill" placeholder="Type Message here.." v-model="text"
             v-on:keyup.enter="addChat()">
 
         <EmojiChat @selectEmoji="onSelectEmoji" />
-        <a class="msger-send-btn" type="" @click="addChat()"><i class="fa fa-location-arrow"></i></a>
+        <button type="submit" class="btn btn-primary rounded-circle msger-send-btn">
+            <i class="fa fa-paper-plane"></i>
+        </button>
     </form>
 </template>
 <script lang="ts" setup>
@@ -48,7 +50,7 @@ function addChat() {
         container.scrollBy({ top: 200, behavior: 'smooth' });
     }, 1100);
     if (text.value !== '') {
-        store.addChat(text.value);
+        store.addMessage(text.value);
         text.value = '';
     }
 }

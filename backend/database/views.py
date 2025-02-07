@@ -232,29 +232,34 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['get', 'post'])
     def presence(self, request, pk=None):
-        if int(pk) != request.user.id:
-            return Response(
-                {"error": "Cannot update other user's presence"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
+        if request.method == 'POST':
+            if int(pk) != request.user.id:
+                return Response(
+                    {"error": "Cannot update other user's presence"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
             
-        try:
-            user_presence, _ = UserPresence.objects.get_or_create(user_id=pk)
-            user_presence.is_online = request.data.get('is_online', False)
-            user_presence.save()
-            
-            return Response({
-                'id': pk,
-                'is_online': user_presence.is_online,
-                'last_seen': user_presence.last_seen
-            })
-        except Exception as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            try:
+                user_presence, _ = UserPresence.objects.get_or_create(user_id=pk)
+                user_presence.is_online = request.data.get('is_online', False)
+                user_presence.save()
+                
+                return Response({
+                    'id': pk,
+                    'is_online': user_presence.is_online,
+                    'last_seen': user_presence.last_seen
+                })
+            except Exception as e:
+                return Response(
+                    {'error': str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:  # GET request
+            presences = UserPresence.objects.all()
+            serializer = UserPresenceSerializer(presences, many=True)
+            return Response(serializer.data)
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -454,40 +459,6 @@ class ChatMessages(generics.ListAPIView):
         chat_id = self.kwargs['pk']
         return Message.objects.filter(chat_id=chat_id)
 
-class UserPresenceUpdate(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def post(self, request, user_id):
-        # First check if user is authenticated
-        if not request.user.is_authenticated:
-            return Response(
-                {"error": "User not authenticated"}, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-        # Then check if user is updating their own presence
-        if request.user.id != user_id:
-            return Response(
-                {"error": "Cannot update other user's presence"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        try:
-            user_presence, _ = UserPresence.objects.get_or_create(user_id=user_id)
-            user_presence.is_online = request.data.get('is_online', False)
-            user_presence.save()
-            
-            return Response({
-                'id': user_id,
-                'is_online': user_presence.is_online,
-                'last_seen': user_presence.last_seen
-            })
-        except Exception as e:
-            return Response(
-                {'error': str(e)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
 class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
@@ -573,3 +544,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(f"Error creating message: {str(e)}")  # Debug print
             return Response({"error": str(e)}, status=400)
+
+class UserPresenceList(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        presences = UserPresence.objects.all().select_related('user')
+        serializer = UserPresenceSerializer(presences, many=True)
+        return Response(serializer.data)

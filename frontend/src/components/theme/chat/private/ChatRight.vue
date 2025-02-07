@@ -1,53 +1,67 @@
 <template>
     <div class="col-xxl-9 col-xl-8 col-md-7 box-col-7">
         <div class="card right-sidebar-chat">
-            <div v-if="currentChat" class="card-header chat-header">
-                <div class="d-flex align-items-center">
-                    <div class="status-indicator" :class="userPresenceClass"></div>
-                    <div class="ms-3">
-                        <h5 class="mb-0">{{ formatUserName(currentChat.user) }}</h5>
-                        <small class="text-muted">{{ isOnline ? 'Online' : 'Offline' }}</small>
-                    </div>
-                </div>
-            </div>
-            
-            <div v-if="currentChat" class="card-body chat-body p-3">
-                <div class="messages-container" ref="messagesContainer">
-                    <div v-for="message in sortedMessages" 
-                         :key="message.id"
-                         class="d-flex mb-3"
-                         :class="{'justify-content-end': isCurrentUserMessage(message)}">
-                        <div class="message" 
-                             :class="{
-                                 'message-sent': isCurrentUserMessage(message),
-                                 'message-received': !isCurrentUserMessage(message)
-                             }">
-                            <div class="message-bubble">
-                                <div class="message-sender small text-muted">
-                                    {{ formatSenderName(message.sender) }}
+            <div class="right-sidebar-title">
+                <div class="common-space">
+                    <div class="chat-time">
+                        <div class="active-profile">
+                            <img class="img-fluid rounded-circle" 
+                                 :src="getImages('user/1.jpg')" 
+                                 alt="user">
+                            <div class="user-status">
+                                <div class="status" 
+                                     :class="{ 
+                                         'bg-success': isOnline,
+                                         'bg-danger': !isOnline
+                                     }">
                                 </div>
-                                <div class="message-content">{{ message.content }}</div>
-                                <div class="message-time small text-end">
-                                    {{ formatMessageTime(message.time || message.created_at) }}
-                                </div>
+                                <span class="status-text" 
+                                      :class="{ 
+                                          'text-success': isOnline,
+                                          'text-danger': !isOnline 
+                                      }">
+                                    {{ isOnline ? 'Online' : 'Offline' }}
+                                </span>
                             </div>
+                        </div>
+                        <div>
+                            <span>{{ chatName }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div v-if="currentChat" class="card-footer chat-footer">
-                <form @submit.prevent="sendMessage" class="d-flex gap-2">
-                    <input 
-                        v-model="newMessage"
-                        type="text"
-                        placeholder="Type your message..."
-                        class="form-control rounded-pill"
-                    />
-                    <button type="submit" class="btn btn-primary rounded-circle">
-                        <i class="fa fa-paper-plane"></i>
-                    </button>
-                </form>
+            <div class="right-sidebar-Chats">
+                <div class="msger">
+                    <div class="msger-chat" ref="messagesContainer">
+                        <div v-for="message in sortedMessages" 
+                             :key="message.id"
+                             class="msg"
+                             :class="[
+                                 { clearfix: message.sender?.email === 'mdpssupport@metoffice.gov.tt' },
+                                 { 'right-msg': !isSupportUser(message.sender) },
+                                 { 'left-msg': isSupportUser(message.sender) }
+                             ]">
+                            <div class="msg-img">
+                                <img class="rounded-circle chat-user-img img-30"
+                                     :src="getImages('user/1.jpg')"
+                                     :class="{ 
+                                         'float-start': isSupportUser(message.sender),
+                                         'float-end': !isSupportUser(message.sender)
+                                     }"
+                                     alt="">
+                            </div>
+                            <div class="msg-bubble">
+                                <div class="msg-info" :class="{ 'text-start': isSupportUser(message.sender) }">
+                                    <div class="msg-info-name">{{ formatSenderName(message.sender) }}</div>
+                                    <div class="msg-info-time">{{ formatMessageTime(message.created_at) }}</div>
+                                </div>
+                                <div class="msg-text">{{ message.content }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <AddChat />
+                </div>
             </div>
         </div>
     </div>
@@ -57,6 +71,16 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useChatStore } from '@/store/chat'
 import { useAuth } from '@/composables/useAuth'
+import { getImages } from '@/composables/common/getImages'
+import AddChat from './AddChat.vue'
+
+interface MessageSender {
+    id: number;
+    username: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+}
 
 interface Message {
     id: number;
@@ -83,12 +107,16 @@ const currentChat = computed(() => {
     const chat = chatStore.currentChat
     if (!chat) return null;
 
+    // Find the actual user object from participants
+    const chatUser = chat.participants?.find(p => p.id === Number(chat.user))
+    
     return {
         ...chat,
+        user: chatUser,
         messages: chat.messages.map(msg => ({
             ...msg,
             sender: msg.sender || {},
-            content: msg.content || msg.text
+            content: msg.content
         }))
     };
 })
@@ -108,15 +136,7 @@ const supportUserId = computed(() => chatStore.SUPPORT_USER?.id)
 
 const chatName = computed(() => {
     if (!currentChat.value) return '';
-    
-    const isSupportUser = auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt';
-    const otherParticipant = currentChat.value.user;
-    
-    if (isSupportUser) {
-        return `${otherParticipant?.first_name || ''} ${otherParticipant?.last_name || otherParticipant?.username || ''}`.trim();
-    } else {
-        return 'MDPS Support';
-    }
+    return currentChat.value.name;
 });
 
 function formatMessageTime(timestamp: string) {
@@ -170,47 +190,20 @@ watch(currentChat, async () => {
     await scrollToBottom()
 })
 
-const formatUserName = (user) => {
+const formatUserName = (user: MessageSender) => {
     if (!user) return '';
-    
-    const isSupportUser = user.email === 'mdpssupport@metoffice.gov.tt';
-    if (isSupportUser) {
-        return 'MDPS Support';
-    }
-    
     return `${user.first_name || ''} ${user.last_name || user.username || ''}`.trim();
-}
+};
 
 const sortedMessages = computed(() => {
     if (!currentChat.value?.messages) return [];
     
-    console.log('Current Chat Messages:', currentChat.value.messages);
-    console.log('Current User:', auth.currentUser.value);
-    console.log('Is Support User:', auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt');
-    
-    const messages = [...currentChat.value.messages].sort((a, b) => 
+    return [...currentChat.value.messages].sort((a, b) => 
         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
-    
-    console.log('Sorted Messages:', messages);
-    console.log('Message Senders:', messages.map(m => ({
-        senderId: m.sender?.id,
-        senderEmail: m.sender?.email,
-        content: m.content
-    })));
-    
-    return messages;
-})
+});
 
 const isCurrentUserMessage = (message: Message) => {
-    console.log('Checking message ownership:', {
-        messageId: message.id,
-        senderId: message.sender?.id,
-        currentUserId: currentUserId.value,
-        content: message.content,
-        isSupportUser: auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt'
-    });
-    
     if (!currentUserId.value) return false;
     
     // For MDPS Support, show all messages in the chat
@@ -220,6 +213,15 @@ const isCurrentUserMessage = (message: Message) => {
     
     return message.sender?.id === currentUserId.value;
 }
+
+const isSupportUser = (sender: MessageSender | undefined) => {
+    if (!sender) return false;
+    return sender.email === 'mdpssupport@metoffice.gov.tt';
+}
+
+// Add these computed properties for avatars
+const defaultAvatar = computed(() => '/path/to/default/avatar.jpg')
+const userAvatar = computed(() => '/path/to/user/avatar.jpg')
 </script>
 
 <style lang="scss" scoped>
@@ -371,5 +373,30 @@ const isCurrentUserMessage = (message: Message) => {
     &::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
     }
+}
+
+.user-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    .status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+    
+    .status-text {
+        font-size: 0.875rem;
+    }
+}
+
+.bg-success {
+    background-color: #28a745;
+}
+
+.bg-danger {
+    background-color: #dc3545;
 }
 </style>
