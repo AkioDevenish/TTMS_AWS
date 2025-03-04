@@ -57,20 +57,31 @@
 			</div>
 
 			<div class="row">
-				<div class="col-sm-12">
+				<div class="col-sm-6">
 					<div class="mb-3">
 						<label>Package</label>
-						<select class="form-select" v-model="formData.package" :class="inputClasses.package" @change="onPackageSelected(($event.target as HTMLSelectElement).value)">
+						<select class="form-select" v-model="formData.package" :class="inputClasses.package">
 							<option value="">Select Package</option>
 							<option value="Weekly">Weekly</option>
 							<option value="Monthly">Monthly</option>
 							<option value="Yearly">Yearly</option>
 						</select>
-						<div class="invalid-feedback" v-if="!formData.package">
-							Please select a package
-						</div>
 					</div>
 				</div>
+				<div class="col-sm-6">
+					<div class="mb-3">
+						<label>Price</label>
+						<select class="form-select" v-model="formData.subscription_price" :class="inputClasses.subscription_price">
+							<option value="">Select Price</option>
+							<option :value="1500">1,500</option>
+							<option :value="3000">3,000</option>
+							<option :value="6000">6,000</option>
+						</select>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
 				<div class="col-sm-12">
 					<div class="mb-3">
 						<label>Expires At</label>
@@ -134,7 +145,8 @@ const formData = reactive({
 	organization: '',
 	role: '',
 	package: '',
-	expires_at: ''
+	expires_at: '',
+	subscription_price: 0
 })
 
 // Form state
@@ -145,7 +157,8 @@ const inputClasses = reactive({
 	password: '',
 	organization: '',
 	role: '',
-	package: ''
+	package: '',
+	subscription_price: ''
 })
 
 const isSubmitting = ref(false)
@@ -183,6 +196,12 @@ const validateForm = (): boolean => {
 		errorMessage.value = 'Please select a package'
 	}
 
+	// Check if price is selected
+	if (!formData.subscription_price) {
+		isValid = false
+		errorMessage.value = 'Please select a price'
+	}
+
 	return isValid
 }
 
@@ -215,40 +234,33 @@ watch(() => formData.package, (newPackage) => {
 	}
 })
 
-const onPackageSelected = (packageType: string) => {
-	if (!packageType) return
-
-	const expiryDate = calculateExpiryDate(packageType)
-	formData.package = packageType
-	formData.expires_at = expiryDate
-
-	console.log('Package selected:', packageType)
-	console.log('Expiry date set to:', expiryDate)
-
-	inputClasses.package = 'is-valid'
-}
-
 // API interaction
 const createUser = async () => {
 	try {
 		if (!validateForm()) return
 
+		const token = localStorage.getItem('access_token')
+		if (!token) {
+			errorMessage.value = 'Not authorized. Please log in again.'
+			router.push('/auth/login')
+			return
+		}
+
 		isSubmitting.value = true
 		errorMessage.value = ''
 		successMessage.value = ''
 
-		const token = localStorage.getItem('access_token')
-
 		const userData = {
-			first_name: formData.first_name,
-			last_name: formData.last_name,
-			email: formData.email,
+			first_name: formData.first_name.trim(),
+			last_name: formData.last_name.trim(),
+			email: formData.email.trim(),
 			password: formData.password,
-			organization: formData.organization,
-			role: formData.role,
+			organization: formData.organization?.trim() || '',
+			role: formData.role.toLowerCase(),
 			package: formData.package,
 			status: 'Active',
-			expires_at: formData.expires_at || calculateExpiryDate(formData.package)
+			expires_at: formData.expires_at || calculateExpiryDate(formData.package),
+			subscription_price: formData.subscription_price,
 		}
 
 		console.log('Sending user data:', userData)
@@ -260,6 +272,7 @@ const createUser = async () => {
 			}
 		})
 
+		console.log('Server response:', response.data)
 		successMessage.value = 'User created successfully!'
 
 		setTimeout(() => {
@@ -267,8 +280,31 @@ const createUser = async () => {
 		}, 1000)
 
 	} catch (error: any) {
-		console.error('Error creating user:', error)
-		errorMessage.value = error.response?.data?.message || 'Error creating user. Please try again.'
+		console.error('Error creating user:', error.response || error)
+		
+		if (error.response?.data) {
+			const errorData = error.response.data
+			if (typeof errorData === 'object') {
+				if (errorData.error) {
+					errorMessage.value = errorData.error
+				} else if (errorData.detail) {
+					errorMessage.value = errorData.detail
+				} else {
+					// Handle field-specific errors
+					const firstError = Object.entries(errorData)[0]
+					if (firstError) {
+						const [field, messages] = firstError
+						errorMessage.value = Array.isArray(messages) 
+							? messages[0] 
+							: messages.toString()
+					}
+				}
+			} else {
+				errorMessage.value = errorData.toString()
+			}
+		} else {
+			errorMessage.value = 'Error creating user. Please try again.'
+		}
 	} finally {
 		isSubmitting.value = false
 	}

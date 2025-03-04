@@ -87,9 +87,4 @@ export const profile = [
         title: "Account",
         path: "/users/profile"
     },
-    {
-        icon: "settings",
-        title: "Settings",
-        path: "/users/edit"
-    }
 ]

@@ -1,9 +1,8 @@
 <template>
     <div class="container-fluid">
         <div class="edit-profile">
-            <div class="row">
+            <div class="row justify-content-center">
                 <UserProfile />
-                <EditProfile />
             </div>
         </div>
     </div>

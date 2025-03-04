@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, onMounted, watch } from "vue";
 import { menu } from "@/core/data/menu";
 import { useRoute } from 'vue-router'
+import { useAuth } from '@/composables/useAuth';
 
 interface searchdatas {
     icon1: string,
@@ -17,13 +18,43 @@ interface search {
     bookmark: string
 }
 interface MenuItem {
-    title: string;
-
+    headTitle1?: string;
+    headTitle2?: string;
+    title?: string;
+    path?: string;
+    icon?: string;
+    icon1?: string;
+    type: string;
+    children?: MenuItem[];
+    isPinned?: boolean;
+    requireRole?: string;
 }
 
 export const useMenuStore = defineStore("menu", () => {
+    const { currentUser, isAdmin } = useAuth();
+    console.log('currentUser', currentUser);
+    console.log('isAdmin', isAdmin);
+    let data = ref<MenuItem[]>([]);
 
-    let data = ref(menu)
+    const filterMenuByRole = () => {
+        console.log('MenuStore - Is Admin:', isAdmin.value);
+        return menu.filter(item => {
+            // Hide admin-only items for non-admin users
+            if (item.requireRole === 'admin') {
+                return isAdmin.value;
+            }
+            return true;
+        });
+    };
+
+    onMounted(() => {
+        data.value = filterMenuByRole();
+    });
+
+    watch(() => currentUser.value, () => {
+        data.value = filterMenuByRole();
+    });
+
     let togglesidebar = ref<boolean>(true);
     let activeoverlay = ref<boolean>(true);
     let customizer = ref<string>("");
@@ -85,33 +116,79 @@ export const useMenuStore = defineStore("menu", () => {
 
     }
     function searchTerm(term: any) {
-
         const items: any = [];
+        const searchval = term.toLowerCase();
 
-        const searchval = term.toLowerCase()
+        // Early return for empty search
+        if (!searchval) {
+            searchData.value = [];
+            return;
+        }
 
-        data.value.filter((menuItems: any) => {
+        // Add user-related items to search results if they match
+        const userRelatedItems = [
+            {
+                title: "Create New User",
+                path: "/pages/users_management/createuser",
+                icon1: "users",
+                type: "link"
+            },
+            {
+                title: "Profile",
+                path: "/users/profile",
+                icon1: "user",
+                type: "link"
+            }
+        ];
 
-            if (menuItems.title?.toLowerCase().includes(term) && menuItems.type === 'link') {
+        // Check if search term matches user-related keywords
+        const userKeywords = ["user", "profile", "create"];
+        if (userKeywords.some(keyword => searchval.includes(keyword))) {
+            items.push(...userRelatedItems);
+        }
+
+        // Regular menu item search
+        data.value.forEach((menuItems: any) => {
+            if (menuItems.title?.toLowerCase().startsWith(searchval) && menuItems.type === 'link') {
                 items.push(menuItems);
             }
-            menuItems.children?.filter((subItems: any) => {
-                if (subItems.title?.toLowerCase().includes(term) && subItems.type === 'link') {
-                    subItems.icon1 = menuItems.icon1
-                    items.push(subItems);
+            else if (menuItems.title?.toLowerCase().includes(searchval) && menuItems.type === 'link') {
+                items.push(menuItems);
+            }
 
+            menuItems.children?.forEach((subItems: any) => {
+                if (subItems.title?.toLowerCase().startsWith(searchval) && subItems.type === 'link') {
+                    subItems.icon1 = menuItems.icon1;
+                    items.push(subItems);
                 }
-                if (!subItems.children) return false;
-                subItems.children?.filter((suSubItems: any) => {
-                    if (suSubItems.title?.toLowerCase().includes(term)) {
-                        suSubItems.icon1 = menuItems.icon1
+                else if (subItems.title?.toLowerCase().includes(searchval) && subItems.type === 'link') {
+                    subItems.icon1 = menuItems.icon1;
+                    items.push(subItems);
+                }
+
+                subItems.children?.forEach((suSubItems: any) => {
+                    if (suSubItems.title?.toLowerCase().startsWith(searchval)) {
+                        suSubItems.icon1 = menuItems.icon1;
                         items.push(suSubItems);
                     }
-                })
+                    else if (suSubItems.title?.toLowerCase().includes(searchval)) {
+                        suSubItems.icon1 = menuItems.icon1;
+                        items.push(suSubItems);
+                    }
+                });
+            });
+        });
 
-            })
-            searchData.value = items;
-        })
+        // Sort results
+        items.sort((a: any, b: any) => {
+            const aStarts = a.title.toLowerCase().startsWith(searchval);
+            const bStarts = b.title.toLowerCase().startsWith(searchval);
+            if (aStarts && !bStarts) return -1;
+            if (!aStarts && bStarts) return 1;
+            return 0;
+        });
+
+        searchData.value = items;
     }
     function searchterm(terms: any) {
         const items: any = [];

@@ -109,13 +109,7 @@ onMounted(async () => {
 });
 
 const filteredMenu = computed(() => {
-	return menu.filter(item => {
-		if (item.headTitle1 === 'User Management' || item.title === 'User Management') {
-			const isAdmin = currentUser.value?.is_superuser === true;
-			return isAdmin;
-		}
-		return true;
-	});
+	return menu;
 });
 
 const showPinTitle = computed(() => {

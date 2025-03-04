@@ -46,21 +46,12 @@ import Español from "@/core/locales/es.json"
 
 import { createI18n } from 'vue-i18n'
 import './plugins/axios';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { fas } from '@fortawesome/free-solid-svg-icons';
 
-
-
-// Add request interceptor to handle errors
-// axios.interceptors.response.use(
-//   response => response,
-//   error => {
-//     if (error.response?.status === 401) {
-//       localStorage.removeItem('token')
-//       localStorage.removeItem('user')
-//       router.push('/auth/login')
-//     }
-//     return Promise.reject(error)
-//   }
-// )
+// Add all icons to the library
+library.add(fas);
 
 const i18n = createI18n({
   legacy: false,
@@ -79,7 +70,7 @@ const i18n = createI18n({
   }
 })
 
-createApp(App)
+const app = createApp(App)
   .use(router)
   .use(createPinia())
   .use(VueApexCharts)
@@ -100,4 +91,6 @@ createApp(App)
   .component(VueFeather.name, VueFeather)
   .component('Datepicker', Datepicker)
   .component('multiselect', Multiselect)
-  .mount('#app')
+  .component('font-awesome-icon', FontAwesomeIcon)
+
+app.mount('#app')

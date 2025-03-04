@@ -38,19 +38,40 @@ axios.interceptors.request.use(
 
 axios.interceptors.response.use(
   (response) => {
-    stopProgress();
-    return response;
+    // Only check for suspension on auth-related endpoints
+    if (response.config.url?.includes('/token/') || 
+        response.config.url?.includes('/user/me/')) {
+      if (response.data?.user?.status === 'Suspended') {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        router.push('/auth/login?error=suspended')
+        return Promise.reject(new Error('Account suspended'))
+      }
+    }
+    stopProgress()
+    return response
   },
   (error) => {
-    stopProgress();
+    stopProgress()
 
+    // Check for suspended status in error response
+    if (error.response?.status === 403 && 
+        error.response?.data?.error?.includes('suspended') &&
+        (error.config.url?.includes('/token/') || 
+         error.config.url?.includes('/user/me/'))) {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      router.push('/auth/login?error=suspended')
+    }
+
+    // Handle other 401 errors
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
       router.push('/auth/login')
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
 );
 

@@ -470,16 +470,13 @@ export const recentdata = [
 export const totalproject = [
     {
         bgclass: "bg-primary",
-        title: "Completed"
+        title: "Active"
     },
     {
         bgclass: "bg-secondary",
-        title: "In Progress"
+        title: "Inactive"
     },
-    {
-        bgclass: "bg-warning",
-        title: "Terminated"
-    }
+ 
 ]
 export const projectdata = [
     {

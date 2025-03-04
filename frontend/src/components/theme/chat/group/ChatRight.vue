@@ -5,15 +5,19 @@
                 <div class="common-space">
                     <div class="chat-time group-chat">
                         <ul>
-                            <li v-for="(item, index) in group" :key="index"><img class="img-fluid rounded-circle"
-                                    :src="getImages(item.img)" alt="user"></li>
+                            <li v-for="(item, index) in group" :key="index">
+                                <img class="img-fluid rounded-circle"
+                                    :src="getImages(item.img)" 
+                                    alt="user">
+                            </li>
                             <li>
                                 <div class="custom-name profile-count light-background">
                                     <p class="f-w-500">9+</p>
                                 </div>
                             </li>
                         </ul>
-                        <div> <span>Meeting Department</span>
+                        <div> 
+                            <span>Meeting Department</span>
                             <p>35 Members</p>
                         </div>
                     </div>
@@ -23,10 +27,11 @@
                             <svg class="dropdown-toggle" role="menu" data-bs-toggle="dropdown" aria-expanded="false">
                                 <use href="@/assets/svg/icon-sprite.svg#menubar"></use>
                             </svg>
-                            <div class="dropdown-menu dropdown-menu-end"><a class="dropdown-item" href="#!">View
-                                    details</a><a class="dropdown-item" href="#!">
-                                    Send messages</a><a class="dropdown-item" href="#!">
-                                    Add to favorites</a></div>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="#!">View details</a>
+                                <a class="dropdown-item" href="#!">Send messages</a>
+                                <a class="dropdown-item" href="#!">Add to favorites</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -36,7 +41,7 @@
                     <p>Select a group to start messaging</p>
                 </div>
             </div>
-            <div class="right-sidebar-Chats">
+            <div class="right-sidebar-Chats" v-if="currentChat">
                 <div class="msger">
                     <div class="msger-chat">
                         <div class="msg" v-for="(chat, index) in currentChat?.messages" :key="index" 

@@ -5,5 +5,4 @@ class DatabaseConfig(AppConfig):
     name = 'database'
 
     def ready(self):
-        from . import scheduler
-        scheduler.start() 
+        pass 

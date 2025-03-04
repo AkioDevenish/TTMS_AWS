@@ -1,32 +1,58 @@
 <template>
     <div class="container-fluid default-dashboard">
         <div class="row widget-grid">
-         
-        <ScheduledUpdates />
-        <ZentraOverview />
-        <BaraniOverview />
-        <PawsOverview />
-        <PawsOverview2 />
-        <ActiveMembers /> 
-        <HighestRecord/>
-        <div class="col-xl-5 col-md-6 proorder-xl-3 proorder-md-1">
-            <AWSstatus/>
-        </div>
+   
+            <!-- Admin Components -->
+            <template v-if="isAdmin">
+                <ScheduledUpdates />
+                <ActiveMembers />
+                <AWSstatus/>
+                <InactiveSensors/>
+                <Totalsells/>
+           
+            </template>
+
+            <!-- Regular User Components -->
+            <template v-else>
+                <AWSstatus/>
+                <HighestRecord/>
+                <Totalsells/>
+          
+            
+            </template>
         </div>
     </div>
 </template>
-<script lang="ts" setup>
 
-import { defineAsyncComponent } from 'vue'
-const  ZentraOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/ZentraOverview.vue'))
-const  BaraniOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/BaraniOverview.vue'))
-const  PawsOverview =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/PawsOverview.vue'))
-const  PawsOverview2 = defineAsyncComponent(() => import('@/components/theme/dashboards/home/PawsOverview2.vue'))
-const  AWSstatus =  defineAsyncComponent(() => import('@/components/theme/dashboards/home/AWSstatus.vue'))
-const  WelcomeView = defineAsyncComponent(() => import("@/components/theme/dashboards/home/WelcomeView.vue"))
-const  ActiveMembers = defineAsyncComponent(() => import("@/components/theme/dashboards/home/ActiveMembers.vue"))
-const  HighestRecord = defineAsyncComponent(() => import("@/components/theme/dashboards/home/HighestRecord.vue"))
-const  ScheduledUpdates = defineAsyncComponent(() => import("@/components/theme/dashboards/home/ScheduledUpdates.vue"))
+<script lang="ts" setup>
+import { defineAsyncComponent, onMounted, ref } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+
+const { isAdmin, currentUser, checkAuth } = useAuth()
+const showDebug = ref(true) // Set to false in production
+
+// Admin/User components
+const ScheduledUpdates = defineAsyncComponent(() => import("@/components/theme/dashboards/home/ScheduledUpdates.vue"))
+const ActiveMembers = defineAsyncComponent(() => import("@/components/theme/dashboards/home/ActiveMembers.vue"))
+const AWSstatus = defineAsyncComponent(() => import('@/components/theme/dashboards/home/AWSstatus.vue'))
+const HighestRecord = defineAsyncComponent(() => import("@/components/theme/dashboards/home/HighestRecord.vue"))   
+const Totalsells = defineAsyncComponent(() => import("@/components/theme/dashboards/home/TotalSells.vue"))
+const InactiveSensors = defineAsyncComponent(() => import("@/components/theme/dashboards/home/InactiveSensors.vue"))
+onMounted(async () => {
+    await checkAuth()
+    console.log('Is Admin:', isAdmin.value)
+    console.log('Current User:', currentUser.value)
+})
 </script>
+
+<style scoped>
+.debug-info {
+    background: #f5f5f5;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+</style>
 
   

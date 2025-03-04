@@ -19,17 +19,22 @@
                 </tr>
             </tbody>
             <tbody v-else>
-                <tr v-for="user in allData" :key="user.id">
-
-                    <td class="px-4 py-3">{{ user.username || '-' }}</td>
-                    <td class="px-4 py-3">{{ user.organization || '-' }}</td>
-                    <td class="px-4 py-3">{{ user.email || 'N/A' }}</td>
-                    <td class="px-4 py-3">{{ user.role || 'User' }}</td>
-                    <td class="px-4 py-3">{{ user.package || '-' }}</td>
-                    <td class="px-4 py-3">
-                        <span :class="{'text-danger': isExpiringSoon(user.expires_at)}">
-                            {{ formatDate(user.expires_at) }}
-                        </span>
+                <tr v-for="user in allData" :key="user.id" class="user-row">
+                    <td class="clickable" @click="navigateToProfile(user.id)" colspan="6">
+                        <div class="d-flex">
+                            <div class="user-info">
+                                <div>{{ user.username || '-' }}</div>
+                                <div>{{ user.organization || '-' }}</div>
+                                <div>{{ user.email || 'N/A' }}</div>
+                                <div>{{ user.role || 'User' }}</div>
+                                <div>{{ user.package || '-' }}</div>
+                                <div>
+                                    <span :class="{'text-expired': isExpiringSoon(user.expires_at)}">
+                                        {{ formatDate(user.expires_at) }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                     <td class="status-cell px-4 py-3">
                         <button 
@@ -37,7 +42,7 @@
                                 'status-btn',
                                 `status-${(user.status || 'Active').toLowerCase()}`
                             ]"
-                            @click="cycleStatus(user)"
+                            @click.stop="cycleStatus(user)"
                         >
                             <span class="status-dot"></span>
                             {{ user.status || 'Active' }}
@@ -48,14 +53,14 @@
                             <button 
                                 class="action-btn suspend-btn"
                                 :class="{ 'suspended': user.status === 'Suspended' }"
-                                @click="handleSuspendUser(user.id)"
+                                @click.stop="handleSuspendUser(user.id)"
                                 :title="user.status === 'Suspended' ? 'Reactivate user account' : 'Suspend user account'"
                             >
                                 <i class="fa" :class="user.status === 'Suspended' ? 'fa-play' : 'fa-ban'"></i>
                             </button>
                             <button 
                                 class="action-btn delete-btn"
-                                @click="handleDeleteUser(user.id)"
+                                @click.stop="handleDeleteUser(user.id)"
                             >
                                 <i class="fa fa-trash"></i>
                             </button>
@@ -99,8 +104,10 @@ onMounted(async () => {
 })
 
 const cycleStatus = async (user: any) => {
-    if (user.status === 'Pending') {
-        errorMessage.value = 'Cannot change status of pending users'
+    const hasVerifiedBills = user.bills?.some((bill: any) => bill.receipt_verified) || false
+    
+    if (!hasVerifiedBills && !user.is_staff && !user.is_superuser) {
+        errorMessage.value = 'Cannot change status until receipt is verified'
         return
     }
     
@@ -108,15 +115,14 @@ const cycleStatus = async (user: any) => {
         const statusMap = {
             'Active': 'Inactive',
             'Inactive': 'Active',
-            'Paused': 'Active'
+            'Suspended': 'Active',
+            'Pending': hasVerifiedBills ? 'Active' : 'Pending'
         } as const
         
-        const newStatus = statusMap[user.status as keyof typeof statusMap] || 'Inactive'
-        
+        const newStatus = statusMap[user.status as keyof typeof statusMap] || 'Active'
         const success = await updateUserStatus(user.id, newStatus)
         
         if (success) {
-            // Show success toast
             Swal.fire({
                 title: 'Status Updated',
                 text: `User status changed to ${newStatus}`,
@@ -126,23 +132,11 @@ const cycleStatus = async (user: any) => {
                 showConfirmButton: false,
                 timer: 3000
             })
-        } else {
-            // Show error toast
-            Swal.fire({
-                title: 'Error',
-                text: errorMessage.value || 'Failed to update status',
-                icon: 'error',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
-            })
         }
     } catch (error) {
-        console.error('Error in cycleStatus:', error)
         Swal.fire({
             title: 'Error',
-            text: 'An unexpected error occurred',
+            text: errorMessage.value || 'Failed to update status',
             icon: 'error',
             toast: true,
             position: 'top-end',
@@ -213,7 +207,9 @@ const handleSuspendUser = async (userId: number) => {
     try {
         const result = await Swal.fire({
             title: `${isSuspended ? 'Reactivate' : 'Suspend'} User Account`,
-            text: `Are you sure you want to ${isSuspended ? 'reactivate' : 'suspend'} this user account?`,
+            text: `${isSuspended 
+                ? 'This will allow the user to log in again.' 
+                : 'This will prevent the user from logging in to their account.'}`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: isSuspended ? '#28a745' : '#dc3545',
@@ -227,7 +223,9 @@ const handleSuspendUser = async (userId: number) => {
             if (success) {
                 Swal.fire({
                     title: 'Success',
-                    text: `User account ${isSuspended ? 'reactivated' : 'suspended'} successfully`,
+                    text: `User account ${isSuspended 
+                        ? 'reactivated successfully. User can now log in.' 
+                        : 'suspended successfully. User cannot log in until reactivated.'}`,
                     icon: 'success',
                     toast: true,
                     position: 'top-end',
@@ -266,17 +264,36 @@ const formatDate = (dateString: string | null) => {
 
 const isExpiringSoon = (dateString: string | null) => {
     if (!dateString) return false
-    // Remove any time component from the date string
-    const dateOnly = dateString.split('T')[0]
-    const expiryDate = new Date(dateOnly)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // Reset time component
-    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    return daysUntilExpiry <= 7 && daysUntilExpiry > 0
+    const expiryDate = new Date(dateString)
+    const now = new Date()
+    return expiryDate < now
+}
+
+const navigateToProfile = (userId: number) => {
+    router.push({
+        path: `/users/profile`,
+        query: { id: userId.toString() }
+    })
 }
 </script>
 
 <style scoped>
+.user-row {
+    cursor: default;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.user-info {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    width: 100%;
+    gap: 1rem;
+    align-items: center;
+}
+
 .suspend-btn {
     background-color: #dc3545;
     color: white;
@@ -284,5 +301,9 @@ const isExpiringSoon = (dateString: string | null) => {
 
 .suspend-btn.suspended {
     background-color: #28a745;
+}
+
+.text-expired {
+    color: #dc3545;
 }
 </style>

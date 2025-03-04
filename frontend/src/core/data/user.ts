@@ -104,18 +104,41 @@ export const useredit = [
 ]
 export const useapihistory = [
     {
-        api_key: "ws_7f9c2d4e8a6b3djncsdc23sdp-vrn",
-        first_used: "05/28/2024",
-        last_used: "06/28/2024",
-        status: "Active"
+        date: "2024-03-15",
+        title: "2024-01-01",
+        status: "2024-03-15",
+        price: "Active",
+        class: "bg-success"
     },
     {
-        api_key: "ws_3a8d5f2c9e4b7djncsdc230ef-sdc", 
-        first_used: "06/12/2024",
-        last_used: "07/12/2024",
-        status: "Inactive"
+        date: "2024-03-14",
+        title: "2024-01-05",
+        status: "2024-03-14",
+        price: "Active",
+        class: "bg-success"
     },
-]   
+    {
+        date: "2024-03-13",
+        title: "2024-01-10",
+        status: "2024-03-13",
+        price: "Inactive",
+        class: "bg-danger"
+    },
+    {
+        date: "2024-03-12",
+        title: "2024-02-01",
+        status: "2024-03-12",
+        price: "Active",
+        class: "bg-success"
+    },
+    {
+        date: "2024-03-11",
+        title: "2024-02-15",
+        status: "2024-03-11",
+        price: "Expired",
+        class: "bg-warning"
+    }
+]
 export const data = [
     {
         img: "other-images/profile.png",

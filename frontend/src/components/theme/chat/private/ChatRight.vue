@@ -3,35 +3,23 @@
         <div class="card right-sidebar-chat">
             <div class="right-sidebar-title">
                 <div class="common-space">
-                    <div class="chat-time">
+                    <div class="chat-time" v-if="currentChat">
                         <div class="active-profile">
                             <img class="img-fluid rounded-circle" 
-                                 :src="getImages('user/1.jpg')" 
+                                 :src="currentChat?.user?.avatar || getImages('user/1.jpg')" 
                                  alt="user">
-                            <div class="user-status">
-                                <div class="status" 
-                                     :class="{ 
-                                         'bg-success': isOnline,
-                                         'bg-danger': !isOnline
-                                     }">
-                                </div>
-                                <span class="status-text" 
-                                      :class="{ 
-                                          'text-success': isOnline,
-                                          'text-danger': !isOnline 
-                                      }">
-                                    {{ isOnline ? 'Online' : 'Offline' }}
-                                </span>
-                            </div>
                         </div>
                         <div>
                             <span>{{ chatName }}</span>
                         </div>
                     </div>
+                    <div v-else>
+                        <p>Select a chat to start messaging</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="right-sidebar-Chats">
+            <div class="right-sidebar-Chats" v-if="currentChat">
                 <div class="msger">
                     <div class="msger-chat" ref="messagesContainer">
                         <div v-for="message in sortedMessages" 
@@ -135,8 +123,9 @@ const isSupportChat = computed(() => currentChat.value?.support_chat ?? false)
 const supportUserId = computed(() => chatStore.SUPPORT_USER?.id)
 
 const chatName = computed(() => {
-    if (!currentChat.value) return '';
-    return currentChat.value.name;
+    if (!currentChat.value?.user) return '';
+    const user = currentChat.value.user;
+    return `${user.first_name || ''} ${user.last_name || user.username || ''}`.trim();
 });
 
 function formatMessageTime(timestamp: string) {

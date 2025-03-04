@@ -4,6 +4,10 @@ export interface AWSStation {
     location: string;
     lastUpdate: string | null;
     status: 'Online' | 'Offline' | 'Maintenance' | 'NoData';
+    latestHealth?: {
+        connectivity_status: string;
+        battery_status: string;
+    };
     parameters: {
         temperature?: number;
         humidity?: number;
@@ -22,7 +26,7 @@ export const getNoDataStations = (stations: AWSStation[]) => {
 
 export const getStationStatus = (stations: AWSStation[]) => {
     const total = stations.length
-    const offline = stations.filter(s => s.status === 'Offline').length
+    const offline = stations.filter(s => s.status === 'Offline' || !s.latestHealth).length
     const maintenance = stations.filter(s => s.status === 'Maintenance').length
     const noData = stations.filter(s => s.status === 'NoData').length
     const online = total - offline - maintenance - noData

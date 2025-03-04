@@ -20,3 +20,391 @@ Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-01-28 04:47:49,943 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
 2025-01-28 04:47:49,943 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
 2025-01-28 04:47:49,943 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 05:10:20,866 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 05:10:20,867 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 05:10:20,872 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 06:10:20,778 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 06:10:20,779 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 06:10:20,779 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 07:10:20,750 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 07:10:20,752 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 07:10:20,752 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 08:10:20,748 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 08:10:20,749 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 08:10:20,749 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 09:10:20,778 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 09:10:20,778 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 09:10:20,778 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 10:10:20,764 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 10:10:20,765 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 10:10:20,771 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 11:10:20,776 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 11:10:20,777 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 11:10:20,777 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 12:10:20,823 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 12:10:20,828 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 12:10:20,828 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 13:10:20,798 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 13:10:20,799 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 13:10:20,804 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 14:10:20,794 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 14:10:20,795 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 14:10:20,795 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 15:10:20,789 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 15:10:20,791 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 15:10:20,793 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 16:10:20,791 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 16:10:20,791 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 16:10:20,792 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 17:10:20,799 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 17:10:20,799 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 17:10:20,799 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 18:10:20,797 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 18:10:20,801 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 18:10:20,804 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 19:10:20,794 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 19:10:20,794 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 19:10:20,794 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 20:10:20,783 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 20:10:20,784 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 20:10:20,788 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 21:10:20,819 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 21:10:20,823 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-13 21:10:20,823 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 22:10:20,807 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-13 22:10:20,808 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-13 22:10:20,811 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-14 02:57:03,646 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-14 02:57:03,647 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-14 02:57:03,647 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-14 03:57:03,711 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-14 03:57:03,711 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-14 03:57:03,711 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-23 21:07:57,434 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-23 21:07:57,434 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-23 21:07:57,434 - database.management.commands.data_fetcher - WARNING - No stations found for brand '3D Paws'.
+2025-02-23 21:39:27,883 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-23 21:39:27,883 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-23 21:39:59,462 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-23 22:07:57,365 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-23 22:07:57,368 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-23 23:07:57,311 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-23 23:07:57,311 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 00:07:57,318 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 00:07:57,319 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 01:07:57,309 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 01:07:57,310 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 02:07:57,314 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 02:07:57,315 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 03:07:57,312 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 03:07:57,313 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 04:07:57,312 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 04:07:57,313 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 05:07:57,307 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 05:07:57,307 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 06:07:57,308 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 06:07:57,309 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 07:07:57,317 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 07:07:57,318 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 08:07:57,318 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 08:07:57,318 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 09:07:57,322 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 09:07:57,322 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 10:19:48,640 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 10:19:48,643 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 11:34:25,494 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 11:34:25,515 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 12:36:02,829 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 12:36:02,830 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 13:36:05,327 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 13:36:05,330 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 14:36:41,292 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 14:36:41,293 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 15:37:42,157 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 15:37:42,161 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 16:38:40,659 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 16:38:40,659 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 17:45:20,913 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 17:45:20,914 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 18:56:06,287 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 18:56:06,291 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 19:16:42,734 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-24 19:56:06,286 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 19:56:06,287 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 20:13:52,688 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 20:13:52,694 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 20:14:29,403 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-24 20:15:09,657 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-24 20:15:46,539 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-24 20:15:46,539 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-24 21:06:19,473 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 21:06:19,473 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 21:37:03,215 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-24 21:45:30,553 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-24 21:46:09,972 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-24 21:46:09,975 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-24 22:16:09,895 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 22:16:09,895 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 22:16:29,953 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 22:16:29,954 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 22:16:43,874 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-24 22:17:04,384 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-24 22:17:19,508 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-24 22:18:13,676 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-24 22:18:28,786 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-24 22:18:28,789 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-24 22:33:53,325 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-24 22:33:53,326 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-24 23:21:14,860 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Zentra'.
+2025-02-24 23:21:14,863 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-24 23:22:06,363 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-24 23:22:41,469 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-24 23:23:16,579 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-24 23:23:16,582 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-25 00:04:19,703 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-25 00:04:49,798 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:05:24,901 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:06:00,009 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:06:00,012 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-25 00:06:30,096 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:07:05,218 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:07:40,326 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 2: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:07:40,331 - database.management.commands.data_fetcher - WARNING - No data received for station T10 Paramin
+2025-02-25 00:08:10,424 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:08:45,527 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:09:20,624 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 3: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:09:20,628 - database.management.commands.data_fetcher - WARNING - No data received for station T03 Centeno
+2025-02-25 00:09:26,586 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-25 00:09:57,686 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:10:32,784 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:11:08,002 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:11:08,004 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-25 00:11:38,236 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:21:15,033 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-25 00:21:50,818 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:22:25,941 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:23:01,054 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:23:01,060 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-25 00:23:31,143 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:24:06,240 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:24:41,340 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 2: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:24:41,345 - database.management.commands.data_fetcher - WARNING - No data received for station T10 Paramin
+2025-02-25 00:25:11,431 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:25:46,523 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:26:21,625 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 3: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:26:21,630 - database.management.commands.data_fetcher - WARNING - No data received for station T03 Centeno
+2025-02-25 00:26:51,720 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:27:26,814 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:28:01,919 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 4: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:28:01,924 - database.management.commands.data_fetcher - WARNING - No data received for station T04 Mayaro
+2025-02-25 00:28:32,021 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:29:07,126 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:29:42,248 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 6: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:29:42,264 - database.management.commands.data_fetcher - WARNING - No data received for station T06 Moruga
+2025-02-25 00:30:23,271 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:30:58,363 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:31:33,466 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 11: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:31:33,475 - database.management.commands.data_fetcher - WARNING - No data received for station T08 Penal
+2025-02-25 00:32:03,574 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:32:38,690 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:33:13,798 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 12: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:33:13,805 - database.management.commands.data_fetcher - WARNING - No data received for station T07 Wild Fowl Trust
+2025-02-25 00:33:43,898 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:34:18,998 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:34:54,098 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 24: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:34:54,103 - database.management.commands.data_fetcher - WARNING - No data received for station T11 UWI
+2025-02-25 00:35:24,191 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:36:06,778 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:36:41,885 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 25: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:36:41,887 - database.management.commands.data_fetcher - WARNING - No data received for station T09 Brigand Hill
+2025-02-25 00:37:11,977 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:37:47,076 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:38:22,173 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 27: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:38:22,177 - database.management.commands.data_fetcher - WARNING - No data received for station T12 Caroni
+2025-02-25 00:38:52,352 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:39:27,457 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:40:02,570 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 28: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:40:02,575 - database.management.commands.data_fetcher - WARNING - No data received for station T15 ASJA
+2025-02-25 00:40:32,675 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:41:07,762 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:41:42,867 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 29: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:41:42,872 - database.management.commands.data_fetcher - WARNING - No data received for station T13 Matelot
+2025-02-25 00:42:34,793 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:43:19,312 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:44:04,124 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 31: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-25 00:44:04,133 - database.management.commands.data_fetcher - WARNING - No data received for station T02 Brasso Venado
+2025-02-25 00:44:38,214 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:45:13,415 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:45:48,666 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 32: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:45:48,672 - database.management.commands.data_fetcher - WARNING - No data received for station T05 Mt. St. Benedict
+2025-02-25 00:46:18,768 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:46:53,874 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:47:28,983 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 33: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:47:28,992 - database.management.commands.data_fetcher - WARNING - No data received for station T14 UTT
+2025-02-25 00:48:07,759 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:48:52,348 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:49:27,451 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 35: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:49:27,455 - database.management.commands.data_fetcher - WARNING - No data received for station T16 Lochmaben
+2025-02-25 00:49:57,547 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:50:43,661 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:51:33,284 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 36: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-25 00:51:33,286 - database.management.commands.data_fetcher - WARNING - No data received for station T18 Matura
+2025-02-25 00:52:03,389 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:52:38,691 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:53:26,065 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 37: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-25 00:53:26,072 - database.management.commands.data_fetcher - WARNING - No data received for station T19 UTT Tamana Campus
+2025-02-25 00:54:01,402 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:54:36,503 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:55:11,617 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 38: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Read timed out. (read timeout=30)
+2025-02-25 00:55:11,623 - database.management.commands.data_fetcher - WARNING - No data received for station T20 Nelson Island
+2025-02-25 00:55:41,711 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 00:56:16,812 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 00:56:58,648 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 41: HTTPSConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=443): Read timed out. (read timeout=30)
+2025-02-25 00:56:58,654 - database.management.commands.data_fetcher - WARNING - No data received for station T17 Guayaguayare
+2025-02-25 01:21:14,952 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-25 01:21:44,970 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:22:09,073 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:22:14,170 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 01: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/01?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47020>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:22:14,176 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-02-25 01:22:14,261 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:22:19,354 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:22:24,446 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 2: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/2?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47680>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:22:24,450 - database.management.commands.data_fetcher - WARNING - No data received for station T10 Paramin
+2025-02-25 01:22:24,536 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:22:29,630 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:22:34,720 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 3: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/3?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47ce0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:22:34,721 - database.management.commands.data_fetcher - WARNING - No data received for station T03 Centeno
+2025-02-25 01:22:34,798 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:22:39,896 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:22:44,988 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 4: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/4?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105bf0380>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:22:44,991 - database.management.commands.data_fetcher - WARNING - No data received for station T04 Mayaro
+2025-02-25 01:22:45,082 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:22:50,173 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:22:55,269 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 6: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/6?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105bf09e0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:22:55,272 - database.management.commands.data_fetcher - WARNING - No data received for station T06 Moruga
+2025-02-25 01:22:55,361 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:23:00,465 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:23:05,564 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 11: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/11?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47bd0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:23:05,566 - database.management.commands.data_fetcher - WARNING - No data received for station T08 Penal
+2025-02-25 01:23:05,653 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:23:10,740 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:23:15,835 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 12: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/12?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47570>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:23:15,840 - database.management.commands.data_fetcher - WARNING - No data received for station T07 Wild Fowl Trust
+2025-02-25 01:23:15,929 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:23:21,027 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:23:26,133 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 24: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/24?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f46f10>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:23:26,138 - database.management.commands.data_fetcher - WARNING - No data received for station T11 UWI
+2025-02-25 01:23:26,232 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:23:31,330 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:23:36,430 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 25: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/25?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105bfc380>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:23:36,432 - database.management.commands.data_fetcher - WARNING - No data received for station T09 Brigand Hill
+2025-02-25 01:23:36,517 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:23:41,616 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:23:46,724 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 27: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/27?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105bfc9e0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:23:46,726 - database.management.commands.data_fetcher - WARNING - No data received for station T12 Caroni
+2025-02-25 01:23:46,812 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:23:51,891 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:23:56,986 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 28: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/28?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f46e00>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:23:56,992 - database.management.commands.data_fetcher - WARNING - No data received for station T15 ASJA
+2025-02-25 01:23:57,080 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:24:02,171 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:24:07,935 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 29: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/29?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47460>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:24:07,937 - database.management.commands.data_fetcher - WARNING - No data received for station T13 Matelot
+2025-02-25 01:24:08,016 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:24:13,118 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:24:18,224 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 31: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/31?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105f47ac0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:24:18,229 - database.management.commands.data_fetcher - WARNING - No data received for station T02 Brasso Venado
+2025-02-25 01:24:18,318 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:24:23,464 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:24:28,577 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 32: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/32?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105bfc6b0>: Failed to establish a new connection: [Errno 61] Connection refused'))
+2025-02-25 01:24:28,585 - database.management.commands.data_fetcher - WARNING - No data received for station T05 Mt. St. Benedict
+2025-02-25 01:24:28,664 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:24:34,316 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:24:39,859 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 33: 502 Server Error: Bad Gateway for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/33?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-02-25 01:24:39,868 - database.management.commands.data_fetcher - WARNING - No data received for station T14 UTT
+2025-02-25 01:24:40,426 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:25:15,435 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:25:50,448 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 35: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/35?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x105f478a0>, 'Connection to 3d-trinidad.icdp.ucar.edu timed out. (connect timeout=30)'))
+2025-02-25 01:25:50,450 - database.management.commands.data_fetcher - WARNING - No data received for station T16 Lochmaben
+2025-02-25 01:25:50,540 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:25:55,644 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:26:01,189 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 36: 502 Server Error: Bad Gateway for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/36?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-02-25 01:26:01,191 - database.management.commands.data_fetcher - WARNING - No data received for station T18 Matura
+2025-02-25 01:26:01,720 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:26:07,262 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 01:26:12,763 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 37: 502 Server Error: Bad Gateway for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/37?start=2025-02-24T09:21:14&end=2025-02-24T21:21:14&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-02-25 01:26:12,769 - database.management.commands.data_fetcher - WARNING - No data received for station T19 UTT Tamana Campus
+2025-02-25 01:26:13,292 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-02-25 01:26:18,829 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-02-25 02:21:14,910 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-02-25 03:21:14,884 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-03-01 18:35:46,424 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'Allmeteo'.
+2025-03-01 21:30:03,458 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-01 21:45:50,276 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-01 22:03:51,095 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 1: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/1?start=2025-03-01T05:30:03&end=2025-03-01T17:30:03&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NameResolutionError("<urllib3.connection.HTTPConnection object at 0x109800190>: Failed to resolve '3d-trinidad.icdp.ucar.edu' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-01 22:03:51,097 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-03-01 22:03:51,101 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-01 22:21:48,929 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-01 22:38:33,761 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-01 22:54:11,591 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-01 22:56:27,405 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 1: HTTPConnectionPool(host='3d-trinidad.icdp.ucar.edu', port=80): Max retries exceeded with url: /api/v1/data/1?start=2025-03-01T06:38:33&end=2025-03-01T18:38:33&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW- (Caused by NameResolutionError("<urllib3.connection.HTTPConnection object at 0x10a0ae0d0>: Failed to resolve '3d-trinidad.icdp.ucar.edu' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-01 22:56:27,406 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-03-01 22:56:27,409 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-01 23:11:49,824 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-01 23:47:51,833 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-01 23:48:42,038 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-01 23:57:25,811 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-02 00:52:50,623 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-03 16:34:07,135 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-03 16:34:07,137 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 00:34:07.137396-04:00 to 2025-03-03 12:34:07.137396-04:00
+2025-03-03 16:34:07,138 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-03 16:34:37,681 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-03 16:35:07,324 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-03 16:35:07,325 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 00:35:07.325713-04:00 to 2025-03-03 12:35:07.325713-04:00
+2025-03-03 16:35:07,326 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-03 16:35:39,791 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-03 16:36:07,147 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-03 16:36:07,148 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 00:36:07.148837-04:00 to 2025-03-03 12:36:07.148837-04:00
+2025-03-03 16:36:07,149 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-03 16:36:36,793 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-03 16:37:07,145 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-03 16:37:07,146 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 00:37:07.146934-04:00 to 2025-03-03 12:37:07.146934-04:00
+2025-03-03 16:37:07,147 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-03 16:39:08,719 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-03 16:39:08,722 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 00:39:08.722415-04:00 to 2025-03-03 12:39:08.722415-04:00
+2025-03-03 16:39:08,725 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 15:35:14,768 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 15:35:14,768 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 15:35:14,769 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 23:35:14.769038-04:00 to 2025-03-04 11:35:14.769038-04:00
+2025-03-04 15:35:14,769 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 23:35:14.769239-04:00 to 2025-03-04 11:35:14.769239-04:00
+2025-03-04 15:35:14,769 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 15:35:14,769 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 15:35:14,776 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 15:35:14,777 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 23:35:14.777041-04:00 to 2025-03-04 11:35:14.777041-04:00
+2025-03-04 15:35:14,777 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 15:35:54,849 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 15:36:26,930 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 15:37:12,603 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 15:37:12,603 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-03 23:37:12.603615-04:00 to 2025-03-04 11:37:12.603615-04:00
+2025-03-04 15:37:12,604 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 15:38:25,788 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 16:00:00,130 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 16:00:00,132 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-04 00:00:00.132350-04:00 to 2025-03-04 12:00:00.132350-04:00
+2025-03-04 16:00:00,134 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 16:00:32,295 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 16:35:23,564 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 16:35:23,569 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-04 00:35:23.568677-04:00 to 2025-03-04 12:35:23.568677-04:00
+2025-03-04 16:35:23,573 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 16:36:03,955 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 17:00:00,144 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 17:00:00,147 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-04 01:00:00.147120-04:00 to 2025-03-04 13:00:00.147120-04:00
+2025-03-04 17:00:00,148 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 17:00:34,688 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 18:00:00,030 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 18:00:00,033 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-04 02:00:00.033279-04:00 to 2025-03-04 14:00:00.033279-04:00
+2025-03-04 18:00:00,034 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 18:00:32,020 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-04 19:00:00,097 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-04 19:00:00,101 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-04 03:00:00.100978-04:00 to 2025-03-04 15:00:00.100978-04:00
+2025-03-04 19:00:00,102 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-04 19:00:58,419 - database.management.commands.data_fetcher - INFO - All fetchers completed

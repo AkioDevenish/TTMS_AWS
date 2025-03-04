@@ -11,6 +11,8 @@ interface MenuItem {
   path?: string;
   children?: MenuItem[];
   bookmark?: boolean;
+  requireRole?: string;
+  admin?: number;
 }
 
 export const menu: MenuItem[] = [
@@ -61,17 +63,27 @@ export const menu: MenuItem[] = [
   },
   {
     title: "Weather Stations",
-    icon: "stroke-project",
-    icon1: "fill-project",
+    icon: "stroke-charts",
+    icon1: "fill-charts",
     type: "sub",
     badgeType: "light-info",
     isPinned: false,
     active: false,
     children: [
+      {
+        path: "/stations/AWS_OTT_Hyrdomet",
+        title: "OTT-Hydromet",
+        type: "link"
+      },
 
       {
         path: "/stations/AWS_Barani",
         title: "Barani",
+        type: "link"
+      },
+      {
+        path: "/stations/AWS_Zentra",
+        title: "Zentra",
         type: "link"
       },
       {
@@ -84,22 +96,16 @@ export const menu: MenuItem[] = [
         title: "Sutron",
         type: "link"
       },
-      {
-        path: "/stations/AWS_OTT_Hyrdomet",
-        title: "OTT-Hydromet",
-        type: "link"
-      },
-      {
-        path: "/stations/AWS_Zentra",
-        title: "Zentra",
-        type: "link"
-      },
+  
+   
 
     ]
   },
   {
     path: "/stations/create",
     title: "Create New AWS",
+    icon: "stroke-form",
+    icon1: "fill-form",
     type: "link"
   },
 
@@ -113,9 +119,10 @@ export const menu: MenuItem[] = [
     path: "/pages/api",
     title: "API Key",
     isPinned: false,
-    icon: "stroke-support-tickets",
-    icon1: "fill-",
+    icon: "stroke-others",
+    icon1: "fill-others",
     type: "link"
+    
   },
 
   // miscellaneous block
@@ -136,23 +143,24 @@ export const menu: MenuItem[] = [
     path: "/pages/knowledgebase",
     title: "Documentation",
     isPinned: false,
-    icon: "stroke-knowledgebase",
-    icon1: "fill-knowledgebase",
+    icon: "stroke-to-do",
+    icon1: "fill-to-do",
     type: "link"
   },
 
   // system management block
   {
     headTitle1: "System Management",
-    headTitle2: "Miscellaneous",
+    headTitle2: "System Management",
     type: "headtitle"
   },
   {
     path: "/pages/users_management",
     title: "User Management",
     isPinned: false,
-    icon: "stroke-support-tickets",
-    icon1: "fill-support-tickets",
-    type: "link"
+    icon: "stroke-user",
+    icon1: "fill-user",
+    type: "link",
+    admin: 1
   }
 ]

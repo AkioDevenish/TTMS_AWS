@@ -100,10 +100,16 @@ async function doLogin() {
 				localStorage.setItem('rememberedEmail', email.value)
 			}
 			router.push('/dashboard')
+		} else if (response.error) {
+			toast.error(response.error)
+			return
 		}
 	} catch (error: any) {
 		console.error('Login error:', error)
-		toast.error(error.response?.data?.detail || 'Invalid credentials')
+		const errorMessage = error.response?.data?.error || 
+							error.response?.data?.detail || 
+							'Invalid credentials'
+		toast.error(errorMessage)
 	}
 }
 </script>

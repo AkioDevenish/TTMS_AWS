@@ -1,6 +1,10 @@
 <template>
-    <Card1 dropdown="true" headerTitle="true" title="Automatic Weather Stations - Status"
-        cardhaderClass="card-no-border pb-0" cardbodyClass="designer-card">
+    <Card1 colClass="col-xl-12 col-lg-12 col-md-12 order-2" 
+        dropdown="true" 
+        headerTitle="true" 
+        title="Automatic Weather Stations - Status"
+        cardhaderClass="card-no-border pb-0" 
+        cardbodyClass="designer-card">
         <div>
             <div class="d-flex align-items-center gap-2">
                 <div class="flex-shrink-0"><img src="@/assets/images/dashboard-2/user/16.png" alt="user"></div>
@@ -13,12 +17,9 @@
                 <button v-for="station in stations" 
                     :key="station.id"
                     class="btn me-1 mb-1"
-                    :class="{
-                        'bg-light-primary font-primary': station.status !== 'NoData',
-                        'bg-light-danger font-danger': station.status === 'NoData'
-                    }"
+                    :class="getStationClass(station)"
                 >
-                    {{ station.id }} {{ station.name }}
+                    {{ station.name }}
                 </button>
             </div>
             <div class="ratting-button">
@@ -49,16 +50,23 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, computed } from 'vue'
+import { defineAsyncComponent, onMounted, computed, onUnmounted } from 'vue'
 import { useAWSStations } from '@/composables/useAWSStations'
-import { getStationStatus } from '@/core/data/aws'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 const { stations, fetchStations } = useAWSStations()
 
 const status = computed(() => {
     const total = stations.value.length
-    const noData = stations.value.filter(s => s.status === 'NoData').length
+    const noData = stations.value.filter(s => {
+        // Check if station is inactive based on status and battery
+        const isOffline = s.status === 'Offline'
+        const hasBatteryIssue = !s.latestHealth?.battery_status || 
+                               s.latestHealth.battery_status === 'Unknown' ||
+                               s.latestHealth.battery_status === '0.0%'
+        return isOffline || hasBatteryIssue
+    }).length
+    
     const online = total - noData
     
     return {
@@ -69,5 +77,23 @@ const status = computed(() => {
     }
 })
 
-onMounted(fetchStations)
+// Update the template class bindings
+const getStationClass = (station: any) => {
+    const isOffline = station.status === 'Offline'
+    const hasBatteryIssue = !station.latestHealth?.battery_status || 
+                           station.latestHealth.battery_status === 'Unknown' ||
+                           station.latestHealth.battery_status === '0.0%'
+
+    return {
+        'bg-light-primary font-primary': !isOffline && !hasBatteryIssue,
+        'bg-light-danger font-danger': isOffline || hasBatteryIssue
+    }
+}
+
+onMounted(() => {
+    fetchStations()
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchStations, 300000)
+    onUnmounted(() => clearInterval(interval))
+})
 </script>

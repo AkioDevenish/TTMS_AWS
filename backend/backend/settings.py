@@ -61,7 +61,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
+X_FRAME_OPTIONS = 'SAMEORIGIN' 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -86,12 +86,32 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'database.auth.CustomAuthBackend',
+] 
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://167.88.45.83",
     "https://metoffice.gov.tt"
 ]
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    }
+}
+
 
 CORS_ALLOWED_METHODS = [
     'DELETE',
@@ -219,3 +239,9 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = 'database.User'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 60 * 1024 * 1024  # 60MB

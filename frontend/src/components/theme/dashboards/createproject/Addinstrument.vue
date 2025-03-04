@@ -32,13 +32,42 @@
 			</div>
 			<div class="col-sm-4">
 				<div class="mb-3">
-					<label>Lat/Lng <span class="f-light">(Optional)</span></label>
-					<input class="form-control" type="text" v-model="latLng" placeholder="e.g., 12.3456, -78.9012">
+					<label>Latitude <span class="txt-danger">*</span></label>
+					<input 
+						class="form-control" 
+						type="number" 
+						step="0.000001"
+						v-model="latitude" 
+						:class="inputClasses.latitude"
+						@input="validated('latitude')"
+						placeholder="e.g., 12.3456">
 				</div>
 			</div>
 			<div class="col-sm-4">
-				<label>Device Location <span class="f-light">(Optional)</span></label>
-				<input class="form-control" type="text" v-model="address" placeholder="Enter physical location">
+				<div class="mb-3">
+					<label>Longitude <span class="txt-danger">*</span></label>
+					<input 
+						class="form-control" 
+						type="number"
+						step="0.000001"
+						v-model="longitude" 
+						:class="inputClasses.longitude"
+						@input="validated('longitude')"
+						placeholder="e.g., -78.9012">
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col">
+				<label>Device Location <span class="txt-danger">*</span></label>
+				<input 
+					class="form-control" 
+					type="text" 
+					v-model="address" 
+					:class="inputClasses.address"
+					@input="validated('address')"
+					placeholder="Enter physical location">
 			</div>
 		</div>
 
@@ -80,7 +109,8 @@ const router = useRouter();
 const name = ref<string>('');
 const deviceCode = ref<string>('');
 const address = ref<string>('');
-const latLng = ref<string>('');
+const latitude = ref<number | null>(null);
+const longitude = ref<number | null>(null);
 const brandId = ref<number>(0);
 const installationDate = ref<Date | null>(null);
 const brands = ref<Array<{ id: number, name: string }>>([]);
@@ -90,8 +120,11 @@ const statusType = ref<string>('');
 // Input validation
 const inputClasses = ref({
 	name: '',
-	deviceCode: '', // Changed to deviceCode validation
-	brandId: ''
+	deviceCode: '',
+	brandId: '',
+	latitude: '',
+	longitude: '',
+	address: ''
 });
 
 // Date format function for submission
@@ -120,22 +153,53 @@ const fetchBrands = async () => {
 
 // Function to validate fields
 function validated(field: string) {
-	if (field === 'name' && name.value.length < 5) {
-		inputClasses.value.name = 'is-invalid';
-	} else {
-		inputClasses.value.name = 'is-valid';
+	// Only validate the field that was changed
+	if (field === 'name') {
+		if (name.value.length < 5) {
+			inputClasses.value.name = 'is-invalid';
+		} else {
+			inputClasses.value.name = 'is-valid';
+		}
 	}
 
-	if (field === 'deviceCode' && deviceCode.value.length < 1) {
-		inputClasses.value.deviceCode = 'is-invalid';
-	} else {
-		inputClasses.value.deviceCode = 'is-valid';
+	if (field === 'deviceCode') {
+		if (deviceCode.value.length < 1) {
+			inputClasses.value.deviceCode = 'is-invalid';
+		} else {
+			inputClasses.value.deviceCode = 'is-valid';
+		}
 	}
 
-	if (field === 'brandId' && brandId.value === 0) {
-		inputClasses.value.brandId = 'is-invalid';
-	} else {
-		inputClasses.value.brandId = 'is-valid';
+	if (field === 'brandId') {
+		if (brandId.value === 0) {
+			inputClasses.value.brandId = 'is-invalid';
+		} else {
+			inputClasses.value.brandId = 'is-valid';
+		}
+	}
+
+	if (field === 'latitude') {
+		if (latitude.value !== null && (latitude.value < -90 || latitude.value > 90)) {
+			inputClasses.value.latitude = 'is-invalid';
+		} else {
+			inputClasses.value.latitude = 'is-valid';
+		}
+	}
+
+	if (field === 'longitude') {
+		if (longitude.value !== null && (longitude.value < -180 || longitude.value > 180)) {
+			inputClasses.value.longitude = 'is-invalid';
+		} else {
+			inputClasses.value.longitude = 'is-valid';
+		}
+	}
+
+	if (field === 'address') {
+		if (!address.value || address.value.length < 3) {
+			inputClasses.value.address = 'is-invalid';
+		} else {
+			inputClasses.value.address = 'is-valid';
+		}
 	}
 }
 
@@ -167,14 +231,20 @@ const getBrandRoute = (brandId: number): string => {
 // Add method to submit form data
 async function add() {
 	try {
-		// Validate the inputs before submitting
+		// Validate all required inputs
 		validated('name');
 		validated('deviceCode');
 		validated('brandId');
+		validated('latitude');
+		validated('longitude');
+		validated('address');
 
 		if (inputClasses.value.name !== 'is-valid' ||
 			inputClasses.value.deviceCode !== 'is-valid' ||
-			inputClasses.value.brandId !== 'is-valid') {
+			inputClasses.value.brandId !== 'is-valid' ||
+			inputClasses.value.latitude !== 'is-valid' ||
+			inputClasses.value.longitude !== 'is-valid' ||
+			inputClasses.value.address !== 'is-valid') {
 			alert('Please fill in all required fields correctly.');
 			return;
 		}
@@ -192,7 +262,8 @@ async function add() {
 			name: name.value.trim(),
 			serial_number: deviceCode.value.trim(),
 			brand: brandId.value,
-			lat_lng: latLng.value?.trim() || null,
+			latitude: latitude.value,
+			longitude: longitude.value,
 			address: address.value?.trim() || '',
 			installation_date: formattedDate,
 			last_updated_at: new Date().toISOString()

@@ -160,6 +160,7 @@ import indexBreadcrumb from "@/pages/advance/indexBreadcrumb.vue"
 import indexRange from "@/pages/advance/indexRange.vue"
 
 import { useAuth } from '@/composables/useAuth'
+import { useChatStore } from '@/store/chat'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -1849,6 +1850,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const { checkAuth } = useAuth()
+  const chatStore = useChatStore()
 
   // Allow access to login page without authentication
   if (to.path === '/auth/login') {
@@ -1868,6 +1870,20 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
+  // Only initialize chat on chat-related routes
+  if (to.path.includes('/chat') || to.path.includes('/messages')) {
+    chatStore.setInChatRoute(true)
+  } else {
+    chatStore.setInChatRoute(false)
+    // Clear any polling intervals
+    if (chatStore.presencePollingInterval) {
+      clearInterval(chatStore.presencePollingInterval)
+    }
+    if (chatStore.messagePollingInterval) {
+      clearInterval(chatStore.messagePollingInterval)
+    }
+  }
+  
   next()
 })
 

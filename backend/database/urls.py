@@ -8,8 +8,10 @@ from .views import (
     UserViewSet, NotificationViewSet, verify_token, get_current_user,
     CustomTokenObtainPairView, MessageListCreate, MessageDetail, ConversationList,
     MarkMessageRead, UserList, LoginView, ChatListCreate, ChatDetail, ChatMessages,
-    UserPresenceUpdate, ChatViewSet, MessageViewSet, UserPresenceList
+    ChatViewSet, MessageViewSet, BillViewSet
 )
+from django.conf import settings
+from django.conf.urls.static import static
 
 router = DefaultRouter()
 router.register(r'brands', BrandViewSet)
@@ -24,6 +26,7 @@ router.register(r'users', UserViewSet)
 router.register(r'notifications', NotificationViewSet)
 router.register(r'chats', ChatViewSet)
 router.register(r'messages', MessageViewSet)
+router.register(r'bills', BillViewSet)
 
 
 urlpatterns = [
@@ -40,6 +43,4 @@ urlpatterns = [
     path('api/chats/', ChatListCreate.as_view(), name='chat-list-create'),
     path('api/chats/<int:pk>/', ChatDetail.as_view(), name='chat-detail'),
     path('api/chats/<int:pk>/messages/', ChatMessages.as_view(), name='chat-messages'),
-    path('api/users/<int:user_id>/presence/', UserPresenceUpdate.as_view(), name='user-presence'),
-    path('api/user-presences/', UserPresenceList.as_view(), name='user-presence-list'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 

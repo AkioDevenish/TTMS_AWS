@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     Brand, Station, Sensor, Measurement,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification, Chat, Message, UserPresence
+    SystemLog, User, Notification, Chat, Message, UserPresence, Bill
 )
 
 # Register your models
@@ -36,3 +36,10 @@ class MessageAdmin(admin.ModelAdmin):
 class UserPresenceAdmin(admin.ModelAdmin):
     list_display = ('user', 'is_online', 'last_seen')
     list_filter = ('is_online',)
+
+@admin.register(Bill)
+class BillAdmin(admin.ModelAdmin):
+    list_display = ('bill_num', 'user', 'total', 'package', 'created_at', 'receipt_verified')
+    list_filter = ('package', 'receipt_verified', 'created_at')
+    search_fields = ('bill_num', 'user__email', 'package')
+    date_hierarchy = 'created_at'

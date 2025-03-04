@@ -9,8 +9,8 @@
                     <input class="form-control" 
                            type="text" 
                            placeholder="Search here.." 
-                           v-model="search"
-                           @keyup="setSerchUsers">
+                           v-model="searchQuery"
+                           @input="handleSearch">
                 </div>
             </div>
             <div class="advance-options">
@@ -22,32 +22,41 @@
                 <div class="tab-content">
                     <div class="tab-pane fade show active">
                         <div class="common-space">
-                            <p>Recent chats</p>
+                            <p>{{ searchQuery ? 'Search Results' : 'Recent chats' }}</p>
                         </div>
-                        <ul class="chats-user" v-if="!search">
+                        <ul class="chats-user" v-if="searchQuery">
                             <li class="common-space" 
-                                v-for="(chat, index) in displayChats" 
-                                :key="chat.id"
-                                @click="setActiveChat(chat)">
+                                v-for="user in filteredUsers" 
+                                :key="user.id"
+                                @click="startChat(user)">
                                 <div class="chat-time">
                                     <div class="active-profile">
                                         <img class="img-fluid rounded-circle" 
-                                             :src="chat.user?.avatar || getImages('user/1.jpg')" 
+                                             :src="user.avatar || getImages('user/1.jpg')" 
                                              alt="user">
-                                        <div class="status" 
-                                             :class="{ 
-                                                 'bg-success': isUserOnline(chat.user),
-                                                 'bg-danger': !isUserOnline(chat.user)
-                                             }">
-                                        </div>
                                     </div>
                                     <div>
-                                        <span>{{ formatUserName(chat.user) }}</span>
-                                        <p>{{ getLastMessage(chat) }}</p>
+                                        <span>{{ formatUserName(user) }}</span>
+                                        <p>Click to start chat</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <p>{{ formatTime(chat.lastMessageTime.toISOString()) }}</p>
+                            </li>
+                        </ul>
+                        <ul class="chats-user" v-else>
+                            <li class="common-space" 
+                                v-for="user in chatStore.users" 
+                                :key="user.id"
+                                @click="startChat(user)">
+                                <div class="chat-time">
+                                    <div class="active-profile">
+                                        <img class="img-fluid rounded-circle" 
+                                             :src="user.avatar || getImages('user/1.jpg')" 
+                                             alt="user">
+                                    </div>
+                                    <div>
+                                        <span>{{ formatUserName(user) }}</span>
+                                        <p>Click to view chat</p>
+                                    </div>
                                 </div>
                             </li>
                         </ul>
@@ -59,14 +68,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useChatStore } from '@/store/chat'
 import { getImages } from '@/composables/common/getImages'
 import { useAuth } from '@/composables/useAuth'
 
 const chatStore = useChatStore()
 const auth = useAuth()
-const search = ref('')
 const searchQuery = ref('')
 
 interface User {
@@ -119,18 +127,32 @@ interface ProcessedChat extends Chat {
 }
 
 onMounted(async () => {
+    console.log('SearchChat mounted');
     await chatStore.init();
-    await chatStore.fetchAllChats(); // Always fetch chats first
-    
-    if (auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
-        await chatStore.fetchAllUsers(); // Only fetch users for MDPS Support
-    }
+    await chatStore.fetchAllChats();
+    await chatStore.fetchAllUsers();
+    console.log('Initialization complete');
 })
 
 const displayChats = computed(() => {
     return chatStore.chats.sort((a, b) => 
         b.lastMessageTime.getTime() - a.lastMessageTime.getTime()
     );
+})
+
+const filteredUsers = computed(() => {
+    if (!searchQuery.value) return chatStore.users
+    
+    const query = searchQuery.value.toLowerCase()
+    return chatStore.users.filter(user => {
+        const fullName = formatUserName(user).toLowerCase()
+        const username = user.username?.toLowerCase() || ''
+        const email = user.email.toLowerCase()
+        
+        return fullName.includes(query) || 
+               username.includes(query) || 
+               email.includes(query)
+    })
 })
 
 const formatUserName = (user: User) => {
@@ -164,11 +186,28 @@ const formatTime = (timestamp: string | undefined) => {
     })
 }
 
-function setSerchUsers() {
-    if (search.value !== '') {
-        chatStore.setSearchUsers(search.value)
+const handleSearch = () => {
+    // Debounce the search if needed
+    if (searchQuery.value.length >= 2) {
+        chatStore.fetchAllUsers() // Refresh user list
     }
 }
+
+const startChat = async (user: User) => {
+    const chat = await chatStore.setActiveuser(user)
+    if (chat) {
+        await setActiveChat(chat as ProcessedChat)
+    }
+    searchQuery.value = '' // Clear search after starting chat
+}
+
+// Add this watch effect to update user list when new messages arrive
+watch(() => chatStore.messages, async () => {
+    if (auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
+        // Refresh user list for MDPS support when new messages arrive
+        await chatStore.fetchAllUsers();
+    }
+}, { deep: true });
 </script>
 
 <style lang="scss" scoped>

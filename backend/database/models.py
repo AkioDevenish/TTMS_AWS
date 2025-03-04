@@ -5,6 +5,8 @@ import json
 from django.core.exceptions import ValidationError
 import uuid
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # User Management
 class UserManager(BaseUserManager):
@@ -27,6 +29,18 @@ def generate_username():
     return f"user_{uuid.uuid4().hex[:8]}"
 
 class User(AbstractUser):
+    STATUS_CHOICES = (
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+        ('Suspended', 'Suspended'),
+        ('Pending', 'Pending'),
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='Active'
+    )
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -34,9 +48,20 @@ class User(AbstractUser):
     )
     email = models.EmailField(unique=True)
     organization = models.CharField(max_length=255, null=True, blank=True)
-    package = models.CharField(max_length=100, null=True, blank=True)
+    PACKAGE_PRICES = {
+        'Weekly': 1500,
+        'Monthly': 3000,
+        'Yearly': 6000
+    }
+
+    package = models.CharField(max_length=10, choices=[
+        ('Weekly', 'Weekly'),
+        ('Monthly', 'Monthly'),
+        ('Yearly', 'Yearly')
+    ], default='Monthly')
+    
+    subscription_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     role = models.CharField(max_length=50, default='user')
-    status = models.CharField(max_length=100, default='Active')
     expires_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -69,6 +94,16 @@ class User(AbstractUser):
             self.username = username
         super().save(*args, **kwargs)
 
+@receiver(post_save, sender=User)
+def create_initial_bill(sender, instance, created, **kwargs):
+    if created:
+        Bill.objects.create(
+            user=instance,
+            total=instance.subscription_price,  
+            package=instance.package,
+            bill_num=f"{int(timezone.now().timestamp())}{instance.id}"
+        )
+
 # Core Models
 class Brand(models.Model):
     name = models.CharField(max_length=100)
@@ -85,7 +120,8 @@ class Station(models.Model):
     serial_number = models.CharField(max_length=100, unique=True)
     last_updated_at = models.DateTimeField()
     address = models.TextField()
-    lat_lng = models.CharField(max_length=255, null=True)
+    latitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
     installation_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     sensors = models.ManyToManyField('Sensor', through='StationSensor', related_name='stations')
@@ -271,3 +307,35 @@ def process_and_save_data(raw_data):
             print(f"Unexpected item format: {item}")
             continue
         # Existing processing logic...
+
+class Bill(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='bills')
+    bill_num = models.CharField(max_length=255, unique=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    package = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    receipt_num = models.CharField(max_length=255, null=True, blank=True)
+    receipt_upload = models.FileField(upload_to='receipts/%Y/%m/%d/', null=True, blank=True)
+    receipt_createat = models.DateTimeField(null=True, blank=True)
+    receipt_verified = models.BooleanField(default=False)
+    receipt_verifiedby = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='verified_bills')
+    receipt_verified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'bills'
+
+    def save(self, *args, **kwargs):
+        if not self.bill_num:
+            timestamp = int(timezone.now().timestamp())
+            self.bill_num = f"{timestamp}{self.user_id}"
+        super().save(*args, **kwargs)
+
+class TaskExecution(models.Model):
+    task_name = models.CharField(max_length=100)
+    last_run = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, default='success')
+    interval = models.IntegerField(default=60)  # seconds
+
+    class Meta:
+        get_latest_by = 'last_run'

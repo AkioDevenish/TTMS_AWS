@@ -1,13 +1,16 @@
 <template>
-    <Card1 colClass="col-xl-12 col-md-12 proorder-xl-3 proorder-md-2" headerTitle="true"
-        title="Recent Users" cardhaderClass="card-no-border pb-0" cardbodyClass="active-members px-0 pb-0">
+    <Card1 colClass="col-xl-6 col-lg-6 col-md-6 order-5" 
+        headerTitle="true"
+        title="Recent Users" 
+        cardhaderClass="card-no-border pb-0" 
+        cardbodyClass="active-members px-0 pb-0">
         <div class="table-responsive theme-scrollbar">
-            <table class="table display" style="width:100%">
+            <table class="table table-sm display mb-0" style="width:100%">
                 <thead>
                     <tr>
-                        <th>User Profile</th>
-                        <th>Email</th>
-                        <th class="text-center">Status</th>
+                        <th class="py-2">User Info</th>
+                        <th class="py-2">Email</th>
+                        <th class="text-center py-2">Status</th>
                     </tr>
                 </thead>
                 <tbody v-if="loading">
@@ -19,12 +22,9 @@
                     <tr v-for="(user, index) in recentUsers" :key="index">
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0">
-                                    <img src="/dashboard-4/icon/user.png" alt="User">
-                                </div>
                                 <div class="flex-grow-1">
-                                    <h5>{{ user.name }}</h5>
-                                    <span>{{ user.role }}</span>
+                                    <h5 class="mb-0">{{ user.username || `${user.first_name} ${user.last_name}`.trim() }}</h5>
+                                    <span class="text-muted">{{ user.role || (user.is_superuser ? 'Admin' : user.is_staff ? 'Staff' : 'User') }}</span>
                                 </div>
                             </div>
                         </td>
@@ -56,7 +56,7 @@ const { allData, loading, fetchUsers } = useUserManagement()
 const recentUsers = computed(() => {
     return (allData.value || [])
         .sort((a, b) => b.id - a.id)
-        .slice(0, 5)
+        .slice(0, 4)
 })
 
 onMounted(async () => {

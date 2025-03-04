@@ -3,7 +3,7 @@ from .models import (
     Brand, Sensor, Measurement, Station,
     StationHealthLog, StationSensor, ApiAccessKey,
     SystemLog, User, Notification, ApiAccessKeyStation,
-    Message, Chat, UserPresence
+    Message, Chat, UserPresence, Bill
 )
 import urllib3
 import json
@@ -78,41 +78,89 @@ class DateTimeToDateField(serializers.DateField):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
-        fields = ['id', 'username', 'email', 'role', 'is_superuser', 
-                 'is_staff', 'first_name', 'last_name']
+        model = User
+        fields = (
+            'id', 'first_name', 'last_name', 'email', 'password',
+            'organization', 'role', 'package', 'status', 'expires_at',
+            'subscription_price'
+        )
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        subscription_price = validated_data.get('subscription_price', 0)
+        user = User.objects.create_user(
+            **validated_data,
+            subscription_price=subscription_price
+        )
+        return user
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
+    role = serializers.CharField(required=True)
+    status = serializers.CharField(required=False, default='Active')
+    username = serializers.CharField(required=False, read_only=True)
+    package = serializers.CharField(required=True)
+    subscription_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
 
     class Meta:
         model = User
         fields = [
             'id', 
+            'username',
             'email', 
             'password',
             'first_name',
             'last_name', 
             'organization', 
             'package', 
-            'expires_at'
+            'expires_at',
+            'role',
+            'status',
+            'subscription_price'
         ]
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
         if not data.get('first_name') or not data.get('last_name'):
             raise serializers.ValidationError({
                 'error': 'First name and last name are required'
             })
+        
+        # Validate role
+        valid_roles = ['admin', 'user']
+        if data.get('role') and data['role'].lower() not in valid_roles:
+            raise serializers.ValidationError({
+                'error': 'Invalid role. Must be either "admin" or "user"'
+            })
+            
+        # Validate status
+        valid_statuses = ['Active', 'Inactive', 'Suspended', 'Pending']
+        if data.get('status') and data['status'] not in valid_statuses:
+            raise serializers.ValidationError({
+                'error': 'Invalid status'
+            })
+
         return data
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data.get('username', ''),
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            organization=validated_data.get('organization', ''),
+            package=validated_data['package'],
+            role=validated_data['role'],
+            status=validated_data.get('status', 'Active'),
+            expires_at=validated_data.get('expires_at'),
+            subscription_price=validated_data['subscription_price']
+        )
         return user
 
 
@@ -125,21 +173,26 @@ class NotificationSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
-    remember_me = serializers.BooleanField(required=False, default=False)
 
     def validate(self, data):
         email = data.get('email')
         password = data.get('password')
-        
+
         if email and password:
             user = authenticate(email=email, password=password)
-            if not user:
-                raise serializers.ValidationError('Invalid email or password')
-            if not user.is_active:
-                raise serializers.ValidationError('User account is disabled')
-            data['user'] = user
-            return data
-        raise serializers.ValidationError('Must include "email" and "password"')
+            if user:
+                if user.status == 'Suspended':
+                    raise serializers.ValidationError(
+                        'Your account has been suspended. Please contact support.'
+                    )
+                elif user.status == 'Inactive':
+                    raise serializers.ValidationError(
+                        'Your account has expired. Please renew your subscription.'
+                    )
+                data['user'] = user
+                return data
+            raise serializers.ValidationError('Invalid credentials.')
+        raise serializers.ValidationError('Must include "email" and "password".')
 
 
 class ApiAccessKeySerializer(serializers.ModelSerializer):
@@ -245,3 +298,30 @@ class UserPresenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPresence
         fields = ['user_id', 'is_online', 'last_seen']
+
+
+class BillSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
+    verification_status = serializers.SerializerMethodField()
+    
+    def get_verification_status(self, obj):
+        if obj.receipt_verified:
+            return 'Verified'
+        elif obj.receipt_upload:
+            return 'Pending Verification'
+        return 'Pending Upload'
+    
+    class Meta:
+        model = Bill
+        fields = ['id', 'user_id', 'user_email', 'bill_num', 'total', 'package', 
+                 'created_at', 'updated_at', 'receipt_num', 'receipt_upload', 
+                 'receipt_createat', 'receipt_verified', 'receipt_verifiedby',
+                 'verification_status', 'receipt_verified_at']
+        read_only_fields = ('bill_num', 'user_id', 'user_email', 'receipt_verified', 
+                          'receipt_verifiedby', 'created_at', 'updated_at', 'receipt_verified_at')
+
+
+class BillCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bill
+        fields = ('total', 'package', 'receipt_upload')

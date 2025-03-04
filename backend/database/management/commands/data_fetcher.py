@@ -1,6 +1,6 @@
 import requests
 from django.core.management.base import BaseCommand
-from database.models import Measurement, Station, Sensor, Brand, StationSensor
+from database.models import Measurement, Station, Sensor, Brand, StationSensor, StationHealthLog
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -35,26 +35,36 @@ class Command(BaseCommand):
     help = 'Fetches data from PAWS, Zentra, and Barani instruments and stores it in the database'
 
     def handle(self, *args, **kwargs):
-        # Set Trinidad and Tobago timezone (UTC-4)
-        tt_tz = timezone.get_fixed_timezone(-240)
-        
-        # Calculate time range from 12 hours ago to now
-        end_time = timezone.now().astimezone(tt_tz)
-        start_time = end_time - timedelta(hours=12)
+        logger.info("Starting data_fetcher management command")
+        try:
+            # Set Trinidad and Tobago timezone (UTC-4)
+            tt_tz = timezone.get_fixed_timezone(-240)
+            
+            # Calculate time range from 12 hours ago to now
+            end_time = timezone.now().astimezone(tt_tz)
+            start_time = end_time - timedelta(hours=12)
 
-        # Format times for different APIs
-        self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
-        self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
+            logger.info(f"Fetching data from {start_time} to {end_time}")
 
-        # Run fetchers concurrently
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            # Start all fetchers
-            paws_future = executor.submit(self.fetch_paws_data)
-            zentra_future = executor.submit(self.fetch_zentra_data)
-            barani_future = executor.submit(self.fetch_barani_data)
+            # Format times for different APIs
+            self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
+            self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
-            # Wait for all to complete
-            concurrent.futures.wait([paws_future, zentra_future, barani_future])
+            # Run fetchers concurrently
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                logger.info("Starting data fetchers")
+                # Start all fetchers
+                paws_future = executor.submit(self.fetch_paws_data)
+                zentra_future = executor.submit(self.fetch_zentra_data)
+                barani_future = executor.submit(self.fetch_barani_data)
+
+                # Wait for all to complete
+                concurrent.futures.wait([paws_future, zentra_future, barani_future])
+                logger.info("All fetchers completed")
+                
+        except Exception as e:
+            logger.error(f"Error in data_fetcher command: {str(e)}")
+            raise
 
     def get_stations_by_brand(self, brand_name):
         """Get stations by brand name directly from database"""
@@ -445,129 +455,71 @@ class Command(BaseCommand):
                                 logger.error(f"Error saving measurement: {e}")
                                 self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
         
+        # After processing measurements, process health data
+        for rounded_hour in measurements_by_hour.keys():
+            self.process_station_health(station_id, measurements_by_hour, rounded_hour, "3D_Paws")
+        
         return processed_data
 
-    def process_zentra_data(self, station_id, response, sensor_map):
-        """Process and save Zentra data"""
-        if 'data' not in response:
-            logger.error("No 'data' key found in the Zentra API response.")
-            self.stdout.write(self.style.ERROR("Response structure:"))
-            self.stdout.write(str(response)[:500])  # Print first 500 chars of response
-            return []
-
+    def process_zentra_data(self, station_id, response_data, sensor_map):
         processed_data = []
         measurements_by_hour = {}
 
-        # Process each measurement
-        for measurement_name, measurement_data in response['data'].items():
-            self.stdout.write(self.style.SUCCESS(f"\nProcessing measurement: {measurement_name}"))
-            
-            for config in measurement_data:
-                metadata = config.get("metadata", {})
-                readings = config.get("readings", [])
-                
-                # Process readings
-                for reading in readings:
-                    timestamp = self.parse_datetime(reading.get("datetime"))
-                    if timestamp and reading.get("value") is not None:
-                        rounded_timestamp = self.round_to_nearest_hour(timestamp.isoformat())
-                        
-                        if rounded_timestamp not in measurements_by_hour:
-                            measurements_by_hour[rounded_timestamp] = {}
-                        
-                        if measurement_name not in measurements_by_hour[rounded_timestamp]:
-                            measurements_by_hour[rounded_timestamp][measurement_name] = []
-                        
-                        measurements_by_hour[rounded_timestamp][measurement_name].append({
-                            'timestamp': timestamp,
-                            'value': reading["value"]
-                        })
-                        self.stdout.write(f"Added reading: {reading['value']} at {timestamp} for {measurement_name}")
-
-        # Process measurements by hour
-        for rounded_hour, sensor_readings in measurements_by_hour.items():
-            for sensor_type, readings in sensor_readings.items():
-                # Get closest reading to rounded hour
-                closest_reading = min(readings, key=lambda x: abs(x['timestamp'] - rounded_hour))
-                
-                sensor_id = sensor_map.get(sensor_type)
-                if sensor_id:
-                    # Ensure station-sensor relationship exists
-                    self.ensure_station_sensor_relationship(station_id, sensor_id)
+        try:
+            # Process each measurement
+            for measurement_name, measurement_data in response_data['data'].items():
+                for config in measurement_data:
+                    metadata = config.get("metadata", {})
+                    readings = config.get("readings", [])
                     
-                    try:
-                        Measurement.objects.create(
-                            station_id=station_id,
-                            sensor_id=sensor_id,
-                            date=rounded_hour.date(),
-                            time=rounded_hour.time(),
-                            value=closest_reading['value'],
-                            status="Successful",
-                            note="Data Aquired",
-                            created_at=datetime.now()
-                        )
-                        processed_data.append(f"Saved Zentra measurement for station {station_id} at {rounded_hour}")
-                    except Exception as e:
-                        logger.error(f"Error saving measurement: {e}")
-                        self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
+                    # Process readings
+                    for reading in readings:
+                        timestamp = self.parse_datetime(reading.get("datetime"))
+                        if timestamp and reading.get("value") is not None:
+                            rounded_timestamp = self.round_to_nearest_hour(timestamp.isoformat())
+                            
+                            if rounded_timestamp not in measurements_by_hour:
+                                measurements_by_hour[rounded_timestamp] = {}
+                            
+                            if measurement_name not in measurements_by_hour[rounded_timestamp]:
+                                measurements_by_hour[rounded_timestamp][measurement_name] = []
+                            
+                            measurements_by_hour[rounded_timestamp][measurement_name].append({
+                                'timestamp': timestamp,
+                                'value': reading["value"]
+                            })
+
+            # Process measurements and health data for each hour
+            for rounded_hour in measurements_by_hour.keys():
+                # Process regular measurements
+                for measurement_name, readings in measurements_by_hour[rounded_hour].items():
+                    closest_reading = min(readings, key=lambda x: abs(x['timestamp'] - rounded_hour))
+                    
+                    sensor_id = sensor_map.get(measurement_name)
+                    if sensor_id:
+                        try:
+                            self.ensure_station_sensor_relationship(station_id, sensor_id)
+                            Measurement.objects.create(
+                                station_id=station_id,
+                                sensor_id=sensor_id,
+                                date=rounded_hour.date(),
+                                time=rounded_hour.time(),
+                                value=closest_reading['value'],
+                                status="Successful",
+                                note="Data Acquired",
+                                created_at=timezone.now()
+                            )
+                            processed_data.append(f"Saved measurement for station {station_id}")
+                        except Exception as e:
+                            logger.error(f"Error saving measurement: {e}")
+
+                # Process health data for this hour
+                self.process_station_health(station_id, measurements_by_hour, rounded_hour, "Zentra")
+
+        except Exception as e:
+            logger.error(f"Error processing data: {e}")
 
         return processed_data
-
-    def get_sensor_id(self, sensor_type):
-        """Get sensor ID from the database"""
-        try:
-            sensor = Sensor.objects.get(type=sensor_type)
-            return sensor.id
-        except Sensor.DoesNotExist:
-            return None
-
-    def round_to_nearest_hour(self, timestamp_str):
-        """Rounds the given timestamp to the nearest hour"""
-        timestamp = parse_datetime(timestamp_str)
-        if timestamp.minute >= 30:
-            timestamp = timestamp.replace(minute=0) + timedelta(hours=1)
-        else:
-            timestamp = timestamp.replace(minute=0)
-        return timestamp.replace(second=0, microsecond=0)
-
-    def get_closest_measurement(self, entries, rounded_hour):
-        """Find the closest measurement to the rounded hour"""
-        closest_entry = None
-        closest_time_diff = None
-        for entry in entries:
-            timestamp = parse_datetime(entry["time"])
-            time_diff = abs(timestamp - rounded_hour)
-            if closest_time_diff is None or time_diff < closest_time_diff:
-                closest_time_diff = time_diff
-                closest_entry = entry
-        return closest_entry
-
-    def parse_datetime(self, datetime_str):
-        """Parse datetime string to Trinidad and Tobago timezone (UTC-4)"""
-        tt_tz = timezone.get_fixed_timezone(-240)
-        
-        if isinstance(datetime_str, str):
-            try:
-                parsed_datetime = parser.parse(datetime_str)
-                if parsed_datetime.tzinfo is None:
-                    parsed_datetime = timezone.make_aware(parsed_datetime, tt_tz)
-                return parsed_datetime.astimezone(tt_tz)
-            except ValueError:
-                logger.warning("Invalid datetime format: %s", datetime_str)
-                return None
-        elif isinstance(datetime_str, (int, float)):
-            try:
-                if datetime_str < 0 or datetime_str > 32503680000:
-                    logger.warning("Invalid Unix timestamp value: %s", datetime_str)
-                    return None
-                timestamp = datetime.utcfromtimestamp(datetime_str)
-                return timezone.make_aware(timestamp, tt_tz)
-            except (ValueError, OSError) as e:
-                logger.warning("Invalid Unix timestamp value: %s (%s)", datetime_str, e)
-                return None
-        else:
-            logger.warning("Invalid datetime value: %s", datetime_str)
-            return None
 
     def process_barani_data(self, station_id, response_data, sensor_map):
         """Process and save Barani data"""
@@ -652,6 +604,10 @@ class Command(BaseCommand):
             logger.error(f"Error processing Barani data: {e}")
             self.stdout.write(self.style.ERROR(f"Error processing Barani data: {e}"))
 
+        # After processing measurements, process health data
+        for rounded_hour in measurements_by_hour.keys():
+            self.process_station_health(station_id, measurements_by_hour, rounded_hour, "Allmeteo")
+
         return processed_data
 
     def ensure_station_sensor_relationship(self, station_id, sensor_id):
@@ -664,3 +620,122 @@ class Command(BaseCommand):
             self.stdout.write(f"Station-Sensor relationship verified for station {station_id} and sensor {sensor_id}")
         except Exception as e:
             logger.error(f"Error creating station-sensor relationship: {e}")
+
+    def process_station_health(self, station_id, measurements_by_hour, rounded_hour, brand_name):
+        """Process health-related measurements for a station"""
+        try:
+            # Initialize status values
+            battery_status = "Unknown"
+            connectivity_status = "Unknown"
+            
+            if rounded_hour in measurements_by_hour:
+                # Handle different brands' sensor names
+                if brand_name == "3D_Paws":
+                    # Check CSS and BPC for 3D_Paws
+                    if 'css' in measurements_by_hour[rounded_hour]:
+                        css_reading = min(measurements_by_hour[rounded_hour]['css'], 
+                                        key=lambda x: abs(x['timestamp'] - rounded_hour))
+                        css_value = css_reading['value']
+                        connectivity_status = self.get_connectivity_status(css_value)
+                    
+                    if 'bpc' in measurements_by_hour[rounded_hour]:
+                        battery_reading = min(measurements_by_hour[rounded_hour]['bpc'], 
+                                           key=lambda x: abs(x['timestamp'] - rounded_hour))
+                        battery_status = f"{battery_reading['value']}%"
+                        
+                elif brand_name == "Zentra":
+                    # Check Battery Percent for Zentra
+                    if 'Battery Percent' in measurements_by_hour[rounded_hour]:
+                        battery_reading = min(measurements_by_hour[rounded_hour]['Battery Percent'], 
+                                           key=lambda x: abs(x['timestamp'] - rounded_hour))
+                        battery_status = f"{battery_reading['value']}%"
+                        
+                elif brand_name == "Allmeteo":
+                    # Check battery for Allmeteo
+                    if 'battery' in measurements_by_hour[rounded_hour]:
+                        battery_reading = min(measurements_by_hour[rounded_hour]['battery'], 
+                                           key=lambda x: abs(x['timestamp'] - rounded_hour))
+                        battery_status = f"{battery_reading['value']}%"
+            
+            # Create health log entry
+            StationHealthLog.objects.create(
+                station_id=station_id,
+                battery_status=battery_status,
+                connectivity_status=connectivity_status,
+                created_at=rounded_hour
+            )
+                
+        except Exception as e:
+            logger.error(f"Error processing station health: {e}")
+            self.stdout.write(self.style.ERROR(f"Error processing station health: {e}"))
+
+    def get_connectivity_status(self, css_value):
+        """Convert CSS value to connectivity status"""
+        try:
+            css_value = float(css_value)
+            if css_value >= -70:
+                return "Excellent"
+            elif css_value >= -85:
+                return "Good"
+            elif css_value >= -100:
+                return "Fair"
+            else:
+                return "Poor"
+        except (TypeError, ValueError):
+            return "Unknown"
+
+    def get_sensor_id(self, sensor_type):
+        """Get sensor ID from the database"""
+        try:
+            sensor = Sensor.objects.get(type=sensor_type)
+            return sensor.id
+        except Sensor.DoesNotExist:
+            return None
+
+    def round_to_nearest_hour(self, timestamp_str):
+        """Rounds the given timestamp to the nearest hour"""
+        timestamp = parse_datetime(timestamp_str)
+        if timestamp.minute >= 30:
+            timestamp = timestamp.replace(minute=0) + timedelta(hours=1)
+        else:
+            timestamp = timestamp.replace(minute=0)
+        return timestamp.replace(second=0, microsecond=0)
+
+    def get_closest_measurement(self, entries, rounded_hour):
+        """Find the closest measurement to the rounded hour"""
+        closest_entry = None
+        closest_time_diff = None
+        for entry in entries:
+            timestamp = parse_datetime(entry["time"])
+            time_diff = abs(timestamp - rounded_hour)
+            if closest_time_diff is None or time_diff < closest_time_diff:
+                closest_time_diff = time_diff
+                closest_entry = entry
+        return closest_entry
+
+    def parse_datetime(self, datetime_str):
+        """Parse datetime string to Trinidad and Tobago timezone (UTC-4)"""
+        tt_tz = timezone.get_fixed_timezone(-240)
+        
+        if isinstance(datetime_str, str):
+            try:
+                parsed_datetime = parser.parse(datetime_str)
+                if parsed_datetime.tzinfo is None:
+                    parsed_datetime = timezone.make_aware(parsed_datetime, tt_tz)
+                return parsed_datetime.astimezone(tt_tz)
+            except ValueError:
+                logger.warning("Invalid datetime format: %s", datetime_str)
+                return None
+        elif isinstance(datetime_str, (int, float)):
+            try:
+                if datetime_str < 0 or datetime_str > 32503680000:
+                    logger.warning("Invalid Unix timestamp value: %s", datetime_str)
+                    return None
+                timestamp = datetime.utcfromtimestamp(datetime_str)
+                return timezone.make_aware(timestamp, tt_tz)
+            except (ValueError, OSError) as e:
+                logger.warning("Invalid Unix timestamp value: %s (%s)", datetime_str, e)
+                return None
+        else:
+            logger.warning("Invalid datetime value: %s", datetime_str)
+            return None

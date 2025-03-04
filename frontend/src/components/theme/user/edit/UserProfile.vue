@@ -1,47 +1,52 @@
 <template>
-    <div class="col-xl-4">
+    <div class="col-xl-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">Package Information</h4>
-                <div class="card-options">
-                    <a class="card-options-collapse" href="#" data-bs-toggle="card-collapse">
-                        <i class="fe fe-chevron-up"></i>
-                    </a>
-                    <a class="card-options-remove" href="#" data-bs-toggle="card-remove">
-                        <i class="fe fe-x"></i>
-                    </a>
-                </div>
+                <h4 class="card-title mb-0">Receipt Verification</h4>
             </div>
             <div class="card-body">
-                <form>
+                <form class="p-4" @submit.prevent="uploadReceipt">
                     <div class="mb-4">
-                        <label class="form-label">Package Details</label>
-                        <div class="info-row">
-                            <span class="info-value">{{ userData.package || 'No Package' }}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-value">Expires: {{ currentDate }}</span>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Upload Image</label>
+                        <label class="form-label h5">Upload Receipt</label>
                         <div class="dropzone-container">
-                            <DropZone 
-                                :maxFileSize="Number(60000000)" 
-                                class="show-preview" 
-                                :uploadOnDrop="true"
-                                :multipleUpload="false"
-                                :maxFiles="1"
-                                @file-added="handleFileAdded"
-                            />
+                            <div class="dropzone">
+                                <div class="dz-message needsclick">
+                                    <input 
+                                        type="file" 
+                                        id="receipt-upload"
+                                        class="hidden-input"
+                                        @change="handleFileChange"
+                                        accept=".jpg,.jpeg,.png,.pdf"
+                                    />
+                                    <label for="receipt-upload" class="upload-label">
+                                        <i class="fa fa-cloud-upload"></i>
+                                        <span>Drop files here or click to upload</span>
+                                        <div v-if="selectedFile" class="selected-file">
+                                            Selected: {{ selectedFile.name }}
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
                             <div class="file-info">
-                                <p>Accepted file types: .jpg, .jpeg, .png</p>
+                                <p>Accepted file types: .jpg, .jpeg, .png, .pdf</p>
                                 <p>Maximum file size: 60MB</p>
                             </div>
                         </div>
                     </div>
+                    <div v-if="successMessage" class="alert alert-success">
+                        {{ successMessage }}
+                    </div>
+                    <div v-if="errorMessage" class="alert alert-danger">
+                        {{ errorMessage }}
+                    </div>
                     <div class="form-footer">
-                        <button class="btn btn-primary btn-block" @click.prevent="saveProfile">Save</button>
+                        <button 
+                            type="submit"
+                            class="btn btn-primary btn-lg w-100" 
+                            :disabled="!selectedFile || isUploading"
+                        >
+                            {{ isUploading ? 'Uploading...' : 'Upload Receipt' }}
+                        </button>
                     </div>
                 </form>
             </div>
@@ -50,52 +55,129 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import DropZone from "dropzone-vue"
-import 'dropzone-vue/dist/dropzone-vue.common.css'
+import { ref, computed, onMounted } from 'vue'
+import { useAuth } from '@/composables/useAuth'
+import axios from 'axios'
+import { useRoute } from 'vue-router'
 
-const currentDate = ref(new Date().toLocaleDateString())
+const { currentUser } = useAuth()
+const route = useRoute()
+const isUploading = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
+const selectedFile = ref<File | null>(null)
+
 const userData = ref({
     package: '',
-    imageFile: null as File | null
+    expires_at: null as string | null,
+    receipt_verification_status: ''
 })
 
-// Simulating fetching user data - replace with actual API call
-const fetchUserPackage = async () => {
-    // Replace this with actual API call
-    userData.value.package = 'Monthly' // This would come from the API
+// Add validation computed property
+const isFormValid = computed(() => {
+    return selectedFile.value !== null
+})
+
+const formatDate = (date: string | null) => {
+    if (!date) return 'N/A'
+    return new Date(date).toLocaleDateString()
+}
+
+const fetchUserData = async () => {
+    try {
+        const token = localStorage.getItem('access_token')
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+        
+        const userId = route.query.id
+        // Match the endpoint used in useUserManagement
+        const response = await axios.get('/users/', { headers })
+        
+        if (Array.isArray(response.data)) {
+            const user = response.data.find((u: any) => u.id === parseInt(userId as string))
+            if (user) {
+                userData.value = {
+                    package: user.package || 'No Package',
+                    expires_at: user.expires_at,
+                    receipt_verification_status: user.receipt_verification_status
+                }
+                console.log('Fetched user data:', user)
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error)
+        errorMessage.value = 'Failed to fetch user data'
+    }
+}
+
+const handleFileChange = (event: Event) => {
+    const input = event.target as HTMLInputElement
+    if (input.files && input.files[0]) {
+        const file = input.files[0]
+        if (file.size > 60000000) {
+            errorMessage.value = 'File size exceeds 60MB limit'
+            input.value = ''
+            return
+        }
+        selectedFile.value = file
+        errorMessage.value = ''
+    }
+}
+
+const uploadReceipt = async () => {
+    if (!selectedFile.value) return
+
+    const formData = new FormData()
+    formData.append('receipt_upload', selectedFile.value)
+    
+    try {
+        isUploading.value = true
+        errorMessage.value = ''
+        successMessage.value = ''
+        
+        const token = localStorage.getItem('access_token')
+        const billId = route.query.bill_id
+        
+        const response = await axios.post(`/bills/${billId}/upload_receipt/`, formData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+        
+        if (response.data) {
+            successMessage.value = 'Receipt uploaded successfully'
+            selectedFile.value = null
+        }
+    } catch (error: any) {
+        errorMessage.value = error.response?.data?.error || 'Failed to upload receipt'
+    } finally {
+        isUploading.value = false
+    }
 }
 
 onMounted(() => {
-    fetchUserPackage()
+    fetchUserData()
 })
-
-const handleFileAdded = (file: File) => {
-    userData.value.imageFile = file
-}
-
-const saveProfile = () => {
-    console.log('Saving profile:', {
-        imageFile: userData.value.imageFile
-    })
-}
 </script>
 
 <style scoped>
 .info-row {
-    padding: 0.5rem 0;
+    padding: 1rem 0;
 }
 
 .info-value {
-    color: #6c757d;
-    font-size: 0.875rem;
+    color: #2c323f;
+    font-size: 1rem;
 }
 
 .form-label {
     font-weight: 600;
     color: #2c323f;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
 }
 
 .package-info-container {
@@ -174,29 +256,33 @@ const saveProfile = () => {
 
 .dropzone-container {
     border: 2px dashed #e0e0e0;
-    border-radius: 8px;
+    border-radius: 12px;
     background: #f8f8f8;
-    padding: 20px;
-    min-height: 300px;
+    padding: 30px;
+    min-height: 400px;
     display: flex;
     flex-direction: column;
 }
 
 :deep(.dropzone) {
     flex: 1;
-    min-height: 250px;
+    min-height: 350px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
     border: none;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 :deep(.dropzone .dz-message) {
     margin: 0;
     font-size: 1.1em;
     color: #666;
+}
+
+:deep(.dropzone .dz-preview .dz-progress) {
+    display: none !important;
 }
 
 :deep(.dropzone .dz-preview) {
@@ -206,12 +292,48 @@ const saveProfile = () => {
 .file-info {
     text-align: center;
     color: #666;
-    font-size: 0.9em;
+    font-size: 1rem;
     border-top: 1px solid #e0e0e0;
-    padding-top: 15px;
+    padding-top: 20px;
 }
 
 .file-info p {
-    margin: 5px 0;
+    margin: 8px 0;
+}
+
+.form-footer {
+    margin-top: 2rem;
+}
+
+.hidden-input {
+    display: none;
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 350px;
+    cursor: pointer;
+    color: #666;
+}
+
+.upload-label i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #7366ff;
+}
+
+.upload-label span {
+    font-size: 1.1em;
+}
+
+.selected-file {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
 </style>

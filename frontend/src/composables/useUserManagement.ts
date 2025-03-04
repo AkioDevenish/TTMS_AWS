@@ -13,6 +13,7 @@ interface User {
   status: 'Active' | 'Inactive' | 'Pending' | 'Paused' | 'Suspended';
   isPaused: boolean;
   expires_at: string | null;
+  bills: any[];
 }
 
 export function useUserManagement() {
@@ -45,28 +46,45 @@ export function useUserManagement() {
     try {
       loading.value = true
       const response = await axios.get('/users/')
-      console.log(response.data)
-
+      
       if (Array.isArray(response.data)) {
-        allData.value = response.data.map((user: any) => ({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          organization: user.organization || 'N/A',
-          role: user.role || 'User',
-          package: user.package || 'N/A',
-          status: user.status || 'Pending',
-          isPaused: user.isPaused || false,
-          expires_at: user.expires_at || null
-        }))
+        const billsResponse = await Promise.all(
+          response.data.map(user => 
+            axios.get('/bills/', {
+              params: { user_id: user.id },
+              headers: getHeaders()
+            })
+          )
+        )
+
+        allData.value = response.data.map((user: any, index: number) => {
+          const userBills = billsResponse[index].data
+          const hasVerifiedBill = userBills.some((bill: any) => bill.receipt_verified)
+          
+          return {
+            ...user,
+            status: determineUserStatus(user, hasVerifiedBill),
+            bills: userBills
+          }
+        })
       }
     } catch (error: any) {
-      console.error('Error fetching users:', error.response?.data || error.message)
+      console.error('Error fetching users:', error)
       errorMessage.value = 'Failed to fetch users'
       allData.value = []
     } finally {
       loading.value = false
     }
+  }
+
+  const determineUserStatus = (user: any, hasVerifiedBill: boolean): 'Active' | 'Inactive' | 'Pending' | 'Suspended' => {
+    if (user.is_staff || user.is_superuser) {
+      return 'Active'
+    }
+    if (hasVerifiedBill) {
+      return 'Active'
+    }
+    return 'Pending'
   }
 
   // Update user status
@@ -117,7 +135,7 @@ export function useUserManagement() {
       return false
     } catch (error: any) {
       console.error('Error toggling user suspend:', error)
-      errorMessage.value = error.response?.data?.message || 'Failed to toggle user suspend status'
+      errorMessage.value = error.response?.data?.error || 'Failed to toggle user suspend status'
       return false
     } finally {
       loading.value = false
