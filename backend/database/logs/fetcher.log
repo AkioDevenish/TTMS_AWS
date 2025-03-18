@@ -408,3 +408,533 @@ Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-03-04 19:00:00,101 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-04 03:00:00.100978-04:00 to 2025-03-04 15:00:00.100978-04:00
 2025-03-04 19:00:00,102 - database.management.commands.data_fetcher - INFO - Starting data fetchers
 2025-03-04 19:00:58,419 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-09 02:12:07,278 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-09 02:12:07,279 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-08 10:12:07.279440-04:00 to 2025-03-08 22:12:07.279440-04:00
+2025-03-09 02:12:07,279 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-09 02:12:46,272 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 01:52:06,028 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 01:52:06,029 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 09:52:06.029531-04:00 to 2025-03-09 21:52:06.029531-04:00
+2025-03-10 01:52:06,029 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 01:52:43,676 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 04:17:23,468 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 04:17:23,477 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 12:17:23.477633-04:00 to 2025-03-10 00:17:23.477633-04:00
+2025-03-10 04:17:23,479 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 04:18:17,873 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 04:30:29,022 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 04:30:29,022 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 12:30:29.022858-04:00 to 2025-03-10 00:30:29.022858-04:00
+2025-03-10 04:30:29,022 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 04:31:23,689 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 06:01:58,197 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 06:01:58,198 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 14:01:58.198661-04:00 to 2025-03-10 02:01:58.198661-04:00
+2025-03-10 06:01:58,201 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 06:02:36,124 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 07:09:28,412 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 07:09:28,414 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 15:09:28.414290-04:00 to 2025-03-10 03:09:28.414290-04:00
+2025-03-10 07:09:28,416 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 07:55:39,388 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 08:09:14,509 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 08:09:14,509 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 16:09:14.509974-04:00 to 2025-03-10 04:09:14.509974-04:00
+2025-03-10 08:09:14,511 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 08:24:41,119 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 08:24:48,525 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 08:40:02,355 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 09:10:13,960 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 09:10:13,962 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 17:10:13.962524-04:00 to 2025-03-10 05:10:13.962524-04:00
+2025-03-10 09:10:13,963 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 09:10:19,553 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 09:14:21,145 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 09:14:21,597 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 09:14:30,976 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 09:14:41,999 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 10:05:33,895 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 10:05:33,898 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 18:05:33.897974-04:00 to 2025-03-10 06:05:33.897974-04:00
+2025-03-10 10:05:33,898 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 10:20:52,618 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 10:36:15,524 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 11:07:02,207 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 11:07:02,209 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 19:07:02.209529-04:00 to 2025-03-10 07:07:02.209529-04:00
+2025-03-10 11:07:02,210 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 11:16:23,272 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 11:31:45,406 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 11:31:52,912 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 12:02:32,205 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 12:02:32,205 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 20:02:32.205902-04:00 to 2025-03-10 08:02:32.205902-04:00
+2025-03-10 12:02:32,207 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 12:17:23,278 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 12:32:47,773 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 13:03:30,015 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 13:03:30,016 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 21:03:30.016543-04:00 to 2025-03-10 09:03:30.016543-04:00
+2025-03-10 13:03:30,017 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 13:33:52,456 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 13:49:15,899 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 14:04:29,978 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 14:04:29,979 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 22:04:29.979293-04:00 to 2025-03-10 10:04:29.979293-04:00
+2025-03-10 14:04:29,980 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 14:34:31,294 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 14:34:50,166 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 15:05:18,066 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 15:05:18,067 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-09 23:05:18.067503-04:00 to 2025-03-10 11:05:18.067503-04:00
+2025-03-10 15:05:18,068 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 15:35:52,897 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 16:06:32,604 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 16:06:32,606 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 00:06:32.606742-04:00 to 2025-03-10 12:06:32.606742-04:00
+2025-03-10 16:06:32,607 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 16:06:36,470 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 16:21:25,754 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 16:21:40,001 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 17:11:34,547 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 17:11:34,549 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 01:11:34.549417-04:00 to 2025-03-10 13:11:34.549417-04:00
+2025-03-10 17:11:34,550 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 17:37:52,016 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 17:53:11,709 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 18:08:28,043 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 18:08:28,044 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 02:08:28.044730-04:00 to 2025-03-10 14:08:28.044730-04:00
+2025-03-10 18:08:28,045 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 18:23:39,975 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 19:09:29,445 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 19:09:29,447 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 03:09:29.447107-04:00 to 2025-03-10 15:09:29.447107-04:00
+2025-03-10 19:09:29,447 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 19:39:53,186 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 19:55:07,752 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 19:55:20,279 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 20:10:29,464 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 20:10:29,464 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 04:10:29.464796-04:00 to 2025-03-10 16:10:29.464796-04:00
+2025-03-10 20:10:29,465 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 20:36:57,182 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-10 20:37:18,699 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 21:00:00,156 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 21:00:00,160 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 05:00:00.159734-04:00 to 2025-03-10 17:00:00.159734-04:00
+2025-03-10 21:00:00,162 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 21:00:34,612 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 22:00:00,050 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 22:00:00,052 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 06:00:00.052409-04:00 to 2025-03-10 18:00:00.052409-04:00
+2025-03-10 22:00:00,054 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 22:00:37,361 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-10 23:00:00,076 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-10 23:00:00,077 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 07:00:00.077298-04:00 to 2025-03-10 19:00:00.077298-04:00
+2025-03-10 23:00:00,078 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-10 23:00:39,391 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 00:04:13,770 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 00:04:13,771 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 08:04:13.771584-04:00 to 2025-03-10 20:04:13.771584-04:00
+2025-03-11 00:04:13,772 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 00:12:29,006 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-11 00:12:51,357 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 01:00:00,063 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 01:00:00,065 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 09:00:00.065447-04:00 to 2025-03-10 21:00:00.065447-04:00
+2025-03-11 01:00:00,067 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 01:00:42,051 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 02:06:40,580 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 02:06:40,582 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 10:06:40.582073-04:00 to 2025-03-10 22:06:40.582073-04:00
+2025-03-11 02:06:40,583 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 02:07:14,451 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 03:00:00,046 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 03:00:00,049 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 11:00:00.049248-04:00 to 2025-03-10 23:00:00.049248-04:00
+2025-03-11 03:00:00,050 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 03:00:34,660 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 06:26:26,649 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 06:26:26,649 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 14:26:26.649866-04:00 to 2025-03-11 02:26:26.649866-04:00
+2025-03-11 06:26:26,649 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 06:26:28,886 - database.management.commands.data_fetcher - ERROR - Error processing data for station T01 Rawinsonde: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:29,472 - database.management.commands.data_fetcher - ERROR - Error processing data for station T10 Paramin: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:30,739 - database.management.commands.data_fetcher - ERROR - Error processing data for station T03 Centeno: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:32,370 - database.management.commands.data_fetcher - ERROR - Error processing data for station T04 Mayaro: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:33,822 - database.management.commands.data_fetcher - ERROR - Error processing data for station T06 Moruga: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:35,528 - database.management.commands.data_fetcher - ERROR - Error processing data for station T08 Penal: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:36,936 - database.management.commands.data_fetcher - ERROR - Error processing data for station T07 Wild Fowl Trust: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:38,212 - database.management.commands.data_fetcher - ERROR - Error processing data for station T11 UWI: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:39,935 - database.management.commands.data_fetcher - ERROR - Error processing data for station T09 Brigand Hill: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:41,305 - database.management.commands.data_fetcher - ERROR - Error processing data for station T12 Caroni: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:42,711 - database.management.commands.data_fetcher - ERROR - Error processing data for station T15 ASJA: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:44,024 - database.management.commands.data_fetcher - ERROR - Error processing data for station T13 Matelot: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:45,540 - database.management.commands.data_fetcher - ERROR - Error processing data for station T02 Brasso Venado: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:46,852 - database.management.commands.data_fetcher - ERROR - Error processing data for station T05 Mt. St. Benedict: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:48,553 - database.management.commands.data_fetcher - ERROR - Error processing data for station T14 UTT: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:49,983 - database.management.commands.data_fetcher - ERROR - Error processing data for station T16 Lochmaben: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:51,473 - database.management.commands.data_fetcher - ERROR - Error processing data for station T18 Matura: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:52,903 - database.management.commands.data_fetcher - ERROR - Error processing data for station T19 UTT Tamana Campus: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:54,353 - database.management.commands.data_fetcher - ERROR - Error processing data for station T20 Nelson Island: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:54,893 - database.management.commands.data_fetcher - ERROR - Error processing data for station T17 Guayaguayare: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:26:54,894 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 06:31:16,435 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 06:31:16,436 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 14:31:16.436026-04:00 to 2025-03-11 02:31:16.436026-04:00
+2025-03-11 06:31:16,436 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 06:31:19,146 - database.management.commands.data_fetcher - ERROR - Error processing data for station T01 Rawinsonde: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:19,985 - database.management.commands.data_fetcher - ERROR - Error processing data for station T10 Paramin: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:21,292 - database.management.commands.data_fetcher - ERROR - Error processing data for station T03 Centeno: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:23,030 - database.management.commands.data_fetcher - ERROR - Error processing data for station T04 Mayaro: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:24,531 - database.management.commands.data_fetcher - ERROR - Error processing data for station T06 Moruga: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:25,938 - database.management.commands.data_fetcher - ERROR - Error processing data for station T08 Penal: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:27,385 - database.management.commands.data_fetcher - ERROR - Error processing data for station T07 Wild Fowl Trust: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:28,921 - database.management.commands.data_fetcher - ERROR - Error processing data for station T11 UWI: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:30,318 - database.management.commands.data_fetcher - ERROR - Error processing data for station T09 Brigand Hill: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:31,642 - database.management.commands.data_fetcher - ERROR - Error processing data for station T12 Caroni: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:33,075 - database.management.commands.data_fetcher - ERROR - Error processing data for station T15 ASJA: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:34,329 - database.management.commands.data_fetcher - ERROR - Error processing data for station T13 Matelot: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:35,696 - database.management.commands.data_fetcher - ERROR - Error processing data for station T02 Brasso Venado: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:36,947 - database.management.commands.data_fetcher - ERROR - Error processing data for station T05 Mt. St. Benedict: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:38,256 - database.management.commands.data_fetcher - ERROR - Error processing data for station T14 UTT: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:39,695 - database.management.commands.data_fetcher - ERROR - Error processing data for station T16 Lochmaben: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:41,204 - database.management.commands.data_fetcher - ERROR - Error processing data for station T18 Matura: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:42,765 - database.management.commands.data_fetcher - ERROR - Error processing data for station T19 UTT Tamana Campus: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:44,382 - database.management.commands.data_fetcher - ERROR - Error processing data for station T20 Nelson Island: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:45,057 - database.management.commands.data_fetcher - ERROR - Error processing data for station T17 Guayaguayare: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:31:45,058 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 06:46:45,780 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 06:46:45,780 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 14:46:45.780659-04:00 to 2025-03-11 02:46:45.780659-04:00
+2025-03-11 06:46:45,780 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 06:46:47,159 - database.management.commands.data_fetcher - ERROR - Error processing data for station T01 Rawinsonde: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:47,803 - database.management.commands.data_fetcher - ERROR - Error processing data for station T10 Paramin: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:49,275 - database.management.commands.data_fetcher - ERROR - Error processing data for station T03 Centeno: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:50,879 - database.management.commands.data_fetcher - ERROR - Error processing data for station T04 Mayaro: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:52,207 - database.management.commands.data_fetcher - ERROR - Error processing data for station T06 Moruga: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:53,880 - database.management.commands.data_fetcher - ERROR - Error processing data for station T08 Penal: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:55,469 - database.management.commands.data_fetcher - ERROR - Error processing data for station T07 Wild Fowl Trust: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:57,061 - database.management.commands.data_fetcher - ERROR - Error processing data for station T11 UWI: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:46:58,595 - database.management.commands.data_fetcher - ERROR - Error processing data for station T09 Brigand Hill: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:00,223 - database.management.commands.data_fetcher - ERROR - Error processing data for station T12 Caroni: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:01,577 - database.management.commands.data_fetcher - ERROR - Error processing data for station T15 ASJA: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:02,771 - database.management.commands.data_fetcher - ERROR - Error processing data for station T13 Matelot: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:04,138 - database.management.commands.data_fetcher - ERROR - Error processing data for station T02 Brasso Venado: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:05,359 - database.management.commands.data_fetcher - ERROR - Error processing data for station T05 Mt. St. Benedict: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:07,248 - database.management.commands.data_fetcher - ERROR - Error processing data for station T14 UTT: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:08,324 - database.management.commands.data_fetcher - ERROR - Error processing data for station T16 Lochmaben: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:09,618 - database.management.commands.data_fetcher - ERROR - Error processing data for station T18 Matura: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:11,161 - database.management.commands.data_fetcher - ERROR - Error processing data for station T19 UTT Tamana Campus: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:12,598 - database.management.commands.data_fetcher - ERROR - Error processing data for station T20 Nelson Island: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:13,170 - database.management.commands.data_fetcher - ERROR - Error processing data for station T17 Guayaguayare: 'Command' object has no attribute 'process_paws_data'
+2025-03-11 06:47:13,170 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 06:52:14,844 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 06:52:14,844 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 14:52:14.844544-04:00 to 2025-03-11 02:52:14.844544-04:00
+2025-03-11 06:52:14,844 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 06:53:10,517 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 06:55:08,720 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 06:55:08,720 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 14:55:08.720492-04:00 to 2025-03-11 02:55:08.720492-04:00
+2025-03-11 06:55:08,720 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 06:55:44,921 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:00:52,652 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:00:52,652 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:00:52.652450-04:00 to 2025-03-11 03:00:52.652450-04:00
+2025-03-11 07:00:52,652 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:00:52,712 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'OTT Hydromet'.
+2025-03-11 07:01:26,606 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:01:40,439 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:01:40,439 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:01:40.439692-04:00 to 2025-03-11 03:01:40.439692-04:00
+2025-03-11 07:01:40,439 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:01:41,578 - database.management.commands.data_fetcher - ERROR - Error fetching OTT station data: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00F86
+2025-03-11 07:01:41,579 - database.management.commands.data_fetcher - WARNING - No data received for station POS_SAT
+2025-03-11 07:01:41,908 - database.management.commands.data_fetcher - ERROR - Error fetching OTT station data: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA01CF0
+2025-03-11 07:01:41,908 - database.management.commands.data_fetcher - WARNING - No data received for station SYNOP_SAT
+2025-03-11 07:01:42,216 - database.management.commands.data_fetcher - ERROR - Error fetching OTT station data: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00154
+2025-03-11 07:01:42,216 - database.management.commands.data_fetcher - WARNING - No data received for station TOCO_SAT
+2025-03-11 07:02:14,056 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:09:01,497 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:09:01,498 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:09:01.498663-04:00 to 2025-03-11 03:09:01.498663-04:00
+2025-03-11 07:09:01,498 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:09:01,849 - database.management.commands.data_fetcher - ERROR - Error fetching OTT station data: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00F86
+2025-03-11 07:09:01,849 - database.management.commands.data_fetcher - WARNING - No data received for station POS_SAT
+2025-03-11 07:09:02,151 - database.management.commands.data_fetcher - ERROR - Error fetching OTT station data: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA01CF0
+2025-03-11 07:09:02,152 - database.management.commands.data_fetcher - WARNING - No data received for station SYNOP_SAT
+2025-03-11 07:09:02,554 - database.management.commands.data_fetcher - ERROR - Error fetching OTT station data: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00154
+2025-03-11 07:09:02,555 - database.management.commands.data_fetcher - WARNING - No data received for station TOCO_SAT
+2025-03-11 07:09:36,397 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:15:00,705 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:15:00,706 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:15:00.706078-04:00 to 2025-03-11 03:15:00.706078-04:00
+2025-03-11 07:15:00,706 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:15:00,763 - database.management.commands.data_fetcher - WARNING - No stations found for brand 'OTT Hydromet'.
+2025-03-11 07:15:33,603 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:23:50,546 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:23:50,546 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:23:50.546585-04:00 to 2025-03-11 03:23:50.546585-04:00
+2025-03-11 07:23:50,546 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:23:50,910 - database.management.commands.data_fetcher - ERROR - Error fetching data for station POS_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00F86
+2025-03-11 07:23:51,233 - database.management.commands.data_fetcher - ERROR - Error fetching data for station SYNOP_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA01CF0
+2025-03-11 07:23:51,603 - database.management.commands.data_fetcher - ERROR - Error fetching data for station TOCO_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00154
+2025-03-11 07:24:18,823 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:24:18,823 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:24:18.823332-04:00 to 2025-03-11 03:24:18.823332-04:00
+2025-03-11 07:24:18,823 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:24:19,223 - database.management.commands.data_fetcher - ERROR - Error fetching data for station POS_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00F86
+2025-03-11 07:24:19,693 - database.management.commands.data_fetcher - ERROR - Error fetching data for station SYNOP_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA01CF0
+2025-03-11 07:24:20,094 - database.management.commands.data_fetcher - ERROR - Error fetching data for station TOCO_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00154
+2025-03-11 07:24:51,725 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:25:07,352 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:25:07,352 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:25:07.352445-04:00 to 2025-03-11 03:25:07.352445-04:00
+2025-03-11 07:25:07,352 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:25:07,785 - database.management.commands.data_fetcher - ERROR - Error fetching data for station POS_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00F86
+2025-03-11 07:25:08,115 - database.management.commands.data_fetcher - ERROR - Error fetching data for station SYNOP_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA01CF0
+2025-03-11 07:25:08,436 - database.management.commands.data_fetcher - ERROR - Error fetching data for station TOCO_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00154
+2025-03-11 07:25:38,929 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:28:40,050 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:28:40,050 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:28:40.050242-04:00 to 2025-03-11 03:28:40.050242-04:00
+2025-03-11 07:28:40,050 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:28:40,270 - database.management.commands.data_fetcher - ERROR - Error fetching data for station POS_SAT: HTTPSConnectionPool(host='api.hydrometcloud.com', port=443): Max retries exceeded with url: /v1/stations/1AA00F86 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x106d4ee40>: Failed to resolve 'api.hydrometcloud.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-11 07:28:40,272 - database.management.commands.data_fetcher - ERROR - Error fetching data for station SYNOP_SAT: HTTPSConnectionPool(host='api.hydrometcloud.com', port=443): Max retries exceeded with url: /v1/stations/1AA01CF0 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x106d5b890>: Failed to resolve 'api.hydrometcloud.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-11 07:28:40,273 - database.management.commands.data_fetcher - ERROR - Error fetching data for station TOCO_SAT: HTTPSConnectionPool(host='api.hydrometcloud.com', port=443): Max retries exceeded with url: /v1/stations/1AA00154 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x106dd3250>: Failed to resolve 'api.hydrometcloud.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-11 07:29:14,523 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:36:43,920 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:36:43,920 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:36:43.920766-04:00 to 2025-03-11 03:36:43.920766-04:00
+2025-03-11 07:36:43,920 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:36:44,516 - database.management.commands.data_fetcher - ERROR - Error fetching data for station POS_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00F86
+2025-03-11 07:36:44,886 - database.management.commands.data_fetcher - ERROR - Error fetching data for station SYNOP_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA01CF0
+2025-03-11 07:36:45,461 - database.management.commands.data_fetcher - ERROR - Error fetching data for station TOCO_SAT: 404 Client Error: 404 for url: https://www.hydrometcloud.com/Data/rest/api/sensors?stationId=1AA00154
+2025-03-11 07:37:18,573 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:39:39,341 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:39:39,341 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:39:39.341668-04:00 to 2025-03-11 03:39:39.341668-04:00
+2025-03-11 07:39:39,341 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:39:50,863 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:39:59,437 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:40:08,485 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:40:10,151 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:41:11,284 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:41:11,284 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:41:11.284550-04:00 to 2025-03-11 03:41:11.284550-04:00
+2025-03-11 07:41:11,284 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:41:11,313 - database.management.commands.data_fetcher - ERROR - Error fetching data for station POS_SAT: HTTPSConnectionPool(host='api.hydrometcloud.com', port=443): Max retries exceeded with url: /v1/stations/2305 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10714ee40>: Failed to resolve 'api.hydrometcloud.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-11 07:41:11,315 - database.management.commands.data_fetcher - ERROR - Error fetching data for station SYNOP_SAT: HTTPSConnectionPool(host='api.hydrometcloud.com', port=443): Max retries exceeded with url: /v1/stations/2303 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x1071d2e90>: Failed to resolve 'api.hydrometcloud.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-11 07:41:11,316 - database.management.commands.data_fetcher - ERROR - Error fetching data for station TOCO_SAT: HTTPSConnectionPool(host='api.hydrometcloud.com', port=443): Max retries exceeded with url: /v1/stations/2304 (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x10715b890>: Failed to resolve 'api.hydrometcloud.com' ([Errno 8] nodename nor servname provided, or not known)"))
+2025-03-11 07:41:41,943 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:41:43,483 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:41:43,483 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:41:43.483383-04:00 to 2025-03-11 03:41:43.483383-04:00
+2025-03-11 07:41:43,483 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:41:54,720 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:42:03,178 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:42:11,799 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:42:14,782 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 07:44:21,627 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 07:44:21,627 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 15:44:21.627710-04:00 to 2025-03-11 03:44:21.627710-04:00
+2025-03-11 07:44:21,627 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 07:44:33,264 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:44:41,725 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:44:51,380 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 07:44:54,004 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 12:03:03,728 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 12:03:03,728 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 20:03:03.728644-04:00 to 2025-03-11 08:03:03.728644-04:00
+2025-03-11 12:03:03,728 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 12:03:16,077 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:03:24,992 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:03:36,489 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 12:03:36,489 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 20:03:36.489748-04:00 to 2025-03-11 08:03:36.489748-04:00
+2025-03-11 12:03:36,489 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 12:03:45,209 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 12:03:45,209 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 20:03:45.209531-04:00 to 2025-03-11 08:03:45.209531-04:00
+2025-03-11 12:03:45,209 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 12:03:56,744 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:04:05,462 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:04:14,826 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:04:17,806 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 12:04:24,486 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 12:04:24,486 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-10 20:04:24.486955-04:00 to 2025-03-11 08:04:24.486955-04:00
+2025-03-11 12:04:24,487 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 12:04:36,926 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:04:45,401 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:04:54,461 - database.management.commands.data_fetcher - ERROR - Error processing OTT data: fromisoformat: argument must be str
+2025-03-11 12:04:55,357 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:04:40,356 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:04:40,356 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:04:40.356330-04:00 to 2025-03-11 17:04:40.356330-04:00
+2025-03-11 21:04:40,356 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:04:40,421 - database.management.commands.data_fetcher - WARNING - No sensors found for station POS_SAT
+2025-03-11 21:04:40,422 - database.management.commands.data_fetcher - WARNING - No sensors found for station SYNOP_SAT
+2025-03-11 21:04:40,424 - database.management.commands.data_fetcher - WARNING - No sensors found for station TOCO_SAT
+2025-03-11 21:05:13,955 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:08:59,782 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:08:59,783 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:08:59.783214-04:00 to 2025-03-11 17:08:59.783214-04:00
+2025-03-11 21:08:59,783 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:08:59,798 - database.management.commands.data_fetcher - WARNING - No sensors configured for station POS_SAT
+2025-03-11 21:08:59,799 - database.management.commands.data_fetcher - WARNING - No sensors configured for station SYNOP_SAT
+2025-03-11 21:08:59,800 - database.management.commands.data_fetcher - WARNING - No sensors configured for station TOCO_SAT
+2025-03-11 21:09:32,091 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:14:06,248 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:14:06,249 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:14:06.249103-04:00 to 2025-03-11 17:14:06.249103-04:00
+2025-03-11 21:14:06,249 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:14:06,265 - database.management.commands.data_fetcher - WARNING - No sensors configured for station POS_SAT
+2025-03-11 21:14:06,267 - database.management.commands.data_fetcher - WARNING - No sensors configured for station SYNOP_SAT
+2025-03-11 21:14:06,268 - database.management.commands.data_fetcher - WARNING - No sensors configured for station TOCO_SAT
+2025-03-11 21:15:00,340 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:15:00,341 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:15:00.341106-04:00 to 2025-03-11 17:15:00.341106-04:00
+2025-03-11 21:15:00,341 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:15:00,354 - database.management.commands.data_fetcher - WARNING - No sensors configured for station POS_SAT
+2025-03-11 21:15:00,355 - database.management.commands.data_fetcher - WARNING - No sensors configured for station SYNOP_SAT
+2025-03-11 21:15:00,355 - database.management.commands.data_fetcher - WARNING - No sensors configured for station TOCO_SAT
+2025-03-11 21:15:34,618 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:20:18,827 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:20:18,827 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:20:18.827881-04:00 to 2025-03-11 17:20:18.827881-04:00
+2025-03-11 21:20:18,827 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:20:18,854 - database.management.commands.data_fetcher - WARNING - No sensors configured for station POS_SAT
+2025-03-11 21:20:18,855 - database.management.commands.data_fetcher - WARNING - No sensors configured for station SYNOP_SAT
+2025-03-11 21:20:18,856 - database.management.commands.data_fetcher - WARNING - No sensors configured for station TOCO_SAT
+2025-03-11 21:20:49,549 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:24:18,549 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:24:18,550 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:24:18.550688-04:00 to 2025-03-11 17:24:18.550688-04:00
+2025-03-11 21:24:18,550 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:24:18,563 - database.management.commands.data_fetcher - WARNING - No sensors configured for station POS_SAT
+2025-03-11 21:24:18,566 - database.management.commands.data_fetcher - WARNING - No sensors configured for station SYNOP_SAT
+2025-03-11 21:24:18,567 - database.management.commands.data_fetcher - WARNING - No sensors configured for station TOCO_SAT
+2025-03-11 21:24:35,511 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:24:35,512 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:24:35.512042-04:00 to 2025-03-11 17:24:35.512042-04:00
+2025-03-11 21:24:35,512 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:24:35,522 - database.management.commands.data_fetcher - WARNING - No sensors configured for station POS_SAT
+2025-03-11 21:24:35,524 - database.management.commands.data_fetcher - WARNING - No sensors configured for station SYNOP_SAT
+2025-03-11 21:24:35,525 - database.management.commands.data_fetcher - WARNING - No sensors configured for station TOCO_SAT
+2025-03-11 21:25:07,047 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:25:39,816 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:25:39,816 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:25:39.816580-04:00 to 2025-03-11 17:25:39.816580-04:00
+2025-03-11 21:25:39,816 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:25:52,704 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:25:52,704 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:25:52.704738-04:00 to 2025-03-11 17:25:52.704738-04:00
+2025-03-11 21:25:52,704 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:26:00,350 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:26:00,350 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:26:00.350506-04:00 to 2025-03-11 17:26:00.350506-04:00
+2025-03-11 21:26:00,350 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:26:31,797 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:28:56,522 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:28:56,523 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:28:56.523259-04:00 to 2025-03-11 17:28:56.523259-04:00
+2025-03-11 21:28:56,523 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:29:29,675 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 21:30:17,689 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:30:17,689 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:30:17.689381-04:00 to 2025-03-11 17:30:17.689381-04:00
+2025-03-11 21:30:17,689 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:33:18,284 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 21:33:18,285 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 05:33:18.285049-04:00 to 2025-03-11 17:33:18.285049-04:00
+2025-03-11 21:33:18,285 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 21:33:53,770 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 22:24:39,371 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 22:24:39,372 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 06:24:39.372458-04:00 to 2025-03-11 18:24:39.372458-04:00
+2025-03-11 22:24:39,372 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 22:25:13,080 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 22:25:28,100 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 22:25:28,100 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 06:25:28.100595-04:00 to 2025-03-11 18:25:28.100595-04:00
+2025-03-11 22:25:28,100 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 22:26:01,529 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 22:29:03,154 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 22:29:03,154 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 06:29:03.154896-04:00 to 2025-03-11 18:29:03.154896-04:00
+2025-03-11 22:29:03,155 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 22:30:02,498 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-11 22:30:11,584 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 22:56:41,699 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 22:56:41,700 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 06:56:41.700309-04:00 to 2025-03-11 18:56:41.700309-04:00
+2025-03-11 22:56:41,700 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 22:57:17,899 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:08:14,711 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:08:14,711 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:08:14.711683-04:00 to 2025-03-11 19:08:14.711683-04:00
+2025-03-11 23:08:14,711 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:08:46,665 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:15:58,984 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:15:58,984 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:15:58.984777-04:00 to 2025-03-11 19:15:58.984777-04:00
+2025-03-11 23:15:58,984 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:16:33,225 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:19:45,485 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:19:45,486 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:19:45.486654-04:00 to 2025-03-11 19:19:45.486654-04:00
+2025-03-11 23:19:45,486 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:20:27,712 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:22:50,181 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:22:50,181 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:22:50.181914-04:00 to 2025-03-11 19:22:50.181914-04:00
+2025-03-11 23:22:50,182 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:23:22,804 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:24:10,808 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:24:10,808 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:24:10.808792-04:00 to 2025-03-11 19:24:10.808792-04:00
+2025-03-11 23:24:10,808 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:24:46,093 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:25:50,180 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:25:50,180 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:25:50.180756-04:00 to 2025-03-11 19:25:50.180756-04:00
+2025-03-11 23:25:50,180 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:26:28,878 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:26:53,045 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:26:53,046 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:26:53.046489-04:00 to 2025-03-11 19:26:53.046489-04:00
+2025-03-11 23:26:53,046 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:27:26,735 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-11 23:28:08,322 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-11 23:28:08,322 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 07:28:08.322362-04:00 to 2025-03-11 19:28:08.322362-04:00
+2025-03-11 23:28:08,322 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-11 23:28:40,954 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-12 00:29:13,561 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-12 00:29:13,561 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 08:29:13.561589-04:00 to 2025-03-11 20:29:13.561589-04:00
+2025-03-12 00:29:13,561 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-12 00:29:51,043 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-12 00:48:26,071 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-12 00:48:26,071 - database.management.commands.data_fetcher - INFO - Fetching data from 2020-01-01 00:00:00-04:00 to 2025-03-11 20:48:26.071969-04:00
+2025-03-12 00:48:26,072 - database.management.commands.data_fetcher - INFO - Processing chunk: 2020-01-01 00:00:00-04:00 to 2020-01-31 00:00:00-04:00
+2025-03-12 00:48:26,072 - database.management.commands.data_fetcher - ERROR - Error in data_fetcher command: 'Command' object has no attribute 'process_data_chunk'
+2025-03-12 00:48:36,265 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-12 00:48:36,265 - database.management.commands.data_fetcher - INFO - Fetching data from 2020-01-01 00:00:00-04:00 to 2025-03-11 20:48:36.265717-04:00
+2025-03-12 00:48:36,265 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-12 00:48:38,957 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:48:46,586 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:48:54,211 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 1: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/1?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:48:54,215 - database.management.commands.data_fetcher - WARNING - No data received for station T01 Rawinsonde
+2025-03-12 00:48:56,316 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:49:03,042 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:49:10,066 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 2: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/2?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:49:10,069 - database.management.commands.data_fetcher - WARNING - No data received for station T10 Paramin
+2025-03-12 00:49:12,474 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:49:19,788 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:49:27,056 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 3: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/3?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:49:27,058 - database.management.commands.data_fetcher - WARNING - No data received for station T03 Centeno
+2025-03-12 00:49:29,648 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:49:38,298 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:49:45,953 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 4: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/4?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:49:45,955 - database.management.commands.data_fetcher - WARNING - No data received for station T04 Mayaro
+2025-03-12 00:49:48,182 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:49:56,242 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:50:03,493 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 6: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/6?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:50:03,500 - database.management.commands.data_fetcher - WARNING - No data received for station T06 Moruga
+2025-03-12 00:50:05,363 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:50:12,449 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:50:19,388 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 11: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/11?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:50:19,398 - database.management.commands.data_fetcher - WARNING - No data received for station T08 Penal
+2025-03-12 00:50:22,064 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:50:29,325 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:50:37,298 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 12: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/12?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:50:37,301 - database.management.commands.data_fetcher - WARNING - No data received for station T07 Wild Fowl Trust
+2025-03-12 00:50:38,508 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:50:44,832 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:50:51,214 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 24: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/24?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:50:51,218 - database.management.commands.data_fetcher - WARNING - No data received for station T11 UWI
+2025-03-12 00:50:52,812 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:51:00,639 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:51:07,330 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 25: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/25?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:51:07,332 - database.management.commands.data_fetcher - WARNING - No data received for station T09 Brigand Hill
+2025-03-12 00:51:08,900 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:51:15,471 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:51:22,181 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 27: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/27?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:51:22,183 - database.management.commands.data_fetcher - WARNING - No data received for station T12 Caroni
+2025-03-12 00:51:23,798 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:51:30,351 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:51:36,953 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 28: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/28?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:51:36,955 - database.management.commands.data_fetcher - WARNING - No data received for station T15 ASJA
+2025-03-12 00:51:38,463 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:51:45,088 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:51:51,669 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 29: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/29?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:51:51,672 - database.management.commands.data_fetcher - WARNING - No data received for station T13 Matelot
+2025-03-12 00:51:53,004 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:52:00,562 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:52:07,046 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 31: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/31?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:52:07,052 - database.management.commands.data_fetcher - WARNING - No data received for station T02 Brasso Venado
+2025-03-12 00:52:08,200 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:52:14,653 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:52:21,113 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 32: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/32?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:52:21,118 - database.management.commands.data_fetcher - WARNING - No data received for station T05 Mt. St. Benedict
+2025-03-12 00:52:22,652 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:52:29,245 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:52:35,844 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 33: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/33?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:52:35,847 - database.management.commands.data_fetcher - WARNING - No data received for station T14 UTT
+2025-03-12 00:52:37,090 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:52:43,351 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:52:49,960 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 35: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/35?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:52:49,962 - database.management.commands.data_fetcher - WARNING - No data received for station T16 Lochmaben
+2025-03-12 00:52:51,118 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:52:57,366 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:53:04,727 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 36: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/36?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:53:04,729 - database.management.commands.data_fetcher - WARNING - No data received for station T18 Matura
+2025-03-12 00:53:06,022 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:53:12,470 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:53:18,880 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 37: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/37?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:53:18,883 - database.management.commands.data_fetcher - WARNING - No data received for station T19 UTT Tamana Campus
+2025-03-12 00:53:19,944 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:53:25,958 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:53:32,110 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 38: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/38?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:53:32,114 - database.management.commands.data_fetcher - WARNING - No data received for station T20 Nelson Island
+2025-03-12 00:53:33,212 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-03-12 00:53:39,479 - database.management.commands.data_fetcher - WARNING - Attempt 2 failed, retrying in 5 seconds...
+2025-03-12 00:53:45,742 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 41: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/41?start=2020-01-01T00:00:00&end=2025-03-11T20:48:36&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
+2025-03-12 00:53:45,746 - database.management.commands.data_fetcher - WARNING - No data received for station T17 Guayaguayare
+2025-03-12 01:08:03,982 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-12 01:36:22,226 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-12 01:36:22,227 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 09:36:22.227047-04:00 to 2025-03-11 21:36:22.227047-04:00
+2025-03-12 01:36:22,227 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-12 01:37:44,393 - database.management.commands.data_fetcher - INFO - All fetchers completed

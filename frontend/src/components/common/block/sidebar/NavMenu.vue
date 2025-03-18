@@ -7,7 +7,10 @@
 			<h6>Pinned</h6>
 		</div>
 	</li>
-	<li v-for="(menuItem, index) in filteredMenu" :key="index" class="sidebar-list" :class="[{ ' sidebar-main-title': menuItem.type == 'headtitle' }, menuItem.isPinned ? 'pined' : '']">
+	<li v-for="(menuItem, index) in filteredMenu" :key="index" 
+		v-show="shouldShowMenuItem(menuItem)"
+		class="sidebar-list" 
+		:class="[{ ' sidebar-main-title': menuItem.type == 'headtitle' }, menuItem.isPinned ? 'pined' : '']">
 		<div v-if="menuItem.type == 'headtitle'">
 			<h6 class="lan-1">{{ $t(menuItem.headTitle1) }}</h6>
 		</div>
@@ -95,41 +98,53 @@
 }
 </style>
 <script lang="ts" setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useMenuStore } from "@/store/menu";
 import { useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth';
+import { menu } from '@/core/data/menu'
 
-const { currentUser, checkAuth } = useAuth();
+const { currentUser, checkAuth, isAdmin, isStaff } = useAuth();
 const store = useMenuStore();
-const menu = store.data;
+
+// Get the original menu directly
+const rawMenu = computed(() => menu);
+
+// Use the original menu for filtering in the component
+const filteredMenu = computed(() => {
+	// Log admin status directly
+	console.log('NavMenu - filteredMenu computed - isAdmin:', isAdmin.value);
+	
+	return menu.filter(item => {
+		// Regular items with admin property
+		if (item.type !== 'headtitle' && item.admin === 1) {
+			return isAdmin.value;
+		}
+		
+		// System Management header
+		if (item.type === 'headtitle' && 
+			(item.headTitle1 === 'System Management' || item.headTitle2 === 'System Management')) {
+			return isAdmin.value;
+		}
+		
+		// Show everything else
+		return true;
+	});
+});
 
 onMounted(async () => {
 	await checkAuth();
-});
-
-const filteredMenu = computed(() => {
-	return menu;
+	// Force a re-evaluation
+	console.log('Auth check completed, isAdmin:', isAdmin.value);
 });
 
 const showPinTitle = computed(() => {
-	let show = false;
-	menu.filter(item => {
-		item.isPinned && (show = true)
-		return !show
-	})
-	return show
-})
+	return filteredMenu.value.some(item => item.isPinned);
+});
 
 function togglePinnedName({ item }) {
-
 	item.isPinned = !item.isPinned;
-	if (menu.length > 0) {
-
-	} else {
-
-	}
-};
+}
 
 const handleUnload = () => {
 	let pinsArray: string[] = [];
@@ -144,10 +159,16 @@ onMounted(() => {
 	let localPins = JSON.parse(localStorage.getItem('pins') || '[]');
 	localPins.forEach((pin: string) => {
 		let pinIndex = menu.findIndex(menus => menus.title === pin);
-
-
 		pinIndex > -1 && (menu[pinIndex].isPinned = true);
 	});
 });
 
+function shouldShowMenuItem(item: any): boolean {
+	return true; // Let the computed property handle the filtering
+}
+
+// Add a watcher to debug isAdmin changes
+watch(() => isAdmin.value, (newValue) => {
+	console.log('isAdmin value changed:', newValue);
+});
 </script>

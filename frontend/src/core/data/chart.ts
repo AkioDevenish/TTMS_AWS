@@ -2001,6 +2001,99 @@ export const zentraOptions1 = {
   }; 
 
 
+
+export const OTTOptions1 = {
+    chart: {
+      height: 330,
+      type: 'area',
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: true,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true
+        }
+      },
+      zoom: {
+        enabled: true
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 2
+    },
+    grid: {
+      strokeDashArray: 0,
+      position: 'back',
+      xaxis: {
+        lines: {
+          show: true
+        }
+      }
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.7,
+        opacityTo: 0.9,
+        stops: [0, 90, 100]
+      }
+    },
+    colors: ['#7366ff'],
+    xaxis: {
+      type: 'datetime',
+      labels: {
+        style: {
+          fontFamily: 'Rubik, sans-serif'
+        }
+      },
+      tooltip: {
+        enabled: false
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          fontFamily: 'Rubik, sans-serif'
+        }
+      },
+      title: {
+        text: '',
+        style: {
+          fontFamily: 'Rubik, sans-serif',
+          color: '#8C8C8C'
+        }
+      }
+    },
+    tooltip: {
+      x: {
+        format: 'MM/dd HH:mm'
+      },
+      fixed: {
+        enabled: false
+      },
+      style: {
+        fontSize: '12px',
+        fontFamily: 'Rubik, sans-serif'
+      }
+    },
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'left',
+      fontFamily: 'Rubik, sans-serif'
+    }
+  }; 
+
+
 export const zentraoption2 = {
     chart: {
         height: 230,

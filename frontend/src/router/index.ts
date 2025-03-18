@@ -1819,7 +1819,7 @@ const routes: Array<RouteRecordRaw> = [
       await checkAuth()
 
       if (!isAdmin.value) {
-        next(from)
+        next({ path: '/dashboard' })
       } else {
         next()
       }
@@ -1828,7 +1828,18 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         name: 'UserManagement',
-        component: () => import('@/pages/users_management/indexUserManagement.vue')
+        component: () => import('@/pages/users_management/indexUserManagement.vue'),
+        meta: {
+          requiresAdmin: true
+        }
+      },
+      {
+        path: 'createuser',
+        name: 'CreateUser',
+        component: () => import('@/pages/createuser/indexCreateUser.vue'),
+        meta: {
+          requiresAdmin: true
+        }
       }
     ]
   },
@@ -1849,7 +1860,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const { checkAuth } = useAuth()
+  const { checkAuth, isAdmin, isStaff } = useAuth()
   const chatStore = useChatStore()
 
   // Allow access to login page without authentication
@@ -1870,6 +1881,12 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
+  // Check admin requirement
+  if (to.matched.some(record => record.meta.requiresAdmin) && !isAdmin.value) {
+    next({ path: '/dashboard' })
+    return
+  }
+  
   // Only initialize chat on chat-related routes
   if (to.path.includes('/chat') || to.path.includes('/messages')) {
     chatStore.setInChatRoute(true)

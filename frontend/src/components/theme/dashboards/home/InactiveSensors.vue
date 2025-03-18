@@ -87,61 +87,22 @@ const inactiveSensors = ref<InactiveSensor[]>([])
 // Fetch inactive sensors data
 const fetchInactiveSensors = async () => {
     try {
-        console.log('Fetching station-sensor data...');
-        const [stationsResponse, measurementsResponse, stationSensorsResponse] = await Promise.all([
-            axios.get('/stations/'),
-            axios.get('/measurements/'),
-            axios.get('/station-sensors/')
-        ]);
-
-        // Create maps for quick lookups
-        const stationsMap = new Map(stationsResponse.data.map((station: any) => [station.id, station]));
+        console.log('Fetching inactive sensor data...');
+        const response = await axios.get('/measurements/inactive_sensors/');
         
-        // Create a map of the latest measurement for each station-sensor combination
-        const latestMeasurementMap = new Map();
-        measurementsResponse.data.forEach((measurement: any) => {
-            if (!measurement.value || measurement.status !== 'Successful') return;
-            
-            const key = `${measurement.station}-${measurement.sensor_type}`;
-            if (!latestMeasurementMap.has(key)) {
-                latestMeasurementMap.set(key, measurement);
-            } else {
-                const currentLatest = latestMeasurementMap.get(key);
-                const currentDate = new Date(`${currentLatest.date}T${currentLatest.time}`);
-                const newDate = new Date(`${measurement.date}T${measurement.time}`);
-                if (newDate > currentDate) {
-                    latestMeasurementMap.set(key, measurement);
-                }
-            }
-        });
-
-        // Process each station-sensor assignment
-        const inactiveData: InactiveSensor[] = [];
+        if (response.data) {
+            inactiveSensors.value = response.data.map((sensor: any) => ({
+                station_name: sensor.station_name,
+                brand_name: sensor.brand_name,
+                sensor_type: sensor.sensor_type,
+                lastReading: sensor.last_reading,
+                status: sensor.status
+            }));
+        }
         
-        stationSensorsResponse.data.forEach((assignment: any) => {
-            const station = stationsMap.get(assignment.station);
-            if (!station) return;
-
-            const key = `${assignment.station}-${assignment.sensor_type}`;
-            const latestMeasurement = latestMeasurementMap.get(key);
-            
-            // If no measurement exists or value is null/undefined
-            if (!latestMeasurement || !latestMeasurement.value) {
-                inactiveData.push({
-                    station_name: station.name,
-                    brand_name: station.brand_name,
-                    sensor_type: assignment.sensor_type,
-                    lastReading: latestMeasurement ? 
-                        `${latestMeasurement.date}T${latestMeasurement.time}` : null,
-                    status: !latestMeasurement ? 'No Data' : 'No Reading'
-                });
-            }
-        });
-
-        console.log('Stations without data:', inactiveData);
-        inactiveSensors.value = inactiveData;
+        console.log('Inactive sensors:', inactiveSensors.value);
     } catch (error) {
-        console.error('Error fetching station-sensor data:', error);
+        console.error('Error fetching inactive sensor data:', error);
         inactiveSensors.value = [];
     }
 };
@@ -171,20 +132,26 @@ const paginatedSensors = computed(() => {
 
 // Helper functions
 const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    if (!dateString) return 'Never';
+    try {
+        return new Date(dateString).toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch {
+        return 'Invalid Date';
+    }
 };
 
 const getStationClass = (sensor: InactiveSensor) => {
     return {
         'bg-light-danger font-danger': sensor.status === 'No Data',
         'bg-light-warning font-warning': sensor.status === 'No Reading',
-        'bg-light-primary font-primary': sensor.status === 'Active'
+        'bg-light-error font-error': sensor.status === 'Inactive'
     };
 };
 

@@ -77,16 +77,23 @@ class DateTimeToDateField(serializers.DateField):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = (
-            'id', 'first_name', 'last_name', 'email', 'password',
+            'id', 'first_name', 'last_name', 'name', 'email', 'password',
             'organization', 'role', 'package', 'status', 'expires_at',
             'subscription_price'
         )
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+    def get_name(self, obj):
+        if obj.first_name or obj.last_name:
+            return f"{obj.first_name} {obj.last_name}".strip()
+        return obj.email.split('@')[0]
 
     def create(self, validated_data):
         subscription_price = validated_data.get('subscription_price', 0)

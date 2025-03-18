@@ -49,6 +49,7 @@ import './plugins/axios';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
+import { vRole } from './directives/roleDirective'
 
 // Add all icons to the library
 library.add(fas);
@@ -92,5 +93,6 @@ const app = createApp(App)
   .component('Datepicker', Datepicker)
   .component('multiselect', Multiselect)
   .component('font-awesome-icon', FontAwesomeIcon)
+  .directive('role', vRole)
 
 app.mount('#app')

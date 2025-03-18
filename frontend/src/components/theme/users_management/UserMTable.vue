@@ -23,7 +23,7 @@
                     <td class="clickable" @click="navigateToProfile(user.id)" colspan="6">
                         <div class="d-flex">
                             <div class="user-info">
-                                <div>{{ user.username || '-' }}</div>
+                                <div>{{ user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || '-' }}</div>
                                 <div>{{ user.organization || '-' }}</div>
                                 <div>{{ user.email || 'N/A' }}</div>
                                 <div>{{ user.role || 'User' }}</div>

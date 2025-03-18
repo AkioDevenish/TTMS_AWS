@@ -33,8 +33,15 @@ export function useStationData() {
     try {
       const [stationResponse, measurementsResponse] = await Promise.all([
         axios.get(`/stations/${stationId}/`),
-        axios.get(`/measurements/by_station/?station_id=${stationId}`)
+        axios.get(`/measurements/by_station/?station_id=${stationId}`),
+        axios.get('/measurements/', {
+          params: {
+            station_id: stationId,
+            page: 1
+          }
+        })
       ]);
+
 
       stationInfo.value = stationResponse.data;
       measurements.value = measurementsResponse.data || [];
@@ -134,6 +141,73 @@ export function useStationData() {
     }
   };
 
+  // Add new methods for filtered data fetching
+  const fetchFilteredStationData = async (stationId: number, options: {
+    sensorType?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+  }) => {
+    if (!stationId) return;
+
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('station_id', stationId.toString());
+      
+      if (options.sensorType) {
+        params.append('sensor_type', options.sensorType);
+      }
+      
+      if (options.startDate) {
+        params.append('start_date', options.startDate);
+      }
+      
+      if (options.endDate) {
+        params.append('end_date', options.endDate);
+      }
+      
+      if (options.limit) {
+        params.append('limit', options.limit.toString());
+      }
+
+      const [stationResponse, measurementsResponse] = await Promise.all([
+        axios.get(`/stations/${stationId}/`),
+        axios.get('/measurements/', {
+          params: {
+            station_id: stationId,
+            page: 1
+          }
+        })
+      ]);
+
+      stationInfo.value = stationResponse.data;
+      measurements.value = measurementsResponse.data || [];
+    } catch (err: any) {
+      error.value = err.message;
+      measurements.value = [];
+      stationInfo.value = null;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // Method to fetch only the last 24 hours of data for a specific sensor
+  const fetchLast24HoursSensorData = async (stationId: number, sensorType: string) => {
+    // Calculate date 24 hours ago
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    const yesterdayStr = yesterday.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    
+    await fetchFilteredStationData(stationId, {
+      sensorType,
+      startDate: yesterdayStr
+    });
+  };
+
   return {
     measurements,
     stationInfo,
@@ -143,6 +217,8 @@ export function useStationData() {
     getLast24HoursMeasurements,
     getLatestMeasurement,
     formatDateTime,
-    getStationStatus
+    getStationStatus,
+    fetchFilteredStationData,
+    fetchLast24HoursSensorData
   };
 } 

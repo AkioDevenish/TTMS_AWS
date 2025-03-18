@@ -28,7 +28,10 @@ export function useAuth() {
   const currentUser = ref<User | null>(null)
 
   // Computed properties for role checks
-  const isAdmin = computed(() => currentUser.value?.is_superuser || false)
+  const isAdmin = computed(() => {
+    return !!currentUser.value?.is_superuser || 
+           (currentUser.value?.role === 'admin');
+  })
   const isStaff = computed(() => currentUser.value?.is_staff || false)
 
   const setAuthToken = (token: string) => {
@@ -164,6 +167,13 @@ export function useAuth() {
     router.push('/auth/login')
   }
 
+  const hasRequiredRole = (requiredRole?: 'admin' | 'staff') => {
+    if (!requiredRole) return true
+    if (requiredRole === 'admin') return isAdmin.value
+    if (requiredRole === 'staff') return isStaff.value || isAdmin.value
+    return true
+  }
+
   return {
     login,
     logout,
@@ -174,6 +184,7 @@ export function useAuth() {
     currentUser,
     isAdmin,
     isStaff,
-    requireAuth
+    requireAuth,
+    hasRequiredRole
   }
 }

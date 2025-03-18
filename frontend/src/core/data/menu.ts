@@ -106,7 +106,8 @@ export const menu: MenuItem[] = [
     title: "Create New AWS",
     icon: "stroke-form",
     icon1: "fill-form",
-    type: "link"
+    type: "link",
+    admin: 1
   },
 
   // api key navigation block

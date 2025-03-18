@@ -50,83 +50,61 @@ export function useAWSStations() {
     const fetchStations = async () => {
         try {
             loading.value = true
-            console.log('Fetching stations...')
+            console.log('Fetching AWS stations...')
             
-            const [stationsResponse, healthLogsResponse] = await Promise.all([
-                axios.get('/stations/'),
-                axios.get('/station-health-logs/')
+            const [healthLogsResponse, stationsResponse] = await Promise.all([
+                axios.get('/station-health-logs/'),
+                axios.get('/stations/')
             ])
-
-            const stationsData = (stationsResponse.data || []).filter((station: any) => 
-                station.brand_name === '3D_Paws' || 
-                station.brand_name === 'Allmeteo' ||
-                station.brand_name === 'Zentra'
-            )
-
-            // Create a map of latest health logs by station ID
-            const healthLogsMap = new Map<number, StationHealthLog>(
-                ((healthLogsResponse.data || []) as StationHealthLog[]).map(log => {
-                    // Ensure battery status is properly formatted
-                    let batteryStatus = log.battery_status
-                    
-                    // Handle different battery status formats
-                    if (typeof batteryStatus === 'number') {
-                        batteryStatus = `${batteryStatus}%`
-                    } else if (typeof batteryStatus === 'string') {
-                        // If it's already a string but doesn't end with %, add it
-                        if (!batteryStatus.endsWith('%') && batteryStatus !== 'Unknown') {
-                            batteryStatus = `${batteryStatus}%`
-                        }
+            
+            const healthLogsMap = new Map<number, any>()
+            
+            // Process health logs
+            if (healthLogsResponse.data && Array.isArray(healthLogsResponse.data.results)) {
+                healthLogsResponse.data.results.forEach((log: any) => {
+                    if (!healthLogsMap.has(log.station) || 
+                        new Date(log.created_at) > new Date(healthLogsMap.get(log.station).created_at)) {
+                        healthLogsMap.set(log.station, log)
                     }
-                    
-                    return [
-                        log.station, // Use station instead of id
-                        { 
-                            ...log,
-                            battery_status: batteryStatus || 'Unknown'
-                        }
-                    ]
                 })
-            )
+            }
 
-            stations.value = await Promise.all(stationsData.map(async (station: any) => {
+            const stationsData = stationsResponse.data || []
+            
+            stations.value = stationsData.map((station: any) => {
                 const healthLog = healthLogsMap.get(station.id)
                 
-                // Determine status based on battery status and format
                 let status = 'Offline'
-                let batteryStatus = healthLog?.battery_status || 'Unknown'
+                let batteryStatus = 'Unknown'
+                let connectivityStatus = 'No Data'
                 
-                // Ensure consistent battery status format
-                if (batteryStatus !== 'Unknown' && !batteryStatus.endsWith('%')) {
-                    batteryStatus = `${batteryStatus}%`
+                if (healthLog) {
+                    batteryStatus = healthLog.battery_status || 'Unknown'
+                    connectivityStatus = healthLog.connectivity_status || 'No Data'
+                    
+                    // Mark as online if connectivity is Excellent
+                    if (connectivityStatus === 'Excellent') {
+                        status = 'Online'
+                    }
                 }
                 
-                // Check if battery status is valid and not zero or very low
-                if (batteryStatus && 
-                    batteryStatus !== 'Unknown' && 
-                    batteryStatus !== '0%' && 
-                    batteryStatus !== '0.0%' &&
-                    !batteryStatus.startsWith('0.')) {
-                    status = 'Online'
-                }
-
                 return {
-                    id: station.serial_number || station.id.toString(),
+                    id: station.id.toString(),
                     name: station.name,
-                    location: station.location || 'Unknown',
-                    lastUpdate: station.last_updated_at,
+                    location: station.location || 'Trinidad and Tobago',
+                    lastUpdate: healthLog?.created_at || null,
                     status: status,
                     latestHealth: {
-                        connectivity_status: healthLog?.connectivity_status || 'No Data',
+                        connectivity_status: connectivityStatus,
                         battery_status: batteryStatus,
                         created_at: healthLog?.created_at || null,
                         station: station.id
                     },
                     parameters: {}
                 }
-            }))
+            })
             
-            console.log('Final stations array:', stations.value)
+            console.log('Final AWS stations array:', stations.value)
         } catch (err) {
             console.error('Failed to fetch AWS stations:', err)
             error.value = 'Failed to fetch stations'
@@ -135,24 +113,22 @@ export function useAWSStations() {
         }
     }
 
-    // Auto refresh stations every minute
     onMounted(() => {
         fetchStations()
-        refreshInterval = setInterval(() => {
-            fetchStations()
-        }, 60000)
+        refreshInterval = setInterval(fetchStations, 300000) as unknown as number
     })
 
     onUnmounted(() => {
-        clearInterval(refreshInterval)
+        if (refreshInterval) clearInterval(refreshInterval)
     })
 
     return {
         stations,
         loading,
         error,
-        stationStatus,
         fetchStations,
-        connectionStatus
+        stationStatus,
+        connectionStatus,
+        
     }
 } 

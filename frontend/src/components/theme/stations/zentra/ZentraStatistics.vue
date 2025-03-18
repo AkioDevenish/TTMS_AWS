@@ -59,7 +59,7 @@ const props = defineProps({
   }
 });
 
-const { measurements, stationInfo, getLast24HoursMeasurements, fetchStationData } = useStationData();
+const { measurements, stationInfo, getLast24HoursMeasurements, fetchStationData, fetchLast24HoursSensorData } = useStationData();
 const selectedSensorType = ref<string>('Air Temperature');
 
 // Sensor configuration
@@ -142,11 +142,14 @@ const chartOptions = computed(() => ({
   }
 }));
 
-watch(() => props.selectedStation, (newStationId) => {
-  if (newStationId) {
-    fetchStationData(newStationId);
-  }
-}, { immediate: true });
+watch([() => props.selectedStation, () => selectedSensorType.value], 
+  ([newStationId, sensorType]) => {
+    if (newStationId && sensorType) {
+      fetchLast24HoursSensorData(newStationId, sensorType);
+    }
+  }, 
+  { immediate: true }
+);
 </script>
 
 <style scoped>
@@ -166,3 +169,6 @@ watch(() => props.selectedStation, (newStationId) => {
   padding: 0.5rem 1rem;
 }
 </style>
+
+
+

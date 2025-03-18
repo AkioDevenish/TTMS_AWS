@@ -82,27 +82,7 @@
 import { ref, defineAsyncComponent, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 
-// Define interfaces for type safety
-interface Station {
-    id: number;
-    name: string;
-    brand_name: string;
-}
-
-interface Sensor {
-    id: number;
-    type: string;
-    unit: string;
-}
-
-interface Measurement {
-    station: number;
-    sensor: number;
-    date: string;
-    time: string;
-    value: number;
-}
-
+    
 interface HighestRecord {
     station_name: string;
     brand_name: string;
@@ -115,24 +95,22 @@ interface HighestRecord {
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 
-const elementsPerPage = ref<number>(4)
-const currentPage = ref<number>(1)
+const elementsPerPage = ref(10)
+const currentPage = ref(1)
 const filterQuery = ref<string>("")
 const allData = ref<HighestRecord[]>([])
 const selectedBrand = ref<string>("")
 
-// Computed properties for filtering and pagination
+// Add a separate reactive reference for storing all available brands 
+const uniqueBrandsData = ref<string[]>([])
+
+// Update the uniqueBrands computed property to use the new data source
 const uniqueBrands = computed(() => {
-    const brands = [...new Set(allData.value.map(record => record.brand_name))]
-    if (!selectedBrand.value && brands.length > 0) {
-        selectedBrand.value = brands[0]
-    }
-    return brands
+    return uniqueBrandsData.value;
 })
 
 const filteredRows = computed(() => {
     return allData.value
-        .filter(row => row.brand_name === selectedBrand.value)
         .filter(row => 
             filterQuery.value ? 
                 row.station_name.toLowerCase().includes(filterQuery.value.toLowerCase()) ||
@@ -169,57 +147,56 @@ const formatTime = (time: string) => {
 
 const fetchHighestRecords = async () => {
     try {
-        const [stationsResponse, measurementsResponse, sensorsResponse] = await Promise.all([
-            axios.get<Station[]>('/stations/'),
-            axios.get<Measurement[]>('/measurements/'),
-            axios.get<Sensor[]>('/sensors/')
-        ]);
-
-        // Create maps for quick lookup
-        const stationsMap = new Map(stationsResponse.data.map((station: Station) => [station.id, station]));
-        const sensorsMap = new Map(sensorsResponse.data.map((sensor: Sensor) => [sensor.id, sensor]));
-
-        // Group measurements by brand and sensor type
-        const highestMeasurements = new Map<string, HighestRecord>();
-
-        measurementsResponse.data.forEach((measurement: Measurement) => {
-            const station = stationsMap.get(measurement.station);
-            const sensor = sensorsMap.get(measurement.sensor);
-            const key = `${station?.brand_name}-${sensor?.type}`;
-
-            if (!highestMeasurements.has(key) || 
-                measurement.value > highestMeasurements.get(key)!.value) {
-                highestMeasurements.set(key, {
-                    station_name: station?.name || 'Unknown Station',
-                    brand_name: station?.brand_name || 'Unknown Brand',
-                    date: measurement.date,
-                    time: measurement.time,
-                    value: measurement.value,
-                    sensor_type: sensor?.type || 'Unknown Sensor',
-                    sensor_unit: sensor?.unit || 'N/A'
-                });
+        // First fetch all available brands from the stations endpoint
+        const stationsResponse = await axios.get('/stations/');
+        
+        // Extract unique brands from stations data
+        const brands = [...new Set(stationsResponse.data.map((station) => station.brand_name))];
+        
+        // Update uniqueBrandsData with all available brands
+        uniqueBrandsData.value = brands;
+        
+        // Set initial selected brand if not already set
+        if (!selectedBrand.value && brands.length > 0) {
+            selectedBrand.value = brands[0];
+        }
+        
+        // Then fetch measurements for the selected brand (no page_size param)
+        const measurementsResponse = await axios.get('/measurements/highest_by_brand/', {
+            params: {
+                brand: selectedBrand.value
             }
         });
-
-        allData.value = Array.from(highestMeasurements.values())
-            .sort((a, b) => b.value - a.value);
-
+        
+        console.log(`Received ${measurementsResponse.data.length} records for ${selectedBrand.value}`);
+        
+        // Update the data
+        allData.value = measurementsResponse.data;
+        currentPage.value = 1; // Reset to first page when data changes
     } catch (error) {
         console.error('Error fetching data:', error);
         allData.value = [];
     }
 };
 
-watch([filterQuery, selectedBrand], () => {
+// Add a watch for selectedBrand to reload data when it changes
+watch(selectedBrand, () => {
+    fetchHighestRecords();
     currentPage.value = 1;
 });
 
 const next = () => {
-    if (currentPage.value < totalPages.value) currentPage.value++;
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+        console.log(`Page ${currentPage.value} of ${totalPages.value}`);
+    }
 };
 
 const prev = () => {
-    if (currentPage.value > 1) currentPage.value--;
+    if (currentPage.value > 1) {
+        currentPage.value--;
+        console.log(`Page ${currentPage.value} of ${totalPages.value}`);
+    }
 };
 
 onMounted(() => {

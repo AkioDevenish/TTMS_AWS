@@ -59,12 +59,10 @@ const { stations, fetchStations } = useAWSStations()
 const status = computed(() => {
     const total = stations.value.length
     const noData = stations.value.filter(s => {
-        // Check if station is inactive based on status and battery
-        const isOffline = s.status === 'Offline'
-        const hasBatteryIssue = !s.latestHealth?.battery_status || 
-                               s.latestHealth.battery_status === 'Unknown' ||
-                               s.latestHealth.battery_status === '0.0%'
-        return isOffline || hasBatteryIssue
+        // A station is inactive if it doesn't have Excellent connectivity
+        return s.status === 'Offline' || 
+            !s.latestHealth || 
+            s.latestHealth.connectivity_status !== 'Excellent'
     }).length
     
     const online = total - noData
@@ -77,17 +75,12 @@ const status = computed(() => {
     }
 })
 
-// Update the template class bindings
+// Update the getStationClass function to only check connectivity status
 const getStationClass = (station: any) => {
-    const isOffline = station.status === 'Offline'
-    const hasBatteryIssue = !station.latestHealth?.battery_status || 
-                           station.latestHealth.battery_status === 'Unknown' ||
-                           station.latestHealth.battery_status === '0.0%'
-
-    return {
-        'bg-light-primary font-primary': !isOffline && !hasBatteryIssue,
-        'bg-light-danger font-danger': isOffline || hasBatteryIssue
+    if (station.latestHealth?.connectivity_status === 'Excellent') {
+        return 'bg-light-primary font-primary'
     }
+    return 'bg-light-danger font-danger'
 }
 
 onMounted(() => {

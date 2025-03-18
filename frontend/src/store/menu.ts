@@ -38,12 +38,42 @@ export const useMenuStore = defineStore("menu", () => {
 
     const filterMenuByRole = () => {
         console.log('MenuStore - Is Admin:', isAdmin.value);
-        return menu.filter(item => {
-            // Hide admin-only items for non-admin users
+        
+        // First pass to filter menu items based on role
+        const filteredMenu = menu.filter(item => {
+            // Skip regular checks for headings initially
+            if (item.type === 'headtitle') return true;
+            
+            // Check admin property - this is what your menu.ts is using
+            if (item.admin === 1) {
+                return isAdmin.value;
+            }
+            
+            // Also check requireRole for completeness
             if (item.requireRole === 'admin') {
                 return isAdmin.value;
             }
+            
             return true;
+        });
+        
+        // Second pass to filter out orphaned headings
+        // Only keep headings that have at least one visible child after them
+        return filteredMenu.filter((item, index, array) => {
+            if (item.type !== 'headtitle') return true;
+            
+            // Find the next heading or end of array
+            let nextHeadingIndex = array.findIndex((nextItem, nextIndex) => 
+                nextIndex > index && nextItem.type === 'headtitle'
+            );
+            
+            if (nextHeadingIndex === -1) nextHeadingIndex = array.length;
+            
+            // Check if there are any non-heading items between this heading and next heading
+            const hasVisibleChildren = array.slice(index + 1, nextHeadingIndex)
+                .some(child => child.type !== 'headtitle');
+            
+            return hasVisibleChildren;
         });
     };
 

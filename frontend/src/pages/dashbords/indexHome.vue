@@ -8,7 +8,7 @@
                 <ActiveMembers />
                 <AWSstatus/>
                 <InactiveSensors/>
-                <Totalsells/>
+                <StationsOverview/>
            
             </template>
 
@@ -16,7 +16,7 @@
             <template v-else>
                 <AWSstatus/>
                 <HighestRecord/>
-                <Totalsells/>
+                <StationsOverview/>
           
             
             </template>
@@ -36,7 +36,7 @@ const ScheduledUpdates = defineAsyncComponent(() => import("@/components/theme/d
 const ActiveMembers = defineAsyncComponent(() => import("@/components/theme/dashboards/home/ActiveMembers.vue"))
 const AWSstatus = defineAsyncComponent(() => import('@/components/theme/dashboards/home/AWSstatus.vue'))
 const HighestRecord = defineAsyncComponent(() => import("@/components/theme/dashboards/home/HighestRecord.vue"))   
-const Totalsells = defineAsyncComponent(() => import("@/components/theme/dashboards/home/TotalSells.vue"))
+const StationsOverview = defineAsyncComponent(() => import("@/components/theme/dashboards/home/StationsOverview.vue"))
 const InactiveSensors = defineAsyncComponent(() => import("@/components/theme/dashboards/home/InactiveSensors.vue"))
 onMounted(async () => {
     await checkAuth()
