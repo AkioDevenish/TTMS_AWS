@@ -94,7 +94,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://167.88.45.83",
-    "https://metoffice.gov.tt"
+    "https://metoffice.gov.tt", 
+	"https://ttmsaws.com"
 ]
 
 
