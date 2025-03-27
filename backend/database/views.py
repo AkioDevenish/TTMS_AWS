@@ -708,25 +708,37 @@ class HistoricalDataViewSet(viewsets.ViewSet):
         try:
             # Get query parameters for filtering
             sensor_types = request.query_params.get('sensor_type', '').split(',')
-            start_date = request.query_params.get('start_date')
-            end_date = request.query_params.get('end_date')
-            limit = request.query_params.get('limit')
             
-            # Start with base queryset
-            measurements = Measurement.objects.filter(station_id=station_id)
+            # Calculate default time range (last 12 hours)
+            now = timezone.now()
+            default_start = now - timedelta(hours=12)
             
-            # Apply filters
+            # Get start_date and end_date from params or use defaults
+            start_date = request.query_params.get('start_date', default_start.date().isoformat())
+            end_date = request.query_params.get('end_date', now.date().isoformat())
+            
+            # If using default start_date, also consider the time
+            if start_date == default_start.date().isoformat():
+                measurements = Measurement.objects.filter(
+                    station_id=station_id,
+                    date__gte=default_start.date(),
+                    time__gte=default_start.time()
+                )
+            else:
+                measurements = Measurement.objects.filter(station_id=station_id)
+                measurements = measurements.filter(date__gte=start_date)
+                if end_date:
+                    measurements = measurements.filter(date__lte=end_date)
+            
+            # Apply sensor type filter
             if sensor_types and sensor_types[0]:  # Check if there are sensor types
                 measurements = measurements.filter(sensor__type__in=sensor_types)
-            if start_date:
-                measurements = measurements.filter(date__gte=start_date)
-            if end_date:
-                measurements = measurements.filter(date__lte=end_date)
             
             # Order by sensor type, date and time (newest first)
             measurements = measurements.order_by('sensor__type', '-date', '-time')
             
             # Apply limit if provided
+            limit = request.query_params.get('limit')
             if limit and limit.isdigit():
                 measurements = measurements[:int(limit)]
             
