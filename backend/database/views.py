@@ -693,6 +693,73 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+# 
+
+class HistoricalDataViewSet(viewsets.ViewSet):
+    """ViewSet for retrieving historical measurement data."""
+    
+    @action(detail=False, methods=['get'])
+    def get_readings(self, request):
+        """Get historical measurements for a specific station."""
+        station_id = request.query_params.get('station_id')
+        if not station_id:
+            return Response({"error": "station_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Get query parameters for filtering
+            sensor_types = request.query_params.get('sensor_type', '').split(',')
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+            limit = request.query_params.get('limit')
+            
+            # Start with base queryset
+            measurements = Measurement.objects.filter(station_id=station_id)
+            
+            # Apply filters
+            if sensor_types and sensor_types[0]:  # Check if there are sensor types
+                measurements = measurements.filter(sensor__type__in=sensor_types)
+            if start_date:
+                measurements = measurements.filter(date__gte=start_date)
+            if end_date:
+                measurements = measurements.filter(date__lte=end_date)
+            
+            # Order by sensor type, date and time (newest first)
+            measurements = measurements.order_by('sensor__type', '-date', '-time')
+            
+            # Apply limit if provided
+            if limit and limit.isdigit():
+                measurements = measurements[:int(limit)]
+            
+            # Use MeasurementSerializer with specific fields
+            serializer = MeasurementSerializer(
+                measurements, 
+                many=True,
+                fields=['station_name', 'sensor_type', 'date', 'time', 'value']
+            )
+            
+            # Group data by sensor type
+            grouped_data = {}
+            for measurement in serializer.data:
+                sensor_type = measurement['sensor_type']
+                if sensor_type not in grouped_data:
+                    grouped_data[sensor_type] = []
+                grouped_data[sensor_type].append({
+                    'station_name': measurement['station_name'],
+                    'date': measurement['date'],
+                    'time': measurement['time'],
+                    'value': measurement['value']
+                })
+            
+            return Response({
+                'measurements': grouped_data
+            })
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class StationHealthLogPagination(PageNumberPagination):
     page_size = 50

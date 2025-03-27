@@ -8,7 +8,7 @@ from .views import (
     UserViewSet, NotificationViewSet, verify_token, get_current_user,
     CustomTokenObtainPairView, MessageListCreate, MessageDetail, ConversationList,
     MarkMessageRead, UserList, LoginView, ChatListCreate, ChatDetail, ChatMessages,
-    ChatViewSet, MessageViewSet, BillViewSet
+    ChatViewSet, MessageViewSet, BillViewSet, HistoricalDataViewSet
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -27,7 +27,7 @@ router.register(r'notifications', NotificationViewSet)
 router.register(r'chats', ChatViewSet)
 router.register(r'messages', MessageViewSet)
 router.register(r'bills', BillViewSet)
-
+router.register(r'historical-data', HistoricalDataViewSet, basename='historical-data')
 
 urlpatterns = [
     path('api/', include(router.urls)),
