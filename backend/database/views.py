@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from .models import (
     Brand, Station, Sensor, Measurement,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification, Message, Chat, UserPresence, Bill, TaskExecution
+    SystemLog, User, Notification, Message, Chat, UserPresence, Bill, TaskExecution, ApiKeyUsageLog
 )
 from .serializers import (
     BrandSerializer, StationSerializer, SensorSerializer,
@@ -13,7 +13,7 @@ from .serializers import (
     StationSensorSerializer, ApiAccessKeySerializer, SystemLogSerializer,
     UserSerializer, NotificationSerializer, MessageSerializer,
     UserCreateSerializer, LoginSerializer, ChatSerializer, UserPresenceSerializer,
-    BillSerializer
+    BillSerializer, ApiKeyUsageLogSerializer
 )
 from django.utils import timezone
 from rest_framework import serializers
@@ -1761,3 +1761,32 @@ def inactive_sensors(request):
     except Exception as e:
         logger.error(f"Error in inactive_sensors view: {str(e)}")
         return Response({'detail': str(e)}, status=500)
+
+class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
+    queryset = ApiKeyUsageLog.objects.all()
+    serializer_class = ApiKeyUsageLogSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        queryset = ApiKeyUsageLog.objects.all()
+        
+        # Filter by API key if provided
+        api_key = self.request.query_params.get('api_key')
+        if api_key:
+            queryset = queryset.filter(api_key_id=api_key)
+            
+        # Filter by user if provided
+        user = self.request.query_params.get('user')
+        if user:
+            queryset = queryset.filter(user_id=user)
+            
+        # Filter by date range
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(created_at__lte=end_date)
+            
+        return queryset.select_related('api_key', 'user')

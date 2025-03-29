@@ -3,7 +3,7 @@ from .models import (
     Brand, Sensor, Measurement, Station,
     StationHealthLog, StationSensor, ApiAccessKey,
     SystemLog, User, Notification, ApiAccessKeyStation,
-    Message, Chat, UserPresence, Bill
+    Message, Chat, UserPresence, Bill, ApiKeyUsageLog
 )
 import urllib3
 import json
@@ -346,3 +346,17 @@ class BillCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ('total', 'package', 'receipt_upload')
+
+
+class ApiKeyUsageLogSerializer(serializers.ModelSerializer):
+    api_key_name = serializers.CharField(source='api_key.token_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = ApiKeyUsageLog
+        fields = [
+            'id', 'api_key', 'api_key_name', 'user', 'user_email',
+            'request_path', 'query_params', 'response_format',
+            'status_code', 'created_at'
+        ]
+        read_only_fields = ['created_at']

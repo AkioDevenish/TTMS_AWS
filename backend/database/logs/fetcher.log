@@ -946,3 +946,18 @@ Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-03-27 23:37:55,229 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-27 07:37:55.229312-04:00 to 2025-03-27 19:37:55.229312-04:00
 2025-03-27 23:37:55,229 - database.management.commands.data_fetcher - INFO - Starting data fetchers
 2025-03-27 23:38:24,484 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-27 23:55:07,291 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-27 23:55:07,291 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-27 07:55:07.291855-04:00 to 2025-03-27 19:55:07.291855-04:00
+2025-03-27 23:55:07,291 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-27 23:55:35,345 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-28 02:13:10,675 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-28 02:13:10,675 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-27 10:13:10.675746-04:00 to 2025-03-27 22:13:10.675746-04:00
+2025-03-28 02:13:10,675 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-29 00:46:54,185 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-29 00:46:54,186 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-28 08:46:54.186002-04:00 to 2025-03-28 20:46:54.186002-04:00
+2025-03-29 00:46:54,186 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-29 00:47:22,276 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-29 01:06:16,555 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-29 01:06:16,556 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-28 09:06:16.556338-04:00 to 2025-03-28 21:06:16.556338-04:00
+2025-03-29 01:06:16,556 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-29 01:06:44,331 - database.management.commands.data_fetcher - INFO - All fetchers completed

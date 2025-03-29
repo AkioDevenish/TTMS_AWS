@@ -339,3 +339,31 @@ class TaskExecution(models.Model):
 
     class Meta:
         get_latest_by = 'last_run'
+
+class ApiKeyUsageLog(models.Model):
+    api_key = models.ForeignKey('ApiAccessKey', on_delete=models.CASCADE, related_name='usage_logs')
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='api_usage_logs')
+    request_path = models.CharField(max_length=255)
+    query_params = models.JSONField(null=True, blank=True)
+    response_format = models.CharField(
+        max_length=10,
+        choices=[
+            ('json', 'JSON'),
+            ('csv', 'CSV'),
+            ('xml', 'XML')
+        ],
+        default='json'
+    )
+    status_code = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'api_key_usage_logs'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['api_key', '-created_at']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.api_key} - {self.request_path} - {self.created_at}"
