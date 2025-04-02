@@ -750,12 +750,10 @@ class HistoricalDataViewSet(viewsets.ViewSet):
             )
             
             # Group data by sensor type
-            grouped_data = {}
+            grouped_data = []
             for measurement in serializer.data:
-                sensor_type = measurement['sensor_type']
-                if sensor_type not in grouped_data:
-                    grouped_data[sensor_type] = []
-                grouped_data[sensor_type].append({
+                grouped_data.append({
+                    'sensor_type': measurement['sensor_type'],
                     'station_name': measurement['station_name'],
                     'date': measurement['date'],
                     'time': measurement['time'],
@@ -763,7 +761,7 @@ class HistoricalDataViewSet(viewsets.ViewSet):
                 })
             
             return Response({
-                'measurements': grouped_data
+                'data': grouped_data
             })
             
         except Exception as e:
