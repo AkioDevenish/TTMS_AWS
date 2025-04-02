@@ -753,8 +753,9 @@ class HistoricalDataViewSet(viewsets.ViewSet):
             grouped_data = []
             for measurement in serializer.data:
                 grouped_data.append({
-                    'sensor_type': measurement['sensor_type'],
+                 
                     'station_name': measurement['station_name'],
+                    'sensor_type': measurement['sensor_type'],
                     'date': measurement['date'],
                     'time': measurement['time'],
                     'value': measurement['value']
