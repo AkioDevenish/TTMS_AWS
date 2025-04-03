@@ -355,6 +355,7 @@ class ApiKeyUsageLog(models.Model):
         default='json'
     )
     status_code = models.IntegerField()
+    user_agent = models.CharField(max_length=512, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

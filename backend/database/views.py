@@ -38,6 +38,9 @@ from django.core.management.base import BaseCommand
 from django.db.models import Window, F
 from django.db.models.functions import RowNumber
 from django.db.models import Max
+import uuid
+from django.core.mail import send_mail
+from django.conf import settings
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -914,9 +917,81 @@ class UserViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            self.perform_create(serializer)
+            user = serializer.save()
+            
+            # Generate API key for newly created active users
+            if user.status == 'Active':
+                try:
+                    api_key = self.generate_api_key(user)
+                    logger.info(f"API key {api_key.uuid} created for new user {user.email}")
+                except Exception as e:
+                    logger.error(f"Failed to create API key for new user {user.email}: {str(e)}")
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        original_status = instance.status
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_user = serializer.save()
+        
+        # Check if status changed from non-Active to Active
+        if original_status != 'Active' and updated_user.status == 'Active':
+            try:
+                api_key = self.generate_api_key(updated_user)
+                logger.info(f"API key {api_key.uuid} created for activated user {updated_user.email}")
+                
+                # Create a system log entry
+                SystemLog.objects.create(
+                    module="User Management",
+                    activity=f"API key automatically generated for user {updated_user.email}",
+                    type="API Key Generation",
+                    user_id=updated_user.id
+                )
+            except Exception as e:
+                logger.error(f"Failed to create API key for activated user {updated_user.email}: {str(e)}")
+        
+        return Response(serializer.data)
+
+    def generate_api_key(self, user):
+        """Generate a new API key for a user"""
+        try:
+            # Generate a new UUID for the API key
+            api_key_uuid = uuid.uuid4()
+            
+            # Set expiration date (1 year from now by default)
+            expires_at = timezone.now() + timedelta(days=365)
+            
+            # Create the API key record
+            api_key = ApiAccessKey.objects.create(
+                uuid=api_key_uuid,
+                token_name=f"Default Key for {user.email}",
+                user=user,
+                expires_at=expires_at,
+                note="Automatically generated on account activation"
+            )
+            
+            # Create system log entry
+            SystemLog.objects.create(
+                module="User Management",
+                activity=f"API key automatically generated for user {user.email}",
+                type="API Key Generation",
+                user_id=user.id
+            )
+            
+            # Send email notification to the user
+            email_sent = self._send_api_key_email(user, api_key)
+            if not email_sent:
+                logger.warning(f"API key created for {user.email} but email notification failed")
+            
+            return api_key
+        
+        except Exception as e:
+            logger.error(f"Error generating API key for user {user.email}: {str(e)}")
+            raise
 
     @action(detail=True, methods=['get', 'post'])
     def presence(self, request, pk=None):
@@ -991,6 +1066,64 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def _send_api_key_email(self, user, api_key):
+        """Send email notification about the generated API key to the user"""
+        try:
+            logger.info(f"Sending API key email to {user.email}")
+            
+            subject = f"Your API Key for {settings.SITE_NAME}"
+            
+            # Create a message with API key details
+            message = f"""
+Hello {user.first_name},
+
+Your account has been activated, and an API key has been generated for you.
+
+API Key Details:
+----------------
+Key ID: {api_key.uuid}
+Name: {api_key.token_name}
+Expires: {api_key.expires_at.strftime('%Y-%m-%d %H:%M:%S')}
+
+Keep this key secure and do not share it with others. This key allows access to our API services.
+
+To use your API key, include it in the Authorization header of your requests:
+Authorization: Bearer {api_key.uuid}
+
+If you have any questions, please contact our support team.
+
+Best regards,
+The {settings.SITE_NAME} Team
+"""
+            
+            # Send the email
+            sent = send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            
+            if sent:
+                logger.info(f"API key email successfully sent to {user.email}")
+                
+                # Create a system log entry for the email sent
+                SystemLog.objects.create(
+                    module="User Management",
+                    activity=f"API key email sent to user {user.email}",
+                    type="Email Notification",
+                    user_id=user.id
+                )
+                return True
+            else:
+                logger.error(f"Failed to send API key email to {user.email}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"Error sending API key email to {user.email}: {str(e)}")
+            return False
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -1789,3 +1922,58 @@ class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(created_at__lte=end_date)
             
         return queryset.select_related('api_key', 'user')
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def test_email(request):
+    """Test email sending functionality"""
+    try:
+        recipient = request.data.get('email')
+        if not recipient:
+            return Response(
+                {"error": "Email address is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        subject = "Test Email from Your Application"
+        message = "This is a test email to verify that the email sending functionality is working correctly."
+        
+        sent = send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+        
+        if sent:
+            return Response(
+                {"message": f"Test email successfully sent to {recipient}"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": "Failed to send test email"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+    except Exception as e:
+        return Response(
+            {"error": f"Error sending test email: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_api_keys(request):
+    """Retrieve API keys for the current authenticated user"""
+    try:
+        api_keys = ApiAccessKey.objects.filter(user=request.user)
+        serializer = ApiAccessKeySerializer(api_keys, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error retrieving API keys: {str(e)}")
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )

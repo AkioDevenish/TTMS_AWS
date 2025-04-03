@@ -9,7 +9,7 @@ from .views import (
     CustomTokenObtainPairView, MessageListCreate, MessageDetail, ConversationList,
     MarkMessageRead, UserList, LoginView, ChatListCreate, ChatDetail, ChatMessages,
     ChatViewSet, MessageViewSet, BillViewSet, HistoricalDataViewSet,
-    ApiKeyUsageLogViewSet
+    ApiKeyUsageLogViewSet, get_user_api_keys
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -45,4 +45,5 @@ urlpatterns = [
     path('api/chats/', ChatListCreate.as_view(), name='chat-list-create'),
     path('api/chats/<int:pk>/', ChatDetail.as_view(), name='chat-detail'),
     path('api/chats/<int:pk>/messages/', ChatMessages.as_view(), name='chat-messages'),
+    path('user/api-keys/', get_user_api_keys, name='user-api-keys'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 

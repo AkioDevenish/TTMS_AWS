@@ -90,32 +90,27 @@ class DateTimeToDateField(serializers.DateField):
         return value
 
 
+class ApiAccessKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApiAccessKey
+        fields = [
+            'id', 'uuid', 'token_name', 'expires_at', 
+            'note', 'last_used', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
 class UserSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
+    api_keys = ApiAccessKeySerializer(many=True, read_only=True)
     
     class Meta:
         model = User
-        fields = (
-            'id', 'first_name', 'last_name', 'name', 'email', 'password',
-            'organization', 'role', 'package', 'status', 'expires_at',
-            'subscription_price'
-        )
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-    def get_name(self, obj):
-        if obj.first_name or obj.last_name:
-            return f"{obj.first_name} {obj.last_name}".strip()
-        return obj.email.split('@')[0]
-
-    def create(self, validated_data):
-        subscription_price = validated_data.get('subscription_price', 0)
-        user = User.objects.create_user(
-            **validated_data,
-            subscription_price=subscription_price
-        )
-        return user
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'username', 
+            'role', 'organization', 'package', 'subscription_price', 
+            'status', 'expires_at', 'created_at', 'updated_at', 'api_keys'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'api_keys']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -214,14 +209,6 @@ class LoginSerializer(serializers.Serializer):
                 return data
             raise serializers.ValidationError('Invalid credentials.')
         raise serializers.ValidationError('Must include "email" and "password".')
-
-
-class ApiAccessKeySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ApiAccessKey
-        fields = ['id', 'uuid', 'token_name', 'created_at', 'last_used', 
-                 'expires_at', 'note', 'stations']
-        read_only_fields = ['id', 'uuid', 'created_at', 'last_used']
 
 
 class ApiAccessKeyStationSerializer(serializers.ModelSerializer):
@@ -357,6 +344,6 @@ class ApiKeyUsageLogSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'api_key', 'api_key_name', 'user', 'user_email',
             'request_path', 'query_params', 'response_format',
-            'status_code', 'created_at'
+            'status_code', 'user_agent', 'created_at'
         ]
         read_only_fields = ['created_at']
