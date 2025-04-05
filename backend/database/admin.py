@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     Brand, Station, Sensor, Measurement,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification, Chat, Message, UserPresence, Bill
+    SystemLog, User, Notification, Chat, Message, UserPresence, Bill, ApiKeyUsageLog
 )
 
 # Register your models
@@ -43,3 +43,5 @@ class BillAdmin(admin.ModelAdmin):
     list_filter = ('package', 'receipt_verified', 'created_at')
     search_fields = ('bill_num', 'user__email', 'package')
     date_hierarchy = 'created_at'
+
+admin.site.register(ApiKeyUsageLog)

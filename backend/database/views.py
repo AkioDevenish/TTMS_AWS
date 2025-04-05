@@ -41,6 +41,9 @@ from django.db.models import Max
 import uuid
 from django.core.mail import send_mail
 from django.conf import settings
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .auth import ApiKeyAuthentication
+from rest_framework.authentication import SessionAuthentication
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -700,6 +703,8 @@ class MeasurementViewSet(viewsets.ModelViewSet):
 
 class HistoricalDataViewSet(viewsets.ViewSet):
     """ViewSet for retrieving historical measurement data."""
+    authentication_classes = [ApiKeyAuthentication, JWTAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
     
     @action(detail=False, methods=['get'])
     def get_readings(self, request):
@@ -763,6 +768,30 @@ class HistoricalDataViewSet(viewsets.ViewSet):
                     'time': measurement['time'],
                     'value': measurement['value']
                 })
+            
+            # Insert into api_key_usage logs and update Api_Access_Keys
+            if request.auth and isinstance(request.auth, ApiAccessKey):
+                try:
+                    api_key = request.auth
+                    user = api_key.user
+                    
+                    # Update last_used timestamp
+                    api_key.last_used = timezone.now()
+                    api_key.save(update_fields=['last_used'])
+                    
+                    # Create usage log entry
+                    ApiKeyUsageLog.objects.create(
+                        api_key=api_key,
+                        user=user,
+                        request_path=request.path,
+                        query_params=dict(request.query_params),
+                        response_format='json',
+                        status_code=200,
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')
+                    )
+                except Exception as e:
+                    print(f"Error logging API key usage: {str(e)}")
+                    # Don't fail the request if logging fails
             
             return Response({
                 'data': grouped_data
