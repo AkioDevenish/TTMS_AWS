@@ -969,3 +969,7 @@ Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-04-03 02:37:28,757 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-02 10:37:28.757960-04:00 to 2025-04-02 22:37:28.757960-04:00
 2025-04-03 02:37:28,758 - database.management.commands.data_fetcher - INFO - Starting data fetchers
 2025-04-03 02:38:06,140 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-07 23:48:56,003 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-07 23:48:56,004 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-07 07:48:56.004004-04:00 to 2025-04-07 19:48:56.004004-04:00
+2025-04-07 23:48:56,004 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-07 23:49:26,341 - database.management.commands.data_fetcher - INFO - All fetchers completed

@@ -44,6 +44,9 @@ from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .auth import ApiKeyAuthentication
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.renderers import JSONRenderer
+from rest_framework_xml.renderers import XMLRenderer
+from .renderers import MeasurementCSVRenderer, StationCSVRenderer
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -68,6 +71,7 @@ class BrandViewSet(viewsets.ModelViewSet):
 class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
+    renderer_classes = [JSONRenderer, XMLRenderer, StationCSVRenderer]
 
     def list(self, request, *args, **kwargs):
         """Override list to include additional filtering options."""
@@ -149,6 +153,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
     pagination_class = MeasurementPagination
+    renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
 
     @action(detail=False, methods=['get'])
     def by_station(self, request):
@@ -705,9 +710,10 @@ class HistoricalDataViewSet(viewsets.ViewSet):
     """ViewSet for retrieving historical measurement data."""
     authentication_classes = [ApiKeyAuthentication, JWTAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
+    renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
     
-    @action(detail=False, methods=['get'])
-    def get_readings(self, request):
+    @action(detail=False, methods=['get'], url_path='get_readings')
+    def get_readings(self, request, format=None):
         """Get historical measurements for a specific station."""
         station_id = request.query_params.get('station_id')
         if not station_id:
@@ -785,7 +791,7 @@ class HistoricalDataViewSet(viewsets.ViewSet):
                         user=user,
                         request_path=request.path,
                         query_params=dict(request.query_params),
-                        response_format='json',
+                        response_format=request.accepted_renderer.format,
                         status_code=200,
                         user_agent=request.META.get('HTTP_USER_AGENT', '')
                     )
@@ -793,9 +799,15 @@ class HistoricalDataViewSet(viewsets.ViewSet):
                     print(f"Error logging API key usage: {str(e)}")
                     # Don't fail the request if logging fails
             
-            return Response({
-                'data': grouped_data
-            })
+            # Check if CSV format is requested
+            if request.accepted_renderer.format == 'csv':
+                # For CSV, return flat list directly
+                return Response(grouped_data)
+            else:
+                # For JSON/XML, keep your nested structure
+                return Response({
+                    'data': grouped_data
+                })
             
         except Exception as e:
             return Response(
