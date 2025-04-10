@@ -1003,8 +1003,8 @@ class UserViewSet(viewsets.ModelViewSet):
             # Generate a new UUID for the API key
             api_key_uuid = uuid.uuid4()
             
-            # Set expiration date (1 year from now by default)
-            expires_at = timezone.now() + timedelta(days=365)
+            # Use the user's expiration date for the API key
+            expires_at = user.expires_at
             
             # Create the API key record
             api_key = ApiAccessKey.objects.create(
