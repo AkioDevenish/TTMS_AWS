@@ -2,7 +2,7 @@ from celery import shared_task
 from django.core.management import call_command
 from celery.utils.log import get_task_logger
 from celery import Task
-from .models import Station, StationHealthLog, Measurement, TaskExecution
+from .models import Station, StationHealthLog, Measurement, TaskExecution, ApiAccessKey, SystemLog
 from django.utils import timezone
 from datetime import datetime
 from datetime import timedelta
@@ -194,18 +194,80 @@ def deactivate_expired_accounts(self):
                     logger.info(f"Checking user: {user.email}")
                     logger.info(f"Expiration time: {user.expires_at}")
                     logger.info(f"Current time: {now}")
+                    
+                    # Create system log entries for API key deactivation
+                    api_keys = ApiAccessKey.objects.filter(user=user)
+                    for key in api_keys:
+                        SystemLog.objects.create(
+                            module="API Key Management",
+                            activity=f"API key {key.uuid} deactivated due to account expiration",
+                            type="API Key Deactivation",
+                            user_id=user.id
+                        )
+                    
+                    # Delete all API keys for the expired user
+                    api_keys.delete()
                 
                 # Bulk update
                 expired_users.update(
                     status='Inactive',
                     updated_at=now
                 )
-                logger.info(f"Deactivated {count} expired user accounts")
+                logger.info(f"Deactivated {count} expired user accounts and their API keys")
             else:
                 logger.info(f"No expired accounts found at {now}")
             return count
             
     except Exception as e:
         logger.error(f"Error in deactivate_expired_accounts: {str(e)}")
+        logger.exception(e)
+        raise
+
+@shared_task(
+    base=SingletonTask,
+    bind=True,
+    max_retries=0,
+    time_limit=300,
+    soft_time_limit=270
+)
+def deactivate_expired_api_keys(self):
+    try:
+        now = timezone.now()
+        logger.info(f"Starting API key expiration check at {now}")
+        
+        # Using transaction.atomic() for database consistency
+        with transaction.atomic():
+            # Find expired API keys
+            expired_keys = ApiAccessKey.objects.select_for_update().filter(
+                expires_at__isnull=False,
+                expires_at__lt=now
+            )
+            
+            count = expired_keys.count()
+            if count > 0:
+                # Debug log each key's expiration status
+                for key in expired_keys:
+                    logger.info(f"Checking API key: {key.uuid}")
+                    logger.info(f"Expiration time: {key.expires_at}")
+                    logger.info(f"Current time: {now}")
+                
+                # Create system log entries for each expired key
+                for key in expired_keys:
+                    SystemLog.objects.create(
+                        module="API Key Management",
+                        activity=f"API key {key.uuid} has expired",
+                        type="API Key Expiration",
+                        user_id=key.user.id
+                    )
+                
+                # Delete expired keys
+                expired_keys.delete()
+                logger.info(f"Deleted {count} expired API keys")
+            else:
+                logger.info(f"No expired API keys found at {now}")
+            return count
+            
+    except Exception as e:
+        logger.error(f"Error in deactivate_expired_api_keys: {str(e)}")
         logger.exception(e)
         raise

@@ -141,7 +141,13 @@ CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'database.auth.ApiKeyAuthentication',
     ),
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_xml.renderers.XMLRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+    ],
 }
 
 ROOT_URLCONF = 'backend.urls'
@@ -246,3 +252,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 60 * 1024 * 1024  # 60MB
+
+# Email settings
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')  # Change to your SMTP server
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'akiodevenish1@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'cyey vjbj ulas wyls')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'akiodevenish1@gmail.com')
+SITE_NAME = os.getenv('TTMSAWS', 'TTMSAWS')

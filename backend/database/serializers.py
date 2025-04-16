@@ -3,7 +3,7 @@ from .models import (
     Brand, Sensor, Measurement, Station,
     StationHealthLog, StationSensor, ApiAccessKey,
     SystemLog, User, Notification, ApiAccessKeyStation,
-    Message, Chat, UserPresence, Bill
+    Message, Chat, UserPresence, Bill, ApiKeyUsageLog
 )
 import urllib3
 import json
@@ -38,6 +38,20 @@ class StationSerializer(serializers.ModelSerializer):
 class MeasurementSerializer(serializers.ModelSerializer):
     station_name = serializers.CharField(source='station.name', read_only=True)
     sensor_type = serializers.CharField(source='sensor.type', read_only=True)
+
+    def __init__(self, *args, **kwargs):
+        # Don't pass the 'fields' arg up to the superclass
+        fields = kwargs.pop('fields', None)
+        
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        if fields is not None:
+            # Drop any fields that are not specified in the `fields` argument
+            allowed = set(fields)
+            existing = set(self.fields)
+            for field_name in existing - allowed:
+                self.fields.pop(field_name)
 
     class Meta:
         model = Measurement
@@ -76,32 +90,27 @@ class DateTimeToDateField(serializers.DateField):
         return value
 
 
+class ApiAccessKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApiAccessKey
+        fields = [
+            'id', 'uuid', 'token_name', 'expires_at', 
+            'note', 'last_used', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
 class UserSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
+    api_keys = ApiAccessKeySerializer(many=True, read_only=True)
     
     class Meta:
         model = User
-        fields = (
-            'id', 'first_name', 'last_name', 'name', 'email', 'password',
-            'organization', 'role', 'package', 'status', 'expires_at',
-            'subscription_price'
-        )
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
-
-    def get_name(self, obj):
-        if obj.first_name or obj.last_name:
-            return f"{obj.first_name} {obj.last_name}".strip()
-        return obj.email.split('@')[0]
-
-    def create(self, validated_data):
-        subscription_price = validated_data.get('subscription_price', 0)
-        user = User.objects.create_user(
-            **validated_data,
-            subscription_price=subscription_price
-        )
-        return user
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'username', 
+            'role', 'organization', 'package', 'subscription_price', 
+            'status', 'expires_at', 'created_at', 'updated_at', 'api_keys'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'api_keys']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -200,14 +209,6 @@ class LoginSerializer(serializers.Serializer):
                 return data
             raise serializers.ValidationError('Invalid credentials.')
         raise serializers.ValidationError('Must include "email" and "password".')
-
-
-class ApiAccessKeySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ApiAccessKey
-        fields = ['id', 'uuid', 'token_name', 'created_at', 'last_used', 
-                 'expires_at', 'note', 'stations']
-        read_only_fields = ['id', 'uuid', 'created_at', 'last_used']
 
 
 class ApiAccessKeyStationSerializer(serializers.ModelSerializer):
@@ -332,3 +333,17 @@ class BillCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bill
         fields = ('total', 'package', 'receipt_upload')
+
+
+class ApiKeyUsageLogSerializer(serializers.ModelSerializer):
+    api_key_name = serializers.CharField(source='api_key.token_name', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = ApiKeyUsageLog
+        fields = [
+            'id', 'api_key', 'api_key_name', 'user', 'user_email',
+            'request_path', 'query_params', 'response_format',
+            'status_code', 'user_agent', 'created_at'
+        ]
+        read_only_fields = ['created_at']

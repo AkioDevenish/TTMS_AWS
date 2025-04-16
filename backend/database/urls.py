@@ -8,7 +8,8 @@ from .views import (
     UserViewSet, NotificationViewSet, verify_token, get_current_user,
     CustomTokenObtainPairView, MessageListCreate, MessageDetail, ConversationList,
     MarkMessageRead, UserList, LoginView, ChatListCreate, ChatDetail, ChatMessages,
-    ChatViewSet, MessageViewSet, BillViewSet
+    ChatViewSet, MessageViewSet, BillViewSet, HistoricalDataViewSet,
+    ApiKeyUsageLogViewSet, get_user_api_keys
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -27,7 +28,8 @@ router.register(r'notifications', NotificationViewSet)
 router.register(r'chats', ChatViewSet)
 router.register(r'messages', MessageViewSet)
 router.register(r'bills', BillViewSet)
-
+router.register(r'historical-data', HistoricalDataViewSet, basename='historical-data')
+router.register(r'api-key-usage-logs', ApiKeyUsageLogViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
@@ -43,4 +45,5 @@ urlpatterns = [
     path('api/chats/', ChatListCreate.as_view(), name='chat-list-create'),
     path('api/chats/<int:pk>/', ChatDetail.as_view(), name='chat-detail'),
     path('api/chats/<int:pk>/messages/', ChatMessages.as_view(), name='chat-messages'),
+    path('user/api-keys/', get_user_api_keys, name='user-api-keys'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 

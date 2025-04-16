@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from .models import (
     Brand, Station, Sensor, Measurement,
     StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification, Message, Chat, UserPresence, Bill, TaskExecution
+    SystemLog, User, Notification, Message, Chat, UserPresence, Bill, TaskExecution, ApiKeyUsageLog
 )
 from .serializers import (
     BrandSerializer, StationSerializer, SensorSerializer,
@@ -13,7 +13,7 @@ from .serializers import (
     StationSensorSerializer, ApiAccessKeySerializer, SystemLogSerializer,
     UserSerializer, NotificationSerializer, MessageSerializer,
     UserCreateSerializer, LoginSerializer, ChatSerializer, UserPresenceSerializer,
-    BillSerializer
+    BillSerializer, ApiKeyUsageLogSerializer
 )
 from django.utils import timezone
 from rest_framework import serializers
@@ -38,6 +38,15 @@ from django.core.management.base import BaseCommand
 from django.db.models import Window, F
 from django.db.models.functions import RowNumber
 from django.db.models import Max
+import uuid
+from django.core.mail import send_mail
+from django.conf import settings
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .auth import ApiKeyAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.renderers import JSONRenderer
+from rest_framework_xml.renderers import XMLRenderer
+from .renderers import MeasurementCSVRenderer, StationCSVRenderer
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -62,6 +71,7 @@ class BrandViewSet(viewsets.ModelViewSet):
 class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
+    renderer_classes = [JSONRenderer, XMLRenderer, StationCSVRenderer]
 
     def list(self, request, *args, **kwargs):
         """Override list to include additional filtering options."""
@@ -143,6 +153,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     queryset = Measurement.objects.all()
     serializer_class = MeasurementSerializer
     pagination_class = MeasurementPagination
+    renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
 
     @action(detail=False, methods=['get'])
     def by_station(self, request):
@@ -693,6 +704,117 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+# 
+
+class HistoricalDataViewSet(viewsets.ViewSet):
+    """ViewSet for retrieving historical measurement data."""
+    authentication_classes = [ApiKeyAuthentication, JWTAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
+    
+    @action(detail=False, methods=['get'], url_path='get_readings')
+    def get_readings(self, request, format=None):
+        """Get historical measurements for a specific station."""
+        station_id = request.query_params.get('station_id')
+        if not station_id:
+            return Response({"error": "station_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Get query parameters for filtering
+            sensor_types = request.query_params.get('sensor_type', '').split(',')
+            
+            # Calculate default time range (last 12 hours)
+            now = timezone.now()
+            default_start = now - timedelta(hours=12)
+            
+            # Get start_date and end_date from params or use defaults
+            start_date = request.query_params.get('start_date', default_start.date().isoformat())
+            end_date = request.query_params.get('end_date', now.date().isoformat())
+            
+            # If using default start_date, also consider the time
+            if start_date == default_start.date().isoformat():
+                measurements = Measurement.objects.filter(
+                    station_id=station_id,
+                    date__gte=default_start.date(),
+                    time__gte=default_start.time()
+                )
+            else:
+                measurements = Measurement.objects.filter(station_id=station_id)
+                measurements = measurements.filter(date__gte=start_date)
+                if end_date:
+                    measurements = measurements.filter(date__lte=end_date)
+            
+            # Apply sensor type filter
+            if sensor_types and sensor_types[0]:  # Check if there are sensor types
+                measurements = measurements.filter(sensor__type__in=sensor_types)
+            
+            # Order by sensor type, date and time (newest first)
+            measurements = measurements.order_by('sensor__type', '-date', '-time')
+            
+            # Apply limit if provided
+            limit = request.query_params.get('limit')
+            if limit and limit.isdigit():
+                measurements = measurements[:int(limit)]
+            
+            # Use MeasurementSerializer with specific fields
+            serializer = MeasurementSerializer(
+                measurements, 
+                many=True,
+                fields=['station_name', 'sensor_type', 'date', 'time', 'value']
+            )
+            
+            # Group data by sensor type
+            grouped_data = []
+            for measurement in serializer.data:
+                grouped_data.append({
+                 
+                    'station_name': measurement['station_name'],
+                    'sensor_type': measurement['sensor_type'],
+                    'date': measurement['date'],
+                    'time': measurement['time'],
+                    'value': measurement['value']
+                })
+            
+            # Insert into api_key_usage logs and update Api_Access_Keys
+            if request.auth and isinstance(request.auth, ApiAccessKey):
+                try:
+                    api_key = request.auth
+                    user = api_key.user
+                    
+                    # Update last_used timestamp
+                    api_key.last_used = timezone.now()
+                    api_key.save(update_fields=['last_used'])
+                    
+                    # Create usage log entry
+                    ApiKeyUsageLog.objects.create(
+                        api_key=api_key,
+                        user=user,
+                        request_path=request.path,
+                        query_params=dict(request.query_params),
+                        response_format=request.accepted_renderer.format,
+                        status_code=200,
+                        user_agent=request.META.get('HTTP_USER_AGENT', '')
+                    )
+                except Exception as e:
+                    print(f"Error logging API key usage: {str(e)}")
+                    # Don't fail the request if logging fails
+            
+            # Check if CSV format is requested
+            if request.accepted_renderer.format == 'csv':
+                # For CSV, return flat list directly
+                return Response(grouped_data)
+            else:
+                # For JSON/XML, keep your nested structure
+                return Response({
+                    'data': grouped_data
+                })
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class StationHealthLogPagination(PageNumberPagination):
     page_size = 50
@@ -836,9 +958,81 @@ class UserViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            self.perform_create(serializer)
+            user = serializer.save()
+            
+            # Generate API key for newly created active users
+            if user.status == 'Active':
+                try:
+                    api_key = self.generate_api_key(user)
+                    logger.info(f"API key {api_key.uuid} created for new user {user.email}")
+                except Exception as e:
+                    logger.error(f"Failed to create API key for new user {user.email}: {str(e)}")
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        original_status = instance.status
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_user = serializer.save()
+        
+        # Check if status changed from non-Active to Active
+        if original_status != 'Active' and updated_user.status == 'Active':
+            try:
+                api_key = self.generate_api_key(updated_user)
+                logger.info(f"API key {api_key.uuid} created for activated user {updated_user.email}")
+                
+                # Create a system log entry
+                SystemLog.objects.create(
+                    module="User Management",
+                    activity=f"API key automatically generated for user {updated_user.email}",
+                    type="API Key Generation",
+                    user_id=updated_user.id
+                )
+            except Exception as e:
+                logger.error(f"Failed to create API key for activated user {updated_user.email}: {str(e)}")
+        
+        return Response(serializer.data)
+
+    def generate_api_key(self, user):
+        """Generate a new API key for a user"""
+        try:
+            # Generate a new UUID for the API key
+            api_key_uuid = uuid.uuid4()
+            
+            # Use the user's expiration date for the API key
+            expires_at = user.expires_at
+            
+            # Create the API key record
+            api_key = ApiAccessKey.objects.create(
+                uuid=api_key_uuid,
+                token_name=f"Default Key for {user.email}",
+                user=user,
+                expires_at=expires_at,
+                note="Automatically generated on account activation"
+            )
+            
+            # Create system log entry
+            SystemLog.objects.create(
+                module="User Management",
+                activity=f"API key automatically generated for user {user.email}",
+                type="API Key Generation",
+                user_id=user.id
+            )
+            
+            # Send email notification to the user
+            email_sent = self._send_api_key_email(user, api_key)
+            if not email_sent:
+                logger.warning(f"API key created for {user.email} but email notification failed")
+            
+            return api_key
+        
+        except Exception as e:
+            logger.error(f"Error generating API key for user {user.email}: {str(e)}")
+            raise
 
     @action(detail=True, methods=['get', 'post'])
     def presence(self, request, pk=None):
@@ -913,6 +1107,64 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def _send_api_key_email(self, user, api_key):
+        """Send email notification about the generated API key to the user"""
+        try:
+            logger.info(f"Sending API key email to {user.email}")
+            
+            subject = f"Your API Key for {settings.SITE_NAME}"
+            
+            # Create a message with API key details
+            message = f"""
+Hello {user.first_name},
+
+Your account has been activated, and an API key has been generated for you.
+
+API Key Details:
+----------------
+Key ID: {api_key.uuid}
+Name: {api_key.token_name}
+Expires: {api_key.expires_at.strftime('%Y-%m-%d %H:%M:%S')}
+
+Keep this key secure and do not share it with others. This key allows access to our API services.
+
+To use your API key, include it in the Authorization header of your requests:
+Authorization: Bearer {api_key.uuid}
+
+If you have any questions, please contact our support team.
+
+Best regards,
+The {settings.SITE_NAME} Team
+"""
+            
+            # Send the email
+            sent = send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            
+            if sent:
+                logger.info(f"API key email successfully sent to {user.email}")
+                
+                # Create a system log entry for the email sent
+                SystemLog.objects.create(
+                    module="User Management",
+                    activity=f"API key email sent to user {user.email}",
+                    type="Email Notification",
+                    user_id=user.id
+                )
+                return True
+            else:
+                logger.error(f"Failed to send API key email to {user.email}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"Error sending API key email to {user.email}: {str(e)}")
+            return False
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -1682,3 +1934,87 @@ def inactive_sensors(request):
     except Exception as e:
         logger.error(f"Error in inactive_sensors view: {str(e)}")
         return Response({'detail': str(e)}, status=500)
+
+class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
+    queryset = ApiKeyUsageLog.objects.all()
+    serializer_class = ApiKeyUsageLogSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        queryset = ApiKeyUsageLog.objects.all()
+        
+        # Filter by API key if provided
+        api_key = self.request.query_params.get('api_key')
+        if api_key:
+            queryset = queryset.filter(api_key_id=api_key)
+            
+        # Filter by user if provided
+        user = self.request.query_params.get('user')
+        if user:
+            queryset = queryset.filter(user_id=user)
+            
+        # Filter by date range
+        start_date = self.request.query_params.get('start_date')
+        end_date = self.request.query_params.get('end_date')
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(created_at__lte=end_date)
+            
+        return queryset.select_related('api_key', 'user')
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def test_email(request):
+    """Test email sending functionality"""
+    try:
+        recipient = request.data.get('email')
+        if not recipient:
+            return Response(
+                {"error": "Email address is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        subject = "Test Email from Your Application"
+        message = "This is a test email to verify that the email sending functionality is working correctly."
+        
+        sent = send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+        
+        if sent:
+            return Response(
+                {"message": f"Test email successfully sent to {recipient}"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": "Failed to send test email"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+    except Exception as e:
+        return Response(
+            {"error": f"Error sending test email: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_api_keys(request):
+    """Retrieve API keys for the current authenticated user"""
+    try:
+        api_keys = ApiAccessKey.objects.filter(user=request.user)
+        serializer = ApiAccessKeySerializer(api_keys, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error retrieving API keys: {str(e)}")
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
