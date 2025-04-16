@@ -2,14 +2,22 @@
 	<div class="container-fluid dashboard-4">
 		<div class="row mb-4">
 			<div class="col-12">
-				<div class="d-flex align-items-center">
-					<div class="station-selector" style="width: 300px;">
+				<div class="d-flex align-items-start gap-4">
+					<div class="station-selector">
 						<label for="stationSelect" class="form-label">Select Zentra Station</label>
 						<select id="stationSelect" v-model="selectedStation" class="form-select">
 							<option v-for="station in stationNames" :key="station.id" :value="station.id">
 								{{ station.name }}
 							</option>
 						</select>
+					</div>
+					<div class="station-export flex-grow-1" v-if="selectedStation">
+						<StationDataExport 
+							:stationId="selectedStation"
+							:stationName="getSelectedStationName"
+							:sensors="availableSensors"
+							brand="Zentra"
+						/>
 					</div>
 				</div>
 			</div>
@@ -32,7 +40,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { useStationData } from '@/composables/useStationData';
@@ -46,6 +54,7 @@ interface Station {
 const ZentraInsMonitor = defineAsyncComponent(() => import("@/components/theme/stations/zentra/ZentraInsMonitor.vue"));
 const ZentraStatistics = defineAsyncComponent(() => import("@/components/theme/stations/zentra/ZentraStatistics.vue"));
 const ZentraTempCard = defineAsyncComponent(() => import("@/components/theme/stations/zentra/ZentraTempCard.vue"));
+const StationDataExport = defineAsyncComponent(() => import("@/components/theme/stations/StationDataExport.vue"));
 
 const stationNames = ref<Station[]>([]);
 const selectedStation = ref<number>(0);
@@ -54,30 +63,34 @@ const error = ref<string | null>(null);
 
 const zentraData = useStationData();
 
+// Get the name of the selected station
+const getSelectedStationName = computed(() => {
+	const station = stationNames.value.find(s => s.id === selectedStation.value);
+	return station?.name || '';
+});
+
+// List of available sensors for Zentra stations
+const availableSensors = computed(() => [
+	'Air Temperature',
+	'Wind Speed',
+	'Solar Radiation',
+	'Precipitation',
+	'Relative Humidity',
+	'Atmospheric Pressure'
+]);
+
 const fetchStationNames = async () => {
 	try {
-		isLoading.value = true;
 		const response = await axios.get<Station[]>('/stations/');
-		// Try both formats of the brand name
-		const zentraStations = response.data.filter(station =>
-			station.brand_name === "Zentra" || station.brand_name === "ZENTRA"
-		);
-
-		console.log('All stations:', response.data); // Debug log
-		console.log('Filtered Zentra stations:', zentraStations); // Debug log
-
+		const zentraStations = response.data.filter(station => station.brand_name === "Zentra");
 		stationNames.value = zentraStations;
 
 		if (zentraStations.length > 0 && !selectedStation.value) {
 			selectedStation.value = zentraStations[0].id;
-		} else {
-			error.value = 'No Zentra stations available';
 		}
-	} catch (error) {
-		console.error('Error fetching station names:', error);
-		error.value = 'Failed to fetch station data';
-	} finally {
-		isLoading.value = false;
+	} catch (err) {
+		console.error('Error fetching station names:', err);
+		error.value = err instanceof Error ? err.message : 'An error occurred while fetching station names';
 	}
 };
 
@@ -92,6 +105,14 @@ onMounted(fetchStationNames);
 
 <style scoped>
 .station-selector {
+	background-color: white;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	width: 300px;
+}
+
+.station-export {
 	background-color: white;
 	padding: 1rem;
 	border-radius: 0.5rem;
@@ -116,5 +137,9 @@ onMounted(fetchStationNames);
 .form-select:focus {
 	border-color: #7A70BA;
 	box-shadow: 0 0 0 0.2rem rgba(122, 112, 186, 0.25);
+}
+
+.gap-4 {
+	gap: 1.5rem;
 }
 </style>

@@ -2,14 +2,22 @@
 	<div class="container-fluid dashboard-4">
 		<div class="row mb-4">
 			<div class="col-12">
-				<div class="d-flex align-items-center">
-					<div class="station-selector" style="width: 300px;">
+				<div class="d-flex align-items-start gap-4">
+					<div class="station-selector">
 						<label for="stationSelect" class="form-label">Select Station</label>
 						<select id="stationSelect" v-model="selectedStation" class="form-select">
 							<option v-for="station in stationNames" :key="station.id" :value="station.id">
 								{{ station.name }}
 							</option>
 						</select>
+					</div>
+					<div class="station-export flex-grow-1" v-if="selectedStation">
+						<StationDataExport 
+							:stationId="selectedStation"
+							:stationName="getSelectedStationName"
+							:sensors="availableSensors"
+							brand="3D_Paws"
+						/>
 					</div>
 				</div>
 			</div>
@@ -32,7 +40,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { useStationData } from '@/composables/useStationData';
@@ -47,11 +55,33 @@ interface Station {
 const PawsInsMonitor = defineAsyncComponent(() => import("@/components/theme/stations/paws/PawsInsMonitor.vue"));
 const PawsStatistics = defineAsyncComponent(() => import("@/components/theme/stations/paws/PawsStatistics.vue"));
 const PawsTempCard = defineAsyncComponent(() => import("@/components/theme/stations/paws/PawsTempCard.vue"));
+const StationDataExport = defineAsyncComponent(() => import("@/components/theme/stations/StationDataExport.vue"));
 
 const stationNames = ref<Station[]>([]); // Explicitly define the type as an array of Station
 const selectedStation = ref<number>(0); // Default to 0 instead of null
 
 const pawsData = useStationData();
+
+// Get the name of the selected station
+const getSelectedStationName = computed(() => {
+	const station = stationNames.value.find(s => s.id === selectedStation.value);
+	return station?.name || '';
+});
+
+// List of available sensors for 3D_Paws stations
+const availableSensors = computed(() => [
+	'bt1',
+	'mt1',
+	'bp1',
+	'ws',
+	'wd',
+	'rg',
+	'sv1',
+	'si1',
+	'su1',
+	'bpc',
+	'css'
+]);
 
 const fetchStationNames = async () => {
 	try {
@@ -83,6 +113,14 @@ onMounted(fetchStationNames);
 	padding: 1rem;
 	border-radius: 0.5rem;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	width: 300px;
+}
+
+.station-export {
+	background-color: white;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .form-label {
@@ -103,5 +141,9 @@ onMounted(fetchStationNames);
 .form-select:focus {
 	border-color: #7A70BA;
 	box-shadow: 0 0 0 0.2rem rgba(122, 112, 186, 0.25);
+}
+
+.gap-4 {
+	gap: 1.5rem;
 }
 </style>
