@@ -6,7 +6,7 @@ import 'nprogress/nprogress.css';
 // set base URL
 axios.defaults.baseURL = process.env.VUE_APP_API_URL
 
-NProgress.configure({ showSpinner: true, trickleSpeed: 200 });
+NProgress.configure({ showSpinner: false, trickleSpeed: 200 });
 
 let activeRequests = 0;
 
@@ -39,8 +39,8 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   (response) => {
     // Only check for suspension on auth-related endpoints
-    if (response.config.url?.includes('/token/') || 
-        response.config.url?.includes('/user/me/')) {
+    if (response.config.url?.includes('/token/') ||
+      response.config.url?.includes('/user/me/')) {
       if (response.data?.user?.status === 'Suspended') {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
@@ -55,10 +55,10 @@ axios.interceptors.response.use(
     stopProgress()
 
     // Check for suspended status in error response
-    if (error.response?.status === 403 && 
-        error.response?.data?.error?.includes('suspended') &&
-        (error.config.url?.includes('/token/') || 
-         error.config.url?.includes('/user/me/'))) {
+    if (error.response?.status === 403 &&
+      error.response?.data?.error?.includes('suspended') &&
+      (error.config.url?.includes('/token/') ||
+        error.config.url?.includes('/user/me/'))) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
       router.push('/auth/login?error=suspended')
