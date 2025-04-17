@@ -13,4 +13,7 @@ django-celery-beat
 redis
 python-dateutil
 requests
-APScheduler==3.10.4
+APScheduler
+djangorestframework-xml
+djangorestframework-csv
+black
