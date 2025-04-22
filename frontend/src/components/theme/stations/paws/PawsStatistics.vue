@@ -27,9 +27,20 @@
 
 		<!-- Chart Section -->
 		<div class="chart-container">
-			<apexchart v-if="chartData.length > 0" type="area" height="330" ref="chart" :options="chartOptions" :series="chartData"></apexchart>
-			<div v-else>
-				<p>No data available to display.</p>
+			<div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 330px;">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+			<apexchart
+				v-else-if="chartData.length > 0"
+				type="area"
+				height="330"
+				:options="chartOptions"
+				:series="chartData"
+			></apexchart>
+			<div v-else class="d-flex justify-content-center align-items-center" style="height: 330px;">
+				<p class="text-muted">No data available to display.</p>
 			</div>
 		</div>
 	</Card1>
@@ -37,6 +48,7 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, onMounted, watch, computed, defineProps, onUnmounted, PropType } from 'vue';
+import VueApexCharts from 'vue3-apexcharts';
 import { zentraOptions1 } from '@/core/data/chart';
 
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
@@ -58,6 +70,7 @@ const props = defineProps({
 
 const chartData = ref<any[]>([]);
 const selectedSensorType = ref<string>('bt1');
+const isLoading = ref(false);
 
 // Mapping of sensor types to display names and units
 const sensorConfig: Record<string, { name: string; unit: string }> = {
@@ -74,18 +87,6 @@ const sensorConfig: Record<string, { name: string; unit: string }> = {
 	'css': { name: 'Cell Signal Strength', unit: '%' }
 };
 
-// Format timestamp for display
-const formatTimestamp = (timestamp: string) => {
-	const date = new Date(timestamp);
-	return date.toLocaleString('en-US', {
-		month: 'numeric',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit',
-		hour12: true
-	});
-};
-
 // Get the current sensor's display name
 const currentSensorName = computed(() => {
 	return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
@@ -98,64 +99,107 @@ const currentSensorUnit = computed(() => {
 
 // Chart options
 const chartOptions = computed(() => ({
-	...zentraOptions1,
+	chart: {
+		type: 'area',
+		height: 330,
+		zoom: {
+			enabled: true
+		},
+		animations: {
+			enabled: true
+		}
+	},
+	dataLabels: {
+		enabled: false
+	},
+	stroke: {
+		curve: 'smooth',
+		width: 2
+	},
+	fill: {
+		type: 'gradient',
+		gradient: {
+			shadeIntensity: 1,
+			opacityFrom: 0.7,
+			opacityTo: 0.3,
+			stops: [0, 90, 100]
+		}
+	},
 	yaxis: {
-		...zentraOptions1.yaxis,
 		title: {
-			...zentraOptions1.yaxis.title,
 			text: `${currentSensorName.value} (${currentSensorUnit.value})`,
 			style: {
-				...zentraOptions1.yaxis.title.style,
 				fontSize: '14px',
 				fontWeight: 500
 			}
 		},
 		labels: {
-			...zentraOptions1.yaxis.labels,
 			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
 		}
 	},
 	xaxis: {
-		...zentraOptions1.xaxis,
+		type: 'datetime',
 		labels: {
-			...zentraOptions1.xaxis.labels,
-			formatter: (val: string) => formatTimestamp(val)
+			datetimeFormatter: {
+				year: 'yyyy',
+				month: 'MMM \'yy',
+				day: 'dd MMM',
+				hour: 'HH:mm'
+			}
 		}
 	},
 	tooltip: {
-		...zentraOptions1.tooltip,
+		x: {
+			format: 'dd MMM yyyy HH:mm'
+		},
 		y: {
 			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
 		}
 	}
 }));
 
-// Add watch for selectedSensorType changes
-watch([() => props.measurements, () => selectedSensorType.value], ([newMeasurements, newSensorType]) => {
-	if (!Array.isArray(newMeasurements) || !newMeasurements.length) {
-		chartData.value = [];
-		return;
-	}
+// Watch for measurements and selected sensor type changes
+watch([() => props.measurements, () => selectedSensorType.value], 
+	([newMeasurements, newSensorType]) => {
+		console.log('Measurements received:', newMeasurements);
+		console.log('Selected sensor type:', newSensorType);
 
-	const filteredData = newMeasurements.filter(measurement =>
-		measurement.sensor_type === newSensorType
-	);
+		if (!Array.isArray(newMeasurements) || !newMeasurements.length) {
+			console.log('No measurements available or invalid data');
+			chartData.value = [];
+			return;
+		}
 
-	if (filteredData.length === 0) {
-		chartData.value = [];
-		return;
-	}
+		const filteredData = newMeasurements.filter(measurement => {
+			return measurement.sensor_type === newSensorType;
+		});
 
-	chartData.value = [{
-		name: sensorConfig[newSensorType]?.name || 'Unknown',
-		data: filteredData.map(item => ({
+		console.log('Filtered data:', filteredData);
+
+		if (filteredData.length === 0) {
+			console.log('No data available for selected sensor type');
+			chartData.value = [];
+			return;
+		}
+
+		const formattedData = filteredData.map(item => ({
 			x: new Date(`${item.date}T${item.time}`).getTime(),
 			y: parseFloat(item.value)
-		}))
-	}];
-}, { immediate: true });
+		})).sort((a, b) => a.x - b.x);
 
-// Modify selectMeasurement to only update the selected type
+		console.log('Formatted chart data:', formattedData);
+
+		chartData.value = [{
+			name: sensorConfig[newSensorType]?.name || 'Unknown',
+			data: formattedData
+		}];
+
+		console.log('Final chart data:', chartData.value);
+	}, 
+	{ immediate: true }
+);
+
+// Handle measurement selection
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
 };
@@ -165,7 +209,6 @@ let refreshInterval: number | undefined;
 
 onMounted(() => {
 	refreshInterval = setInterval(() => {
-		// Just trigger a re-render of the chart
 		if (props.measurements.length > 0) {
 			chartData.value = [...chartData.value];
 		}

@@ -1,81 +1,80 @@
 <template>
   <div class="station-data-export">
-    <!-- Station Name Display -->
-    <div class="mb-3">
-      <label class="form-label">Station Name</label>
-      <input 
-        type="text" 
-        class="form-control" 
-        :value="stationName"
-        disabled
-        readonly
-      >
-    </div>
-    
-    <!-- Sensor Selection -->
-    <div class="sensor-selection mb-3">
-      <label class="form-label">Select Sensors to Export</label>
-      <div class="sensor-checkboxes">
-        <div v-for="sensor in availableSensors" :key="sensor.type" class="form-check">
-          <input 
-            type="checkbox" 
-            class="form-check-input"
-            :id="sensor.type"
-            v-model="selectedSensors"
-            :value="sensor.type"
-          >
-          <label class="form-check-label" :for="sensor.type">
-            {{ sensor.name }} ({{ sensor.unit }})
-          </label>
+    <label class="form-label">Export Station Data</label>
+    <div class="export-content" :class="{ 'expanded': isExpanded }" @click="toggleExpand">
+      <div class="toggle-header">
+        <span>{{ stationName }}</span>
+        <i :class="isExpanded ? 'fa fa-angle-up' : 'fa fa-angle-down'"></i>
+      </div>
+
+      <!-- Collapsible Content -->
+      <div v-if="isExpanded" class="toggle-content">
+        <!-- Sensor Selection -->
+        <div class="sensor-selection mb-3">
+          <label class="form-label">Select Sensors</label>
+          <div class="sensor-checkboxes">
+            <div v-for="sensor in availableSensors" :key="sensor.type" class="form-check">
+              <input 
+                type="checkbox" 
+                class="form-check-input"
+                :id="sensor.type"
+                v-model="selectedSensors"
+                :value="sensor.type"
+              >
+              <label class="form-check-label" :for="sensor.type">
+                {{ sensor.name }} ({{ sensor.unit }})
+              </label>
+            </div>
+          </div>
         </div>
+
+        <!-- Format Selection -->
+        <div class="format-selection mb-3">
+          <label class="form-label">Select Export Format</label>
+          <div class="format-radio-group">
+            <div class="form-check form-check-inline">
+              <input 
+                type="radio" 
+                class="form-check-input"
+                id="formatJson"
+                value="json"
+                v-model="selectedFormat"
+              >
+              <label class="form-check-label" for="formatJson">JSON</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input 
+                type="radio" 
+                class="form-check-input"
+                id="formatXml"
+                value="xml"
+                v-model="selectedFormat"
+              >
+              <label class="form-check-label" for="formatXml">XML</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <input 
+                type="radio" 
+                class="form-check-input"
+                id="formatCsv"
+                value="csv"
+                v-model="selectedFormat"
+              >
+              <label class="form-check-label" for="formatCsv">CSV</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Button -->
+        <button 
+          class="btn btn-primary"
+          :disabled="!canExport"
+          @click="exportData"
+        >
+          Export Data
+        </button>
       </div>
     </div>
-
-    <!-- Format Selection -->
-    <div class="format-selection mb-3">
-      <label class="form-label">Select Export Format</label>
-      <div class="format-radio-group">
-        <div class="form-check form-check-inline">
-          <input 
-            type="radio" 
-            class="form-check-input"
-            id="formatJson"
-            value="json"
-            v-model="selectedFormat"
-          >
-          <label class="form-check-label" for="formatJson">JSON</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input 
-            type="radio" 
-            class="form-check-input"
-            id="formatXml"
-            value="xml"
-            v-model="selectedFormat"
-          >
-          <label class="form-check-label" for="formatXml">XML</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input 
-            type="radio" 
-            class="form-check-input"
-            id="formatCsv"
-            value="csv"
-            v-model="selectedFormat"
-          >
-          <label class="form-check-label" for="formatCsv">CSV</label>
-        </div>
-      </div>
-    </div>
-
-    <!-- Export Button -->
-    <button 
-      class="btn btn-primary"
-      :disabled="!canExport"
-      @click="exportData"
-    >
-      Export Data
-    </button>
   </div>
 </template>
 
@@ -124,6 +123,14 @@ const props = defineProps({
 // State
 const selectedSensors = ref<string[]>([]);
 const selectedFormat = ref('json');
+
+// Add toggle state
+const isExpanded = ref(false);
+
+// Add toggle function
+const toggleExpand = () => {
+  isExpanded.value = !isExpanded.value;
+};
 
 // Get sensor configuration based on brand
 const sensorConfigs: SensorConfigs = {
@@ -250,10 +257,48 @@ const exportData = async () => {
 
 <style scoped>
 .station-data-export {
-  padding: 1rem;
-  background-color: #fff;
+  padding: 0;
+  
+}
+
+.form-label {
+  font-weight: 500;
+  color: #212529;
+  margin-bottom: 0.5rem;
+}
+
+.export-content {
+  border: 1px solid #dee2e6;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.toggle-header {
+  padding: 0.5rem 1rem;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  color: #495057;
+  min-height: 38px;
+}
+
+.toggle-header:hover {
+  background-color: #f8f9fa;
+}
+
+.toggle-content {
+  padding: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.fa {
+  font-size: 1.2rem;
+  color: #212529;
+  transition: transform 0.2s ease;
 }
 
 .sensor-checkboxes {
@@ -272,7 +317,6 @@ const exportData = async () => {
   margin-top: 0.5rem;
 }
 
-/* Style for disabled input */
 .form-control:disabled {
   background-color: #f8f9fa;
   cursor: not-allowed;
