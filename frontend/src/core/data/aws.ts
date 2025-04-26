@@ -7,6 +7,7 @@ export interface AWSStation {
     latestHealth?: {
         connectivity_status: string;
         battery_status: string;
+        created_at: string | null;
     };
     parameters: {
         temperature?: number;

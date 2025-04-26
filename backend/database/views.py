@@ -1761,10 +1761,14 @@ def aws_station_health_logs(request):
             'page_size': 100
         }
         
-        # Get the latest health logs in a single query
+        # Get timestamp for 24 hours ago
+        twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
+        
+        # Get the latest health logs in a single query, only from last 24 hours
         station_logs = {}
         latest_logs = StationHealthLog.objects.filter(
-            station_id__in=[s.id for s in stations]
+            station_id__in=[s.id for s in stations],
+            created_at__gte=twenty_four_hours_ago
         ).order_by('-created_at')
         
         for log in latest_logs:
@@ -1775,23 +1779,21 @@ def aws_station_health_logs(request):
         for station in stations:
             log = station_logs.get(station.id)
             
-            # For AWS stations, default to online with Excellent connectivity
-            status = 'Online'
-            connectivity_status = 'Excellent'
-            created_at = timezone.now()
+            # Default status is Offline if no data in last 24 hours
+            status = 'Offline'
+            connectivity_status = 'No Data'
+            created_at = None
             
             if log:
                 if log.connectivity_status and log.connectivity_status != 'Unknown' and log.connectivity_status != 'No Data':
                     connectivity_status = log.connectivity_status
+                    # Only mark as online if we have recent data and connectivity is Excellent
+                    if connectivity_status == 'Excellent':
+                        status = 'Online'
                 created_at = log.created_at
-                
-                # Check if data is too old (more than 48 hours)
-                time_diff = timezone.now() - log.created_at
-                if time_diff.total_seconds() > 172800:  # 48 hours in seconds
-                    status = 'Offline'
             
-            # Update station's is_active field directly
-            station.is_active = True
+            # Update station's is_active field based on recent data
+            station.is_active = status == 'Online'
             station.save(update_fields=['is_active'])
             
             response_data['data'].append({
@@ -1806,7 +1808,15 @@ def aws_station_health_logs(request):
         
         return Response(response_data)
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        print(f"Error in aws_station_health_logs: {str(e)}")
+        print(traceback.format_exc())
+        return Response({
+            'data': [],
+            'total': 0,
+            'page': 1,
+            'page_size': 100,
+            'error': str(e)
+        })
 
 @api_view(['GET'])
 def get_latest_health_logs(request):

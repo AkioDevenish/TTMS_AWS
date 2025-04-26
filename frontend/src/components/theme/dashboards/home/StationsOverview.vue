@@ -2,16 +2,13 @@
     <!-- Move Card1 to be the second component -->
     <div class="order-2">
         <Card1
-            colClass="col-xl-12 col-md-12 proorder-xl-2 proorder-md-2 mb-30"
+        colClass="col-xl-12 col-md-12 proorder-xl-2 proorder-md-2 mb-30"
+            headerTitle="true" 
             title="Station Overview"
-            cardhaderClass="card-no-border pb-0"
+            cardHeaderClass="card-no-border pb-0"
+            cardBodyClass="designer-card"
         >
-            <!-- Station Overview Header -->
-            <div class="station-overview-header mb-4">
-                <h4 class="section-title">Station Overview</h4>
-                <p class="section-subtitle">Monitor all stations by brand and sensor type</p>
-            </div>
-            
+        
             <!-- Brand tabs and sensor dropdown in one row -->
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
                 <ul class="nav nav-tabs border-tab mb-2 mb-md-0 nav-primary" id="brand-tabs" role="tablist">
