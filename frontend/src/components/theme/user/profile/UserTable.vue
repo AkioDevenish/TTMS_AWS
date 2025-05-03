@@ -115,12 +115,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import { useRoute, useRouter } from 'vue-router'
 
-const { currentUser } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 
 interface Bill {
     id: number;
@@ -138,7 +139,7 @@ const uploadModal = ref<HTMLElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const currentBillId = ref(null)
 const viewModal = ref<HTMLElement | null>(null)
-const receiptUrl = ref<string | null>(null)
+const receiptUrl = ref<string | undefined>(undefined)
 const isImage = ref(false)
 
 const router = useRouter()
@@ -259,7 +260,7 @@ const closeViewModal = () => {
     if (viewModal.value) {
         viewModal.value.style.display = 'none'
     }
-    receiptUrl.value = null
+    receiptUrl.value = undefined
 }
 
 const formatDate = (date: string) => {

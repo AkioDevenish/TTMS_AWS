@@ -61,7 +61,8 @@ const {
   measurements,
   stationInfo,
   fetchStationData,
-  formatDateTime
+  formatDateTime,
+  getLast24HoursMeasurements
 } = useStationData();
 
 const localZentraData = ref<CardData[]>([]);
@@ -190,7 +191,7 @@ watch(() => props.selectedStation, (newStationId) => {
 }, { immediate: true });
 
 // Watch for measurements changes
-watch(() => measurements.value, (newMeasurements) => {
+watch(() => getLast24HoursMeasurements.value, (newMeasurements) => {
   if (!newMeasurements?.length) {
     localZentraData.value = [];
     return;

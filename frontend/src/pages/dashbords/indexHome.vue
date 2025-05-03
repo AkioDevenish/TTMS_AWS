@@ -26,9 +26,10 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, onMounted, ref } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 
-const { isAdmin, currentUser, checkAuth } = useAuth()
+const authStore = useAuthStore()
+const { isAdmin, currentUser } = authStore
 const showDebug = ref(true) // Set to false in production
 
 // Admin/User components
@@ -38,8 +39,7 @@ const AWSstatus = defineAsyncComponent(() => import('@/components/theme/dashboar
 const HighestRecord = defineAsyncComponent(() => import("@/components/theme/dashboards/home/HighestRecord.vue"))   
 const StationsOverview = defineAsyncComponent(() => import("@/components/theme/dashboards/home/StationsOverview.vue"))
 const InactiveSensors = defineAsyncComponent(() => import("@/components/theme/dashboards/home/InactiveSensors.vue"))
-onMounted(async () => {
-    await checkAuth()
+onMounted(() => {
     console.log('Is Admin:', isAdmin.value)
     console.log('Current User:', currentUser.value)
 })

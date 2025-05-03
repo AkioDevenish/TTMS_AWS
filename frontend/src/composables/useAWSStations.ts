@@ -53,7 +53,12 @@ export function useAWSStations() {
             console.log('Fetching AWS stations...')
             
             const [healthLogsResponse, stationsResponse] = await Promise.all([
-                axios.get('/station-health-logs/'),
+                axios.get('/station-health-logs/', {
+                    params: {
+                        limit: 100,
+                        ordering: '-created_at'
+                    }
+                }),
                 axios.get('/stations/')
             ])
             
@@ -107,7 +112,7 @@ export function useAWSStations() {
             console.log('Final AWS stations array:', stations.value)
         } catch (err) {
             console.error('Failed to fetch AWS stations:', err)
-            error.value = 'Failed to fetch stations'
+            error.value = 'Failed to fetch stations. Please try again later.'
         } finally {
             loading.value = false
         }

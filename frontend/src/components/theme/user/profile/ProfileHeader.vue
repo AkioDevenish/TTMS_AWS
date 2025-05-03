@@ -62,12 +62,13 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserManagement } from '@/composables/useUserManagement'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 
 const route = useRoute()
 const router = useRouter()
 const { allData, fetchUsers } = useUserManagement()
-const { currentUser, checkAuth } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 
 const username = ref('')
 const subscription = ref('')
@@ -106,8 +107,8 @@ watch(currentUser, (newUser) => {
     }
 }, { immediate: true })
 
-onMounted(async () => {
-    await checkAuth()
+onMounted(() => {
+    // No need to call checkAuth() here, as it's handled by the useAuth composable
 })
 
 const statusClass = computed(() => {

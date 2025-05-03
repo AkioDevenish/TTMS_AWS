@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useChatStore } from '@/store/chat'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import { getImages } from '@/composables/common/getImages'
 import AddChat from './AddChat.vue'
 
@@ -86,11 +86,12 @@ interface Message {
 }
 
 const chatStore = useChatStore()
-const auth = useAuth()
+const authStore = useAuthStore()
 const messagesContainer = ref<HTMLElement | null>(null)
 
 const newMessage = ref('')
-const currentUserId = computed(() => auth.currentUser.value?.id)
+const currentUser = computed(() => authStore.currentUser)
+const currentUserId = computed(() => currentUser.value?.id)
 const currentChat = computed(() => {
     const chat = chatStore.currentChat
     if (!chat) return null;
@@ -196,7 +197,7 @@ const isCurrentUserMessage = (message: Message) => {
     if (!currentUserId.value) return false;
     
     // For MDPS Support, show all messages in the chat
-    if (auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
+    if (currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
         return true;
     }
     

@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, onMounted, watch } from "vue";
 import { menu } from "@/core/data/menu";
 import { useRoute } from 'vue-router'
-import { useAuth } from '@/composables/useAuth';
+import { useAuthStore } from '@/store/auth';
 
 interface searchdatas {
     icon1: string,
@@ -31,13 +31,14 @@ interface MenuItem {
 }
 
 export const useMenuStore = defineStore("menu", () => {
-    const { currentUser, isAdmin } = useAuth();
+    const authStore = useAuthStore();
+    const { currentUser, isAdmin } = authStore;
     console.log('currentUser', currentUser);
     console.log('isAdmin', isAdmin);
     let data = ref<MenuItem[]>([]);
 
     const filterMenuByRole = () => {
-        console.log('MenuStore - Is Admin:', isAdmin.value);
+        console.log('MenuStore - Is Admin:', isAdmin);
         
         // First pass to filter menu items based on role
         const filteredMenu = menu.filter(item => {
@@ -46,12 +47,12 @@ export const useMenuStore = defineStore("menu", () => {
             
             // Check admin property - this is what your menu.ts is using
             if (item.admin === 1) {
-                return isAdmin.value;
+                return isAdmin;
             }
             
             // Also check requireRole for completeness
             if (item.requireRole === 'admin') {
-                return isAdmin.value;
+                return isAdmin;
             }
             
             return true;
@@ -81,7 +82,7 @@ export const useMenuStore = defineStore("menu", () => {
         data.value = filterMenuByRole();
     });
 
-    watch(() => currentUser.value, () => {
+    watch(() => currentUser, () => {
         data.value = filterMenuByRole();
     });
 

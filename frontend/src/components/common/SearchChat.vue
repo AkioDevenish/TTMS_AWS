@@ -71,10 +71,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useChatStore } from '@/store/chat'
 import { getImages } from '@/composables/common/getImages'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 
 const chatStore = useChatStore()
-const auth = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 const searchQuery = ref('')
 
 interface User {
@@ -203,7 +204,7 @@ const startChat = async (user: User) => {
 
 // Add this watch effect to update user list when new messages arrive
 watch(() => chatStore.messages, async () => {
-    if (auth.currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
+    if (currentUser.value?.email === 'mdpssupport@metoffice.gov.tt') {
         // Refresh user list for MDPS support when new messages arrive
         await chatStore.fetchAllUsers();
     }

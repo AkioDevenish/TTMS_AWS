@@ -61,7 +61,8 @@ const {
     measurements,
     stationInfo,
     fetchStationData,
-    formatDateTime
+    formatDateTime,
+    getLast24HoursMeasurements
 } = useStationData();
 
 const localBaraniData = ref<CardData[]>([]);
@@ -163,7 +164,7 @@ watch(() => props.selectedStation, (newStationId) => {
     }
 }, { immediate: true });
 
-watch(() => measurements.value, (newMeasurements) => {
+watch(() => getLast24HoursMeasurements.value, (newMeasurements) => {
     if (!newMeasurements?.length) {
         localBaraniData.value = [];
         return;

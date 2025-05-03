@@ -1568,6 +1568,39 @@ class BillViewSet(viewsets.ModelViewSet):
 @permission_classes([AllowAny])
 def get_task_execution_status(request):
     try:
+        # Check if Celery is running by trying to ping it
+        try:
+            from celery.task.control import inspect
+            insp = inspect()
+            if not insp.active():
+                # Return tasks with "Not Started" status if Celery is not running
+                tasks = TaskExecution.objects.all().order_by('task_name')
+                task_statuses = [{
+                    'id': task.id,
+                    'name': task.task_name,
+                    'brand': task.task_name.replace('_', ' ').title(),
+                    'status': 'Not Started',
+                    'last_updated': None,
+                    'time_until_next': 0,
+                    'progress': 0
+                } for task in tasks]
+                return Response(task_statuses)
+        except Exception as e:
+            logger.warning(f"Could not check Celery status: {str(e)}")
+            # Assume Celery is not running if we can't check
+            tasks = TaskExecution.objects.all().order_by('task_name')
+            task_statuses = [{
+                'id': task.id,
+                'name': task.task_name,
+                'brand': task.task_name.replace('_', ' ').title(),
+                'status': 'Not Started',
+                'last_updated': None,
+                'time_until_next': 0,
+                'progress': 0
+            } for task in tasks]
+            return Response(task_statuses)
+
+        # If Celery is running, proceed with normal status calculation
         tasks = TaskExecution.objects.all().order_by('task_name')
         current_time = timezone.now()
         

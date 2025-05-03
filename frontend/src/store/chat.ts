@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, onBeforeUnmount, watch, onMounted } from "vue"
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import axios from 'axios'
 
 interface User {
@@ -79,16 +79,16 @@ interface ProcessedChat {
 }
 
 export const useChatStore = defineStore('chat', () => {
-  const auth = useAuth()
-  const currentUser = computed(() => auth.currentUser?.value)
+  const auth = useAuthStore()
+  const currentUser = computed(() => auth.currentUser)
 
   // Initialize auth state
   let authInitialized = ref(false)
 
   async function waitForAuth() {
-    if (!auth.currentUser.value) {
+    if (!auth.currentUser) {
       await new Promise<void>((resolve) => {
-        const unwatch = watch(() => auth.currentUser.value, (user) => {
+        const unwatch = watch(() => auth.currentUser, (user) => {
           if (user) {
             authInitialized.value = true
             unwatch()
@@ -157,9 +157,6 @@ export const useChatStore = defineStore('chat', () => {
 
   async function init() {
     try {
-        // Get current user from auth store
-        await auth.checkAuth();
-        
         // Fetch support user after auth is confirmed
         await fetchSupportUser();
         console.log('Current user from auth:', currentUser.value);

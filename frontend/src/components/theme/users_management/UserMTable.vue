@@ -73,9 +73,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useUserManagement } from '@/composables/useUserManagement'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 
@@ -91,11 +91,11 @@ const {
     getHeaders 
 } = useUserManagement()
 
-const { currentUser, checkAuth } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 const router = useRouter()
 
 onMounted(async () => {
-    await checkAuth()
     if (!currentUser.value?.is_superuser) {
         router.go(-1)
         return

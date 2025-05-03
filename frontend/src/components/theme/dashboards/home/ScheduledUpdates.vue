@@ -4,18 +4,6 @@
         title="Task Execution Status" 
         cardhaderClass="card-no-border pb-0" 
         cardbodyClass="active-members px-0">
-        <!-- Brand tabs section -->
-        <ul class="nav nav-tabs border-tab nav-primary" role="tablist">
-            <li class="nav-item" v-for="brand in stationBrands" :key="brand">
-                <a class="nav-link" 
-                   :class="{ active: currentBrand === brand }" 
-                   @click="currentBrand = brand"
-                   role="tab">
-                    {{ brand }}
-                </a>
-            </li>
-        </ul>
-
         <!-- Station Table with Progress -->
         <div class="table-responsive theme-scrollbar" style="height: 300px;">
             <table class="table table-sm display mb-0" style="width:100%">
@@ -29,18 +17,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="station in filteredStations" :key="station.id">
+                    <tr v-for="station in stations" :key="station.id">
                         <td>{{ station.name }}</td>
                         <td>
                             <p class="members-box text-center" 
                                :class="getStatusClass(station)">
-                                {{ station.status }}
+                                {{ getDisplayStatus(station) }}
                             </p>
                         </td>
-                        <td>{{ new Date(station.last_updated).toLocaleString() }}</td>
+                        <td>{{ formatLastUpdate(station.last_updated) }}</td>
                         <td>{{ formatTimeUntilNext(station.time_until_next) }}</td>
                         <td>
-                            <div class="progress progress-striped-primary">
+                            <div v-if="hasStarted(station)" class="progress progress-striped-primary">
                                 <div class="progress-bar" 
                                      :class="getProgressClass(station)"
                                      role="progressbar" 
@@ -51,6 +39,9 @@
                                     {{ Math.round(station.progress) }}%
                                 </div>
                             </div>
+                            <div v-else class="text-muted">
+                                Not Started
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -60,7 +51,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Card1 from '@/components/common/card/CardData1.vue';
 import axios from 'axios';
 
@@ -69,33 +60,44 @@ interface Station {
     name: string;
     brand: string;
     status: string;
-    last_updated: string;
+    last_updated: string | null;
     time_until_next: number;
     progress: number;
 }
 
 // State
 const stations = ref<Station[]>([]);
-const currentBrand = ref('All');
-
-// Computed properties
-const stationBrands = computed(() => ['All', ...new Set(stations.value.map(s => s.brand))]);
-
-const filteredStations = computed(() => {
-    return currentBrand.value === 'All' 
-        ? stations.value 
-        : stations.value.filter(s => s.brand === currentBrand.value);
-});
 
 // Methods
+const hasStarted = (station: Station): boolean => {
+    return station.last_updated !== null && station.status !== 'Not Started';
+};
+
+const formatLastUpdate = (lastUpdate: string | null): string => {
+    if (!lastUpdate) return 'Never';
+    return new Date(lastUpdate).toLocaleString();
+};
+
 const formatTimeUntilNext = (timeInSeconds: number): string => {
+    const station = stations.value.find(s => s.time_until_next === timeInSeconds);
+    if (!station || !hasStarted(station)) {
+        return 'Not Scheduled';
+    }
     if (timeInSeconds <= 0) return 'Due now';
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+const getDisplayStatus = (station: Station): string => {
+    if (!hasStarted(station)) return 'Not Started';
+    return station.status;
+};
+
 const getStatusClass = (station: Station) => {
+    if (!hasStarted(station)) {
+        return 'bg-light-secondary font-secondary';
+    }
     return {
         'bg-light-primary font-primary': station.status === 'success',
         'bg-light-warning font-warning': station.status === 'running',
@@ -123,8 +125,6 @@ const fetchStations = async () => {
 // Lifecycle hooks
 onMounted(() => {
     fetchStations();
-    const interval = setInterval(fetchStations, 1000);
-    onUnmounted(() => clearInterval(interval));
 });
 </script>
 
@@ -144,16 +144,6 @@ onMounted(() => {
     border-radius: 5px;
     font-size: 12px;
     font-weight: 500;
-}
-
-.nav-tabs .nav-link {
-    color: #495057;
-    cursor: pointer;
-}
-
-.nav-tabs .nav-link.active {
-    color: #7A70BA;
-    border-bottom: 2px solid #7A70BA;
 }
 
 /* Keep your existing styles for progress bars and other elements */
@@ -183,6 +173,11 @@ onMounted(() => {
     color: #dc3545;
 }
 
+.bg-light-secondary {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
+}
+
 .cursor-pointer {
     cursor: pointer;
 }
@@ -201,5 +196,10 @@ onMounted(() => {
     top: -18px;
     font-size: 0.85rem;
     color: #495057;
+}
+
+.text-muted {
+    color: #6c757d;
+    font-size: 0.85rem;
 }
 </style>

@@ -64,13 +64,13 @@
 </template>
 <script lang="ts" setup>
 import { ref } from "vue"
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
 const router = useRouter()
-const { login, loading } = useAuth()
+const authStore = useAuthStore()
 
 const type = ref<string>('password')
 const email = ref<string>("")
@@ -88,7 +88,7 @@ async function doLogin() {
 			return
 		}
 
-		const response = await login({
+		const response = await authStore.login({
 			email: email.value,
 			password: password.value,
 			remember_me: rememberMe.value

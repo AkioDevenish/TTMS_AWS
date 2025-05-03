@@ -13,13 +13,13 @@
 import { onMounted, ref, watch, onUnmounted } from "vue"
 import { useRouter } from 'vue-router'
 import { useProductsStore } from "@/store/products"
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import { useProgress } from '@/composables/useProgress';
 // let showLoader = ref<boolean>(false)
 let router = useRouter()
 const { start, done } = useProgress();
 
-const { checkAuth } = useAuth()
+const authStore = useAuthStore()
 
 router.beforeEach((to, from, next) => {
 	start();
@@ -62,8 +62,8 @@ onMounted(() => {
 		}
 	}, 0);
 
-	console.log('App mounted, checking auth...')
-	checkAuth()
+	console.log('App mounted')
+	// Removed authStore.checkAuth() to avoid duplicate /me requests
 })
 onUnmounted(() => {
 	window.removeEventListener('beforeunload', add)

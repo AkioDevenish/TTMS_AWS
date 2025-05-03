@@ -21,7 +21,7 @@
 
         <div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
           <a v-for="sensor in sensorTypes" :key="sensor" class="dropdown-item" href="#" 
-             @click.prevent="selectedSensorType = sensor">
+             @click.prevent="selectMeasurement(sensor)">
             {{ sensorConfig[sensor]?.name || sensor }}
           </a>
         </div>
@@ -59,8 +59,9 @@ const props = defineProps({
   }
 });
 
-const { measurements, stationInfo, getLast24HoursMeasurements, fetchStationData, fetchLast24HoursSensorData } = useStationData();
+const { measurements, stationInfo, getLast24HoursMeasurements, fetchStationData } = useStationData();
 const selectedSensorType = ref<string>('Air Temperature');
+const chartData = ref<any[]>([]);
 
 // Sensor configuration
 const sensorConfig: Record<string, { name: string; unit: string }> = {
@@ -76,21 +77,9 @@ const sensorTypes = computed(() => Object.keys(sensorConfig));
 const currentSensorName = computed(() => sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value);
 const currentSensorUnit = computed(() => sensorConfig[selectedSensorType.value]?.unit || '');
 
-const chartData = computed(() => {
-  const filteredData = getLast24HoursMeasurements.value.filter(
-    measurement => measurement.sensor_type === selectedSensorType.value
-  );
-
-  if (!filteredData.length) return [];
-
-  return [{
-    name: currentSensorName.value,
-    data: filteredData.map(item => ({
-      x: new Date(`${item.date}T${item.time}`).getTime(),
-      y: parseFloat(item.value.toString())
-    }))
-  }];
-});
+const selectMeasurement = (type: string) => {
+  selectedSensorType.value = type;
+};
 
 const chartOptions = computed(() => ({
   ...zentraOptions1,
@@ -109,9 +98,9 @@ const chartOptions = computed(() => ({
   },
   xaxis: {
     ...zentraOptions1.xaxis,
+    type: 'datetime',
     labels: {
-      ...zentraOptions1.xaxis.labels,
-      formatter: (val: string) => {
+      formatter: (val: number) => {
         const date = new Date(val);
         return date.toLocaleString('en-US', {
           month: 'numeric',
@@ -142,11 +131,47 @@ const chartOptions = computed(() => ({
   }
 }));
 
-watch([() => props.selectedStation, () => selectedSensorType.value], 
-  ([newStationId, sensorType]) => {
-    if (newStationId && sensorType) {
-      fetchLast24HoursSensorData(newStationId, sensorType);
+// Watch for station changes
+watch(() => props.selectedStation, (newStationId) => {
+  if (newStationId) {
+    console.log('Fetching data for station:', newStationId);
+    fetchStationData(newStationId);
+  }
+}, { immediate: true });
+
+// Watch for data changes
+watch([() => getLast24HoursMeasurements.value, () => selectedSensorType.value], 
+  ([newMeasurements, newSensorType]) => {
+    console.log('New measurements:', newMeasurements);
+    console.log('Selected sensor type:', newSensorType);
+    
+    if (!newMeasurements?.length) {
+      console.log('No measurements available');
+      chartData.value = [];
+      return;
     }
+
+    const filteredData = newMeasurements.filter(
+      measurement => measurement.sensor_type === newSensorType
+    );
+    
+    console.log('Filtered data:', filteredData);
+
+    if (!filteredData.length) {
+      console.log('No data for selected sensor type');
+      chartData.value = [];
+      return;
+    }
+
+    chartData.value = [{
+      name: sensorConfig[newSensorType]?.name || newSensorType,
+      data: filteredData.map(item => ({
+        x: new Date(`${item.date}T${item.time}`).getTime(),
+        y: parseFloat(item.value.toString())
+      }))
+    }];
+    
+    console.log('Chart data:', chartData.value);
   }, 
   { immediate: true }
 );

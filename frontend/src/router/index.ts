@@ -159,7 +159,7 @@ import indexPagenation from "@/pages/advance/indexPagenation.vue"
 import indexBreadcrumb from "@/pages/advance/indexBreadcrumb.vue"
 import indexRange from "@/pages/advance/indexRange.vue"
 
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import { useChatStore } from '@/store/chat'
 
 const routes: Array<RouteRecordRaw> = [
@@ -1815,10 +1815,11 @@ const routes: Array<RouteRecordRaw> = [
       requiresAdmin: true
     },
     beforeEnter: async (to, from, next) => {
-      const { checkAuth, isAdmin } = useAuth()
+      const authStore = useAuthStore()
+const { checkAuth, isAdmin } = authStore
       await checkAuth()
 
-      if (!isAdmin.value) {
+      if (!isAdmin) {
         next({ path: '/dashboard' })
       } else {
         next()
@@ -1860,29 +1861,35 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const { checkAuth, isAdmin, isStaff } = useAuth()
+  const authStore = useAuthStore()
+  const { checkAuth, isAdmin, isStaff, currentUser } = authStore
   const chatStore = useChatStore()
 
   // Allow access to login page without authentication
   if (to.path === '/auth/login') {
-    const isAuthenticated = await checkAuth()
-    if (isAuthenticated) {
-      next('/')
-      return
+    if (!currentUser) {
+      const isAuthenticated = await checkAuth()
+      if (isAuthenticated) {
+        next('/')
+        return
+      }
     }
     next()
     return
   }
 
   // Check authentication for protected routes
-  const isAuthenticated = await checkAuth()
+  let isAuthenticated = true
+  if (!currentUser) {
+    isAuthenticated = await checkAuth()
+  }
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/auth/login')
     return
   }
 
   // Check admin requirement
-  if (to.matched.some(record => record.meta.requiresAdmin) && !isAdmin.value) {
+  if (to.matched.some(record => record.meta.requiresAdmin) && !isAdmin) {
     next({ path: '/dashboard' })
     return
   }
