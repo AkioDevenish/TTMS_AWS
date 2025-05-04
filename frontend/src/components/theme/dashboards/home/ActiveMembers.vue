@@ -47,18 +47,19 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, onUnmounted } from 'vue'
-import { useUserManagement } from '@/composables/useUserManagement'
+import { defineAsyncComponent, onMounted, onUnmounted, computed } from 'vue'
+import { useUserStore } from '@/store/user'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-const { recentUsers, loading, fetchRecentUsers } = useUserManagement()
+const userStore = useUserStore()
+const recentUsers = computed(() => userStore.users.slice(0, 4))
+const loading = computed(() => userStore.loading)
 
 let refreshInterval: number;
 
 onMounted(async () => {
-    await fetchRecentUsers(4)
-    // Refresh every 5 minutes
-    refreshInterval = window.setInterval(() => fetchRecentUsers(4), 300000)
+    await userStore.fetchUsers()
+    refreshInterval = window.setInterval(() => userStore.fetchUsers(), 300000)
 })
 
 onUnmounted(() => {

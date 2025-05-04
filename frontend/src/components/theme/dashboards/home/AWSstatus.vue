@@ -67,15 +67,18 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, onMounted, computed, onUnmounted } from 'vue'
-import { useAWSStations } from '@/composables/useAWSStations'
+import { useAWSStationsStore } from '@/store/awsStations'
 import VueFeather from 'vue-feather'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-const { stations, fetchStations, loading, error } = useAWSStations()
+const awsStationsStore = useAWSStationsStore()
 
-// Check if we have any recent data (within last 24 hours)
+const stations = computed(() => awsStationsStore.stations)
+const loading = computed(() => awsStationsStore.loading)
+const error = computed(() => awsStationsStore.error)
+
 const hasRecentData = computed(() => {
-    return stations.value.some(station => {
+    return stations.value.some((station: any) => {
         if (!station.latestHealth?.created_at) return false
         const lastUpdate = new Date(station.latestHealth.created_at)
         const twentyFourHoursAgo = new Date()
@@ -86,22 +89,16 @@ const hasRecentData = computed(() => {
 
 const status = computed(() => {
     const total = stations.value.length
-    const noData = stations.value.filter(s => {
-        // Check if station has health data
+    const noData = stations.value.filter((s: any) => {
         if (!s.latestHealth || !s.latestHealth.created_at || s.latestHealth.connectivity_status !== 'Excellent') {
             return true
         }
-
-        // Check if data is older than 24 hours
         const lastUpdate = new Date(s.latestHealth.created_at)
         const twentyFourHoursAgo = new Date()
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
-        
         return lastUpdate < twentyFourHoursAgo
     }).length
-    
     const online = total - noData
-    
     return {
         total,
         online,
@@ -110,16 +107,13 @@ const status = computed(() => {
     }
 })
 
-// Update the getStationClass function to also check timestamp
 const getStationClass = (station: any) => {
     if (!station.latestHealth?.created_at || !station.latestHealth?.connectivity_status) {
         return 'bg-light-danger font-danger'
     }
-
     const lastUpdate = new Date(station.latestHealth.created_at)
     const twentyFourHoursAgo = new Date()
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
-
     if (station.latestHealth.connectivity_status === 'Excellent' && lastUpdate >= twentyFourHoursAgo) {
         return 'bg-light-primary font-primary'
     }
@@ -127,10 +121,7 @@ const getStationClass = (station: any) => {
 }
 
 onMounted(() => {
-    fetchStations()
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchStations, 300000)
-    onUnmounted(() => clearInterval(interval))
+    awsStationsStore.init()
 })
 </script>
 
