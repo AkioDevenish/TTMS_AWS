@@ -14,7 +14,8 @@ export interface AWSStation {
         humidity?: number;
         windSpeed?: number;
         rainfall?: number;
-    }
+    };
+    brand?: string;
 }
 
 export const getOfflineStations = (stations: AWSStation[]) => {

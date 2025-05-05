@@ -15,11 +15,13 @@ import { useRouter } from 'vue-router'
 import { useProductsStore } from "@/store/products"
 import { useAuthStore } from '@/store/auth'
 import { useProgress } from '@/composables/useProgress';
+import { useAWSStationsStore } from '@/store/awsStations'
 // let showLoader = ref<boolean>(false)
 let router = useRouter()
 const { start, done } = useProgress();
 
 const authStore = useAuthStore()
+const awsStationsStore = useAWSStationsStore()
 
 router.beforeEach((to, from, next) => {
 	start();
@@ -64,6 +66,7 @@ onMounted(() => {
 
 	console.log('App mounted')
 	// Removed authStore.checkAuth() to avoid duplicate /me requests
+	awsStationsStore.init()
 })
 onUnmounted(() => {
 	window.removeEventListener('beforeunload', add)

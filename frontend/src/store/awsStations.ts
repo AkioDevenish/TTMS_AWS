@@ -85,7 +85,8 @@ export const useAWSStationsStore = defineStore('awsStations', () => {
             created_at: healthLog?.created_at || null,
             station: station.id
           },
-          parameters: {}
+          parameters: {},
+          brand: station.brand || station.brand_name || ''
         }
       })
     } catch (err) {
@@ -101,6 +102,7 @@ export const useAWSStationsStore = defineStore('awsStations', () => {
   const init = async () => {
     if (initialized) return
     if (initPromise) return initPromise
+    // Set the promise immediately
     initPromise = (async () => {
       await fetchStations()
       refreshInterval = window.setInterval(fetchStations, 300000)

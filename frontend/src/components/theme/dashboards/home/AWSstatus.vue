@@ -119,10 +119,6 @@ const getStationClass = (station: any) => {
     }
     return 'bg-light-danger font-danger'
 }
-
-onMounted(() => {
-    awsStationsStore.init()
-})
 </script>
 
 <style scoped>

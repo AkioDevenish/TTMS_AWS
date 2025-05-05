@@ -84,10 +84,6 @@ const series = computed(() => [{
         stationStats.value.maintenance
     ]
 }])
-
-onMounted(() => {
-    awsStationsStore.init()
-})
 </script>
 
 <style scoped>
