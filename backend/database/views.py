@@ -824,12 +824,6 @@ class StationHealthLogViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        # Try to get from cache first
-        cache_key = 'station_health_logs_latest'
-        cached_queryset = cache.get(cache_key)
-        if cached_queryset is not None:
-            return cached_queryset
-
         # Get the latest health log for each station using a more efficient query
         latest_logs = (
             StationHealthLog.objects
@@ -846,9 +840,6 @@ class StationHealthLogViewSet(viewsets.ModelViewSet):
             .order_by('station__name')
         )
         
-        # Cache the result for 1 minute
-        cache.set(cache_key, queryset, timeout=60)
-        
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -861,16 +852,13 @@ class StationHealthLogViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Get or create the latest health log
+            # Create the health log
             health_log = StationHealthLog.objects.create(
                 station_id=station_id,
                 battery_status=request.data.get('battery_status', 'Unknown'),
                 connectivity_status=request.data.get('connectivity_status', 'No Data'),
                 created_at=timezone.now()
             )
-
-            # Invalidate the cache when new data is added
-            cache.delete('station_health_logs_latest')
 
             serializer = self.get_serializer(health_log)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
