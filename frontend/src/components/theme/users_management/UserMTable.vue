@@ -92,7 +92,6 @@ onMounted(async () => {
         router.go(-1)
         return
     }
-    await userStore.fetchUsers()
 })
 
 const cycleStatus = async (user: any) => {

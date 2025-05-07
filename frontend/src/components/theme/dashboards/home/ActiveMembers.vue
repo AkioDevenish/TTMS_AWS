@@ -23,15 +23,15 @@
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="flex-grow-1">
-                                    <h5 class="mb-0">{{ user.username || `${user.first_name} ${user.last_name}`.trim() }}</h5>
-                                    <span class="text-muted">{{ user.role || (user.is_superuser ? 'Admin' : user.is_staff ? 'Staff' : 'User') }}</span>
+                                    <h5 class="mb-0">{{ (user as any).username || `${(user as any).first_name} ${(user as any).last_name}`.trim() }}</h5>
+                                    <span class="text-muted">{{ (user as any).role || ((user as any).is_superuser ? 'Admin' : (user as any).is_staff ? 'Staff' : 'User') }}</span>
                                 </div>
                             </div>
                         </td>
-                        <td>{{ user.email }}</td>
+                        <td>{{ (user as any).email }}</td>
                         <td>
-                            <p class="members-box text-center" :class="user.status === 'Active' ? 'bg-light-success' : 'bg-light-danger'">
-                                {{ user.status }}
+                            <p class="members-box text-center" :class="(user as any).status === 'Active' ? 'bg-light-success' : 'bg-light-danger'">
+                                {{ (user as any).status }}
                             </p>
                         </td>
                     </tr>
@@ -47,13 +47,24 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, onUnmounted, computed } from 'vue'
+import { defineAsyncComponent, onMounted, onUnmounted, computed, defineProps } from 'vue'
 import { useUserStore } from '@/store/user'
 
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
 const userStore = useUserStore()
-const recentUsers = computed(() => userStore.users.slice(0, 4))
-const loading = computed(() => userStore.loading)
+
+const props = defineProps({
+  users: {
+    type: Array,
+    required: true
+  },
+  loading: {
+    type: Boolean,
+    required: true
+  }
+})
+
+const recentUsers = computed(() => props.users.slice(0, 4))
 
 let refreshInterval: number;
 

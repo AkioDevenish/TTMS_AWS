@@ -161,15 +161,19 @@ class Measurement(models.Model):
 
 class StationHealthLog(models.Model):
     station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name='health_logs')
-    battery_status = models.CharField(max_length=50)
-    connectivity_status = models.CharField(max_length=50)
+    battery_status = models.CharField(max_length=50, default='Unknown')
+    connectivity_status = models.CharField(max_length=50, default='No Data')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'station_health_logs'
+        indexes = [
+            models.Index(fields=['station_id', '-created_at'], name='idx_station_health_created'),
+            models.Index(fields=['connectivity_status'], name='idx_connectivity_status')
+        ]
 
     def __str__(self):
-        return f"{self.station} - {self.created_at}"
+        return f"{self.station.name} - {self.created_at}"
 
 # Relationships and Access Control
 class StationSensor(models.Model):

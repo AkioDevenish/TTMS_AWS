@@ -47,14 +47,16 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.renderers import JSONRenderer
 from rest_framework_xml.renderers import XMLRenderer
 from .renderers import MeasurementCSVRenderer, StationCSVRenderer
+from django.core.cache import cache
+from django.db import models
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 100
+    page_size = 50
     page_size_query_param = 'page_size'
-    max_page_size = 1000
+    max_page_size = 500
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
@@ -816,27 +818,38 @@ class HistoricalDataViewSet(viewsets.ViewSet):
             )
 
 
-class StationHealthLogPagination(PageNumberPagination):
-    page_size = 50
-    page_size_query_param = 'page_size'
-    max_page_size = 500
-
 class StationHealthLogViewSet(viewsets.ModelViewSet):
     queryset = StationHealthLog.objects.all()
     serializer_class = StationHealthLogSerializer
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        # Get only the latest health log for each station
-        latest_logs = StationHealthLog.objects.filter(
-            station=OuterRef('station')
-        ).order_by('-created_at')
+        # Try to get from cache first
+        cache_key = 'station_health_logs_latest'
+        cached_queryset = cache.get(cache_key)
+        if cached_queryset is not None:
+            return cached_queryset
+
+        # Get the latest health log for each station using a more efficient query
+        latest_logs = (
+            StationHealthLog.objects
+            .values('station')
+            .annotate(max_id=models.Max('id'))
+            .values('max_id')
+        )
         
-        return StationHealthLog.objects.filter(
-            id=Subquery(
-                latest_logs.values('id')[:1]
-            )
-        ).select_related('station')
+        # Get the actual logs with related station data
+        queryset = (
+            StationHealthLog.objects
+            .filter(id__in=latest_logs)
+            .select_related('station')
+            .order_by('station__name')
+        )
+        
+        # Cache the result for 1 minute
+        cache.set(cache_key, queryset, timeout=60)
+        
+        return queryset
 
     def create(self, request, *args, **kwargs):
         try:
@@ -855,6 +868,9 @@ class StationHealthLogViewSet(viewsets.ModelViewSet):
                 connectivity_status=request.data.get('connectivity_status', 'No Data'),
                 created_at=timezone.now()
             )
+
+            # Invalidate the cache when new data is added
+            cache.delete('station_health_logs_latest')
 
             serializer = self.get_serializer(health_log)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1694,24 +1710,29 @@ def latest_station_health(request):
 def station_health_logs(request):
     """Get latest health logs for stations."""
     try:
+        cache_key = f"station_health_logs:{request.get_full_path()}"
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            return Response(cached_response)
         # Get parameters
         brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,AWS')
         brand_list = brands.split(',')
 
-        # Get all stations for the specified brands
+        # Annotate each station with the latest health log id
+        latest_log_subquery = StationHealthLog.objects.filter(
+            station=OuterRef('pk')
+        ).order_by('-created_at').values('id')[:1]
+
         stations = Station.objects.filter(
             brand__name__in=brand_list
+        ).annotate(
+            latest_log_id=Subquery(latest_log_subquery)
         ).select_related('brand')
 
-        # Get the latest health log for each station in a single query
+        # Get the latest health logs in a single query
         latest_logs = StationHealthLog.objects.filter(
-            station__brand__name__in=brand_list
-        ).select_related(
-            'station', 
-            'station__brand'
-        ).order_by(
-            '-created_at'
-        ).distinct('station_id')
+            id__in=[s.latest_log_id for s in stations if s.latest_log_id]
+        ).select_related('station', 'station__brand')
 
         response_data = {
             'data': [{
@@ -1727,10 +1748,11 @@ def station_health_logs(request):
             'page': 1,
             'page_size': 100
         }
-
+        cache.set(cache_key, response_data, timeout=10)
         return Response(response_data)
 
     except Exception as e:
+        import traceback
         print(f"Error in station_health_logs: {str(e)}")
         print(traceback.format_exc())
         return Response({
