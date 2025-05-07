@@ -119,18 +119,18 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import axios from 'axios'
 
 const router = useRouter()
-const { currentUser, checkAuth } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 
 const isAdminUser = computed(() => {
 	return currentUser.value?.is_superuser === true
 })
 
 onMounted(async () => {
-	await checkAuth()
 	if (!isAdminUser.value) {
 		router.push('/dashboard/default')
 	}

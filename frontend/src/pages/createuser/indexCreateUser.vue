@@ -14,13 +14,14 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, onMounted } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 
 const Card3 = defineAsyncComponent(() => import("@/components/common/card/CardData3.vue"))
 const NewUser = defineAsyncComponent(() => import("@/components/theme/users_management/createuser/NewUser.vue"))
-const { requireAuth, isAdmin } = useAuth()
+const authStore = useAuthStore()
+const { isAdmin } = authStore
 
-onMounted(async () => {
-  await requireAuth('admin')
+onMounted(() => {
+  // Use isAdmin directly
 })
 </script>

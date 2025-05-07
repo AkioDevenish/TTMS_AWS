@@ -81,6 +81,7 @@
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
+import { useAWSStationsStore } from '@/store/awsStations'
 
     
 interface HighestRecord {
@@ -145,34 +146,29 @@ const formatTime = (time: string) => {
     });
 };
 
+const awsStationsStore = useAWSStationsStore()
+
 const fetchHighestRecords = async () => {
     try {
-        // First fetch all available brands from the stations endpoint
-        const stationsResponse = await axios.get('/stations/');
-        
-        // Extract unique brands from stations data
-        const brands = [...new Set(stationsResponse.data.map((station) => station.brand_name))];
-        
-        // Update uniqueBrandsData with all available brands
+        // Extract unique brands from store data, filtering out undefined
+        const brands = [...new Set(awsStationsStore.stations.map((station) => station.brand).filter((b): b is string => !!b))];
         uniqueBrandsData.value = brands;
-        
-        // Set initial selected brand if not already set
         if (!selectedBrand.value && brands.length > 0) {
             selectedBrand.value = brands[0];
         }
-        
-        // Then fetch measurements for the selected brand (no page_size param)
+        // Only fetch if selectedBrand is set
+        if (!selectedBrand.value) {
+            allData.value = [];
+            return;
+        }
+        // Fetch measurements for the selected brand
         const measurementsResponse = await axios.get('/measurements/highest_by_brand/', {
             params: {
                 brand: selectedBrand.value
             }
         });
-        
-        console.log(`Received ${measurementsResponse.data.length} records for ${selectedBrand.value}`);
-        
-        // Update the data
         allData.value = measurementsResponse.data;
-        currentPage.value = 1; // Reset to first page when data changes
+        currentPage.value = 1;
     } catch (error) {
         console.error('Error fetching data:', error);
         allData.value = [];

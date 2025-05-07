@@ -10,11 +10,11 @@
 				</button>
 
 				<div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bt1')">Temperature 1</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('mt1')">Temperature 2</a>
+					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bt1')">BMX280 Temperature</a>
+					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('mt1')">MCP9808 Temperature</a>
 					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('ws')">Wind Speed</a>
 					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wd')">Wind Direction</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('rg')">Precipitation</a>
+					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('rg')">Rain Gauge</a>
 					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bp1')">Pressure</a>
 					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('sv1')">Downwelling Visible</a>
 					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('si1')">Downwelling Infrared</a>
@@ -27,9 +27,21 @@
 
 		<!-- Chart Section -->
 		<div class="chart-container">
-			<apexchart v-if="chartData.length > 0" type="area" height="330" ref="chart" :options="chartOptions" :series="chartData"></apexchart>
-			<div v-else>
-				<p>No data available to display.</p>
+			<div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 330px;">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
+			<apexchart
+				v-else-if="chartData.length > 0"
+				type="area"
+				height="330"
+				ref="chart"
+				:options="chartOptions"
+				:series="chartData"
+			></apexchart>
+			<div v-else class="d-flex justify-content-center align-items-center" style="height: 330px;">
+				<p class="text-muted">No data available to display.</p>
 			</div>
 		</div>
 	</Card1>
@@ -37,7 +49,9 @@
 
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, onMounted, watch, computed, defineProps, onUnmounted, PropType } from 'vue';
+import VueApexCharts from 'vue3-apexcharts';
 import { zentraOptions1 } from '@/core/data/chart';
+import { useStationData } from '@/composables/useStationData';
 
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
@@ -56,34 +70,24 @@ const props = defineProps({
 	}
 });
 
-const chartData = ref<any[]>([]);
+const { measurements: stationMeasurements, stationInfo: stationInfoData, getLast24HoursMeasurements, fetchStationData } = useStationData();
 const selectedSensorType = ref<string>('bt1');
+const chartData = ref<any[]>([]);
+const isLoading = ref(false);
 
 // Mapping of sensor types to display names and units
 const sensorConfig: Record<string, { name: string; unit: string }> = {
-	'bp1': { name: 'Pressure', unit: 'hPa' },
-	'bt1': { name: 'Temperature 1', unit: '°C' },
-	'mt1': { name: 'Temperature 2', unit: '°C' },
+	'bp1': { name: 'BMX280 Pressure', unit: 'hPa' },
+	'bt1': { name: 'BMX280 Temperature', unit: '°C' },
+	'mt1': { name: 'MCP9808 Temperature', unit: '°C' },
 	'ws': { name: 'Wind Speed', unit: 'm/s' },
 	'wd': { name: 'Wind Direction', unit: '°' },
-	'rg': { name: 'Precipitation', unit: 'mm' },
+	'rg': { name: 'Rain Gauge', unit: 'mm' },
 	'sv1': { name: 'Downwelling Visible', unit: 'W/m²' },
 	'si1': { name: 'Downwelling Infrared', unit: 'W/m²' },
 	'su1': { name: 'Downwelling Ultraviolet', unit: 'W/m²' },
 	'bpc': { name: 'Battery Percent', unit: '%' },
 	'css': { name: 'Cell Signal Strength', unit: '%' }
-};
-
-// Format timestamp for display
-const formatTimestamp = (timestamp: string) => {
-	const date = new Date(timestamp);
-	return date.toLocaleString('en-US', {
-		month: 'numeric',
-		day: 'numeric',
-		hour: '2-digit',
-		minute: '2-digit',
-		hour12: true
-	});
 };
 
 // Get the current sensor's display name
@@ -102,60 +106,89 @@ const chartOptions = computed(() => ({
 	yaxis: {
 		...zentraOptions1.yaxis,
 		title: {
-			...zentraOptions1.yaxis.title,
 			text: `${currentSensorName.value} (${currentSensorUnit.value})`,
 			style: {
-				...zentraOptions1.yaxis.title.style,
 				fontSize: '14px',
 				fontWeight: 500
 			}
 		},
 		labels: {
-			...zentraOptions1.yaxis.labels,
 			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
 		}
 	},
 	xaxis: {
 		...zentraOptions1.xaxis,
+		type: 'datetime',
 		labels: {
-			...zentraOptions1.xaxis.labels,
-			formatter: (val: string) => formatTimestamp(val)
+			formatter: (val: number) => {
+				const date = new Date(val);
+				return date.toLocaleString('en-US', {
+					month: 'numeric',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					hour12: true
+				});
+			}
 		}
 	},
 	tooltip: {
-		...zentraOptions1.tooltip,
+		x: {
+			formatter: (val: number) => {
+				const date = new Date(val);
+				return date.toLocaleString('en-US', {
+					month: 'numeric',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					hour12: true
+				});
+			}
+		},
 		y: {
 			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
 		}
 	}
 }));
 
-// Add watch for selectedSensorType changes
-watch([() => props.measurements, () => selectedSensorType.value], ([newMeasurements, newSensorType]) => {
-	if (!Array.isArray(newMeasurements) || !newMeasurements.length) {
-		chartData.value = [];
-		return;
-	}
+// Watch for measurements and selected sensor type changes
+watch([() => getLast24HoursMeasurements.value, () => selectedSensorType.value], 
+	([newMeasurements, newSensorType]) => {
+		console.log('New measurements:', newMeasurements);
+		console.log('Selected sensor type:', newSensorType);
+		
+		if (!newMeasurements?.length) {
+			console.log('No measurements available');
+			chartData.value = [];
+			return;
+		}
 
-	const filteredData = newMeasurements.filter(measurement =>
-		measurement.sensor_type === newSensorType
-	);
+		const filteredData = newMeasurements.filter(
+			measurement => measurement.sensor_type === newSensorType
+		);
+		
+		console.log('Filtered data:', filteredData);
 
-	if (filteredData.length === 0) {
-		chartData.value = [];
-		return;
-	}
+		if (!filteredData.length) {
+			console.log('No data for selected sensor type');
+			chartData.value = [];
+			return;
+		}
 
-	chartData.value = [{
-		name: sensorConfig[newSensorType]?.name || 'Unknown',
-		data: filteredData.map(item => ({
-			x: new Date(`${item.date}T${item.time}`).getTime(),
-			y: parseFloat(item.value)
-		}))
-	}];
-}, { immediate: true });
+		chartData.value = [{
+			name: sensorConfig[newSensorType]?.name || newSensorType,
+			data: filteredData.map(item => ({
+				x: new Date(`${item.date}T${item.time}`).getTime(),
+				y: parseFloat(item.value.toString())
+			}))
+		}];
+		
+		console.log('Chart data:', chartData.value);
+	}, 
+	{ immediate: true }
+);
 
-// Modify selectMeasurement to only update the selected type
+// Handle measurement selection
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
 };
@@ -165,11 +198,10 @@ let refreshInterval: number | undefined;
 
 onMounted(() => {
 	refreshInterval = setInterval(() => {
-		// Just trigger a re-render of the chart
-		if (props.measurements.length > 0) {
+		if (chartData.value.length > 0) {
 			chartData.value = [...chartData.value];
 		}
-	}, 60000);
+	}, 1000);
 });
 
 onUnmounted(() => {
@@ -177,6 +209,14 @@ onUnmounted(() => {
 		clearInterval(refreshInterval);
 	}
 });
+
+// Watch for station changes
+watch(() => props.selectedStation, (newStationId) => {
+	if (newStationId) {
+		console.log('Fetching data for station:', newStationId);
+		fetchStationData(newStationId);
+	}
+}, { immediate: true });
 </script>
 
 <style scoped>

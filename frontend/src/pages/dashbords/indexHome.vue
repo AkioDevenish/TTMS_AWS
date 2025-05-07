@@ -5,7 +5,7 @@
             <!-- Admin Components -->
             <template v-if="isAdmin">
                 <ScheduledUpdates />
-                <ActiveMembers />
+                <ActiveMembers :users="users" :loading="loading" />
                 <AWSstatus/>
                 <InactiveSensors/>
                 <StationsOverview/>
@@ -25,10 +25,15 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, ref } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { defineAsyncComponent, onMounted, ref, computed } from 'vue'
+import { useAuthStore } from '@/store/auth'
+import { useUserStore } from '@/store/user'
 
-const { isAdmin, currentUser, checkAuth } = useAuth()
+const authStore = useAuthStore()
+const { isAdmin, currentUser } = authStore
+const userStore = useUserStore()
+const users = computed(() => userStore.users)
+const loading = computed(() => userStore.loading)
 const showDebug = ref(true) // Set to false in production
 
 // Admin/User components
@@ -38,10 +43,9 @@ const AWSstatus = defineAsyncComponent(() => import('@/components/theme/dashboar
 const HighestRecord = defineAsyncComponent(() => import("@/components/theme/dashboards/home/HighestRecord.vue"))   
 const StationsOverview = defineAsyncComponent(() => import("@/components/theme/dashboards/home/StationsOverview.vue"))
 const InactiveSensors = defineAsyncComponent(() => import("@/components/theme/dashboards/home/InactiveSensors.vue"))
-onMounted(async () => {
-    await checkAuth()
-    console.log('Is Admin:', isAdmin.value)
-    console.log('Current User:', currentUser.value)
+onMounted(() => {
+    console.log('Is Admin:', isAdmin)
+    console.log('Current User:', currentUser)
 })
 </script>
 

@@ -1,3 +1,4 @@
+import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
@@ -20,7 +21,7 @@ interface User {
   status: string
 }
 
-export function useAuth() {
+export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -55,23 +56,16 @@ export function useAuth() {
       if (response.data.access) {
         setAuthToken(response.data.access)
         localStorage.setItem('refresh_token', response.data.refresh)
-
-        // Wait for user data to be fetched and set
         await refreshUserData()
-
-        // Now currentUser.value should be set
-        if (currentUser.value?.status === 'Suspended') {
+        if (currentUser.value && (currentUser.value as User).status === 'Suspended') {
           clearAuth()
           error.value = 'Your account has been suspended. Please contact support.'
           return { success: false, error: error.value }
         }
-
-        // Only now, redirect or return success
         return { success: true, user: currentUser.value }
       }
       return { success: false }
     } catch (error: any) {
-      console.error('Login error:', error)
       error.value = error.response?.data?.error || 'Login failed'
       return { success: false, error: error.value }
     } finally {
@@ -82,7 +76,6 @@ export function useAuth() {
   const refreshUserData = async () => {
     try {
       const response = await axios.get('/user/me/')
-   
       currentUser.value = {
         id: response.data.id,
         username: `${response.data.first_name} ${response.data.last_name}`.trim(),
@@ -94,17 +87,13 @@ export function useAuth() {
         last_name: response.data.last_name,
         status: response.data.status
       }
-
-      // Check if user is suspended
-      if (currentUser.value.status === 'Suspended') {
+      if ((currentUser.value as User).status === 'Suspended') {
         clearAuth()
         error.value = 'Your account has been suspended. Please contact support.'
         return false
       }
-
       isAuthenticated.value = true
     } catch (error) {
-      console.error('Error fetching user data:', error)
       clearAuth()
       throw error
     }
@@ -118,7 +107,7 @@ export function useAuth() {
     }
     if (currentUser.value) {
       isAuthenticated.value = true
-      if (currentUser.value && (currentUser.value as User).status === 'Suspended') {
+      if ((currentUser.value as User).status === 'Suspended') {
         clearAuth()
         error.value = 'Your account has been suspended. Please contact support.'
         return false
@@ -142,22 +131,18 @@ export function useAuth() {
 
   const requireAuth = async (requiredRole?: 'admin' | 'staff') => {
     const isAuthed = await checkAuth()
-
     if (!isAuthed) {
       router.push('/auth/login')
       return false
     }
-
     if (requiredRole === 'admin' && !isAdmin.value) {
       router.push('/unauthorized')
       return false
     }
-
     if (requiredRole === 'staff' && !isStaff.value && !isAdmin.value) {
       router.push('/unauthorized')
       return false
     }
-
     return true
   }
 
@@ -186,4 +171,4 @@ export function useAuth() {
     requireAuth,
     hasRequiredRole
   }
-}
+}) 

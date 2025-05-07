@@ -2,14 +2,22 @@
 	<div class="container-fluid dashboard-4">
 		<div class="row mb-4">
 			<div class="col-12">
-				<div class="d-flex align-items-center">
-					<div class="station-selector" style="width: 300px;">
+				<div class="d-flex align-items-start gap-4">
+					<div class="station-selector">
 						<label for="stationSelect" class="form-label">Select OTT Station</label>
 						<select id="stationSelect" v-model="selectedStation" class="form-select">
 							<option v-for="station in stationNames" :key="station.id" :value="station.id">
 								{{ station.name }}
 							</option>
 						</select>
+					</div>
+					<div class="station-export flex-grow-1" v-if="selectedStation">
+						<StationDataExport 
+							:stationId="selectedStation"
+							:stationName="getSelectedStationName"
+							:sensors="availableSensors"
+							brand="OTT"
+						/>
 					</div>
 				</div>
 			</div>
@@ -32,7 +40,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { useStationData } from '@/composables/useStationData';
@@ -46,10 +54,40 @@ interface Station {
 const HydrometInsMonitor = defineAsyncComponent(() => import("@/components/theme/stations/hydromet/HydrometInsMonitor.vue"));
 const HydrometStatistics = defineAsyncComponent(() => import("@/components/theme/stations/hydromet/HydrometStatistics.vue"));
 const HydrometTempCard = defineAsyncComponent(() => import("@/components/theme/stations/hydromet/HydrometTempCard.vue"));
+const StationDataExport = defineAsyncComponent(() => import("@/components/theme/stations/StationDataExport.vue"));
 
 const stationNames = ref<Station[]>([]);
 const selectedStation = ref<number>(0);
 const ottData = useStationData();
+
+// Get the name of the selected station
+const getSelectedStationName = computed(() => {
+	const station = stationNames.value.find(s => s.id === selectedStation.value);
+	return station?.name || '';
+});
+
+// List of available sensors for OTT stations
+const availableSensors = computed(() => [
+	'5 min rain',
+	'Air Temperature',
+	'Barometric Pressure',
+	'Baro Tendency',
+	'Battery',
+	'Daily Rain',
+	'Dew Point',
+	'Gust Direction',
+	'Gust Speed',
+	'Hours of Sunshine',
+	'Maximum Air Temperature',
+	'Minimum Air Temperature',
+	'Relative Humidity',
+	'Solar Radiation Avg',
+	'Solar Radiation Total',
+	'Wind Dir Average',
+	'Wind Dir Inst',
+	'Wind Speed Average',
+	'Wind Speed Inst'
+]);
 
 const fetchStationNames = async () => {
 	try {
@@ -60,8 +98,8 @@ const fetchStationNames = async () => {
 		if (ottStations.length > 0 && !selectedStation.value) {
 			selectedStation.value = ottStations[0].id;
 		}
-	} catch (error) {
-		console.error('Error fetching station names:', error);
+	} catch (err) {
+		console.error('Error fetching station names:', err);
 	}
 };
 
@@ -76,6 +114,14 @@ onMounted(fetchStationNames);
 
 <style scoped>
 .station-selector {
+	background-color: white;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+	width: 300px;
+}
+
+.station-export {
 	background-color: white;
 	padding: 1rem;
 	border-radius: 0.5rem;
@@ -100,5 +146,9 @@ onMounted(fetchStationNames);
 .form-select:focus {
 	border-color: #7A70BA;
 	box-shadow: 0 0 0 0.2rem rgba(122, 112, 186, 0.25);
+}
+
+.gap-4 {
+	gap: 1.5rem;
 }
 </style>

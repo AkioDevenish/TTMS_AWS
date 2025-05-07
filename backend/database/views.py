@@ -47,14 +47,16 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.renderers import JSONRenderer
 from rest_framework_xml.renderers import XMLRenderer
 from .renderers import MeasurementCSVRenderer, StationCSVRenderer
+from django.core.cache import cache
+from django.db import models
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 100
+    page_size = 50
     page_size_query_param = 'page_size'
-    max_page_size = 1000
+    max_page_size = 500
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
@@ -816,27 +818,29 @@ class HistoricalDataViewSet(viewsets.ViewSet):
             )
 
 
-class StationHealthLogPagination(PageNumberPagination):
-    page_size = 50
-    page_size_query_param = 'page_size'
-    max_page_size = 500
-
 class StationHealthLogViewSet(viewsets.ModelViewSet):
     queryset = StationHealthLog.objects.all()
     serializer_class = StationHealthLogSerializer
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        # Get only the latest health log for each station
-        latest_logs = StationHealthLog.objects.filter(
-            station=OuterRef('station')
-        ).order_by('-created_at')
+        # Get the latest health log for each station using a more efficient query
+        latest_logs = (
+            StationHealthLog.objects
+            .values('station')
+            .annotate(max_id=models.Max('id'))
+            .values('max_id')
+        )
         
-        return StationHealthLog.objects.filter(
-            id=Subquery(
-                latest_logs.values('id')[:1]
-            )
-        ).select_related('station')
+        # Get the actual logs with related station data
+        queryset = (
+            StationHealthLog.objects
+            .filter(id__in=latest_logs)
+            .select_related('station')
+            .order_by('station__name')
+        )
+        
+        return queryset
 
     def create(self, request, *args, **kwargs):
         try:
@@ -848,7 +852,7 @@ class StationHealthLogViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Get or create the latest health log
+            # Create the health log
             health_log = StationHealthLog.objects.create(
                 station_id=station_id,
                 battery_status=request.data.get('battery_status', 'Unknown'),
@@ -1568,6 +1572,39 @@ class BillViewSet(viewsets.ModelViewSet):
 @permission_classes([AllowAny])
 def get_task_execution_status(request):
     try:
+        # Check if Celery is running by trying to ping it
+        try:
+            from celery.task.control import inspect
+            insp = inspect()
+            if not insp.active():
+                # Return tasks with "Not Started" status if Celery is not running
+                tasks = TaskExecution.objects.all().order_by('task_name')
+                task_statuses = [{
+                    'id': task.id,
+                    'name': task.task_name,
+                    'brand': task.task_name.replace('_', ' ').title(),
+                    'status': 'Not Started',
+                    'last_updated': None,
+                    'time_until_next': 0,
+                    'progress': 0
+                } for task in tasks]
+                return Response(task_statuses)
+        except Exception as e:
+            logger.warning(f"Could not check Celery status: {str(e)}")
+            # Assume Celery is not running if we can't check
+            tasks = TaskExecution.objects.all().order_by('task_name')
+            task_statuses = [{
+                'id': task.id,
+                'name': task.task_name,
+                'brand': task.task_name.replace('_', ' ').title(),
+                'status': 'Not Started',
+                'last_updated': None,
+                'time_until_next': 0,
+                'progress': 0
+            } for task in tasks]
+            return Response(task_statuses)
+
+        # If Celery is running, proceed with normal status calculation
         tasks = TaskExecution.objects.all().order_by('task_name')
         current_time = timezone.now()
         
@@ -1661,24 +1698,29 @@ def latest_station_health(request):
 def station_health_logs(request):
     """Get latest health logs for stations."""
     try:
+        cache_key = f"station_health_logs:{request.get_full_path()}"
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            return Response(cached_response)
         # Get parameters
         brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,AWS')
         brand_list = brands.split(',')
 
-        # Get all stations for the specified brands
+        # Annotate each station with the latest health log id
+        latest_log_subquery = StationHealthLog.objects.filter(
+            station=OuterRef('pk')
+        ).order_by('-created_at').values('id')[:1]
+
         stations = Station.objects.filter(
             brand__name__in=brand_list
+        ).annotate(
+            latest_log_id=Subquery(latest_log_subquery)
         ).select_related('brand')
 
-        # Get the latest health log for each station in a single query
+        # Get the latest health logs in a single query
         latest_logs = StationHealthLog.objects.filter(
-            station__brand__name__in=brand_list
-        ).select_related(
-            'station', 
-            'station__brand'
-        ).order_by(
-            '-created_at'
-        ).distinct('station_id')
+            id__in=[s.latest_log_id for s in stations if s.latest_log_id]
+        ).select_related('station', 'station__brand')
 
         response_data = {
             'data': [{
@@ -1694,10 +1736,11 @@ def station_health_logs(request):
             'page': 1,
             'page_size': 100
         }
-
+        cache.set(cache_key, response_data, timeout=10)
         return Response(response_data)
 
     except Exception as e:
+        import traceback
         print(f"Error in station_health_logs: {str(e)}")
         print(traceback.format_exc())
         return Response({
@@ -1761,10 +1804,14 @@ def aws_station_health_logs(request):
             'page_size': 100
         }
         
-        # Get the latest health logs in a single query
+        # Get timestamp for 24 hours ago
+        twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
+        
+        # Get the latest health logs in a single query, only from last 24 hours
         station_logs = {}
         latest_logs = StationHealthLog.objects.filter(
-            station_id__in=[s.id for s in stations]
+            station_id__in=[s.id for s in stations],
+            created_at__gte=twenty_four_hours_ago
         ).order_by('-created_at')
         
         for log in latest_logs:
@@ -1775,23 +1822,21 @@ def aws_station_health_logs(request):
         for station in stations:
             log = station_logs.get(station.id)
             
-            # For AWS stations, default to online with Excellent connectivity
-            status = 'Online'
-            connectivity_status = 'Excellent'
-            created_at = timezone.now()
+            # Default status is Offline if no data in last 24 hours
+            status = 'Offline'
+            connectivity_status = 'No Data'
+            created_at = None
             
             if log:
                 if log.connectivity_status and log.connectivity_status != 'Unknown' and log.connectivity_status != 'No Data':
                     connectivity_status = log.connectivity_status
+                    # Only mark as online if we have recent data and connectivity is Excellent
+                    if connectivity_status == 'Excellent':
+                        status = 'Online'
                 created_at = log.created_at
-                
-                # Check if data is too old (more than 48 hours)
-                time_diff = timezone.now() - log.created_at
-                if time_diff.total_seconds() > 172800:  # 48 hours in seconds
-                    status = 'Offline'
             
-            # Update station's is_active field directly
-            station.is_active = True
+            # Update station's is_active field based on recent data
+            station.is_active = status == 'Online'
             station.save(update_fields=['is_active'])
             
             response_data['data'].append({
@@ -1806,7 +1851,15 @@ def aws_station_health_logs(request):
         
         return Response(response_data)
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        print(f"Error in aws_station_health_logs: {str(e)}")
+        print(traceback.format_exc())
+        return Response({
+            'data': [],
+            'total': 0,
+            'page': 1,
+            'page_size': 100,
+            'error': str(e)
+        })
 
 @api_view(['GET'])
 def get_latest_health_logs(request):

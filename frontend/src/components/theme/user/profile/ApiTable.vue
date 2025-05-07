@@ -77,18 +77,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 
 // Define the type explicitly to avoid the TypeScript error
 const apiKeys = ref<any[]>([])
 const isLoading = ref(true)
 const route = useRoute()
-const { currentUser } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 
 // Fetch API keys on component mount
 onMounted(async () => {
@@ -141,9 +142,9 @@ const fetchApiKeys = async () => {
         })
         
         // Create a map of the latest user agent for each API key
-        const userAgentMap = {}
+        const userAgentMap: { [key: string]: { user_agent: string; created_at: string } } = {}
         if (Array.isArray(logsResponse.data?.results)) {
-            logsResponse.data.results.forEach(log => {
+            logsResponse.data.results.forEach((log: any) => {
                 const keyId = log.api_key
                 // Only update if this is a newer log entry than what we have already
                 if (!userAgentMap[keyId] || new Date(log.created_at) > new Date(userAgentMap[keyId].created_at)) {
@@ -156,7 +157,7 @@ const fetchApiKeys = async () => {
         }
         
         // Filter keys to only show those matching the user's email
-        let filteredKeys = []
+        let filteredKeys: any[] = []
         if (Array.isArray(response.data) && user?.email) {
             filteredKeys = response.data.filter(key => 
                 key.email === user.email || 
@@ -192,7 +193,7 @@ const fetchApiKeys = async () => {
 }
 
 // Format date for display
-const formatDate = (dateString) => {
+const formatDate = (dateString: any) => {
     if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -204,20 +205,20 @@ const formatDate = (dateString) => {
 }
 
 // Check if an API key is expired
-const isExpired = (expiryDate) => {
+const isExpired = (expiryDate: any) => {
     if (!expiryDate) return true
     return new Date(expiryDate) < new Date()
 }
 
 // Mask API key for display (show only last 12 characters)
-const maskApiKey = (apiKey) => {
+const maskApiKey = (apiKey: any) => {
     if (!apiKey) return 'N/A'
     const str = apiKey.toString()
     return '••••••••-••••-••••-••••-' + str.substring(str.length - 12)
 }
 
 // Copy API key to clipboard
-const copyApiKey = (apiKey) => {
+const copyApiKey = (apiKey: any) => {
     navigator.clipboard.writeText(apiKey)
         .then(() => {
             toast.success('API key copied to clipboard', {

@@ -33,19 +33,34 @@ export function useStationData() {
     try {
       const [stationResponse, measurementsResponse] = await Promise.all([
         axios.get(`/stations/${stationId}/`),
-        axios.get(`/measurements/by_station/?station_id=${stationId}`),
-        axios.get('/measurements/', {
+        axios.get(`/measurements/by_station/`, {
           params: {
             station_id: stationId,
-            page: 1
+            hours: 24 // Get last 24 hours of data
           }
         })
       ]);
 
-
       stationInfo.value = stationResponse.data;
-      measurements.value = measurementsResponse.data || [];
+      
+      // Ensure measurements is an array and has the correct structure
+      if (Array.isArray(measurementsResponse.data)) {
+        measurements.value = measurementsResponse.data.map(m => ({
+          ...m,
+          value: parseFloat(m.value),
+          date: m.date,
+          time: m.time,
+          sensor_type: m.sensor_type,
+          status: m.status,
+          station_id: m.station_id
+        }));
+      } else {
+        measurements.value = [];
+      }
+      
+      console.log('Fetched measurements:', measurements.value);
     } catch (err: any) {
+      console.error('Error fetching station data:', err);
       error.value = err.message;
       measurements.value = [];
       stationInfo.value = null;
@@ -55,12 +70,15 @@ export function useStationData() {
   };
 
   const getLast24HoursMeasurements = computed(() => {
-    if (!measurements.value?.length) return [];
+    if (!measurements.value?.length) {
+      console.log('No measurements available');
+      return [];
+    }
 
     const now = Date.now();
     const oneDayAgo = now - (24 * 60 * 60 * 1000);
 
-    return measurements.value
+    const filteredMeasurements = measurements.value
       .filter(measurement => {
         const measurementTime = new Date(`${measurement.date}T${measurement.time}`).getTime();
         return measurementTime >= oneDayAgo;
@@ -70,6 +88,9 @@ export function useStationData() {
         const dateB = new Date(`${b.date}T${b.time}`).getTime();
         return dateA - dateB;
       });
+
+    console.log('Filtered 24h measurements:', filteredMeasurements);
+    return filteredMeasurements;
   });
 
   const getLatestMeasurement = computed(() => {

@@ -1,4 +1,4 @@
-interface MenuItem {
+export interface MenuItem {
   headTitle1?: string;
   headTitle2?: string;
   title?: string;
@@ -6,6 +6,7 @@ interface MenuItem {
   icon1?: string;
   type: string;
   badgeType?: string;
+  badgeValue?: string | number;
   active?: boolean;
   isPinned?: boolean;
   path?: string;

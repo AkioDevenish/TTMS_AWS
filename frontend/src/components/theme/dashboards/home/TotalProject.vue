@@ -22,14 +22,14 @@
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, onMounted, computed } from 'vue'
 import Card1 from '@/components/common/card/CardData1.vue'
-import { useAWSStations } from '@/composables/useAWSStations'
+import { useAWSStationsStore } from '@/store/awsStations'
 
-const { stations, fetchStations } = useAWSStations()
+const awsStationsStore = useAWSStationsStore()
 
 const stationStats = computed(() => {
-    const total = stations.value.length
-    const offline = stations.value.filter(s => s.status === 'Offline').length
-    const maintenance = stations.value.filter(s => s.status === 'Maintenance').length
+    const total = awsStationsStore.stations.length
+    const offline = awsStationsStore.stations.filter(s => s.status === 'Offline').length
+    const maintenance = awsStationsStore.stations.filter(s => s.status === 'Maintenance').length
     const online = total - offline - maintenance
     
     return {
@@ -84,8 +84,6 @@ const series = computed(() => [{
         stationStats.value.maintenance
     ]
 }])
-
-onMounted(fetchStations)
 </script>
 
 <style scoped>

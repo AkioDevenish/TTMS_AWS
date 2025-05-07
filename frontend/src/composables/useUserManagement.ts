@@ -14,12 +14,17 @@ interface User {
   isPaused: boolean;
   expires_at: string | null;
   bills: any[];
+  first_name?: string;
+  last_name?: string;
+  is_superuser?: boolean;
+  is_staff?: boolean;
 }
 
 export function useUserManagement() {
   const router = useRouter()
   const { logout, checkAuth } = useAuth()
   const allData = ref<User[]>([])
+  const recentUsers = ref<User[]>([])
   const loading = ref<boolean>(true)
   const filterQuery = ref<string>("")
   const currentPage = ref<number>(1)
@@ -38,6 +43,31 @@ export function useUserManagement() {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       'Accept': 'application/json'
+    }
+  }
+
+  // Fetch only recent users
+  const fetchRecentUsers = async (limit: number = 4) => {
+    try {
+      loading.value = true
+      const response = await axios.get('/users/', {
+        params: {
+          limit,
+          ordering: '-id'  // Order by id descending to get most recent
+        }
+      })
+      
+      if (Array.isArray(response.data)) {
+        recentUsers.value = response.data.map((user: any) => ({
+          ...user,
+          status: user.status || 'Active'  // Use status from database, default to Active if not set
+        }));
+      }
+    } catch (error: any) {
+      console.error('Error fetching recent users:', error)
+      recentUsers.value = []
+    } finally {
+      loading.value = false
     }
   }
 
@@ -199,6 +229,7 @@ export function useUserManagement() {
 
   return {
     allData,
+    recentUsers,
     loading,
     filterQuery,
     currentPage,
@@ -206,6 +237,7 @@ export function useUserManagement() {
     paginatedData,
     totalPages,
     fetchUsers,
+    fetchRecentUsers,
     updateUserStatus,
     toggleSuspendUser,
     deleteUser,

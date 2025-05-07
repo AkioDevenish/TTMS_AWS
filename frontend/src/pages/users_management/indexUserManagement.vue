@@ -19,13 +19,14 @@
 
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, onMounted } from 'vue';
-import { useAuth } from '@/composables/useAuth';
-import { useUserManagement } from '@/composables/useUserManagement';
+import { useAuthStore } from '@/store/auth';
+import { useUserStore } from '@/store/user';
 
 const Card3 = defineAsyncComponent(() => import("@/components/common/card/CardData3.vue"))
 const SupportTable = defineAsyncComponent(() => import("@/components/theme/users_management/UserMTable.vue"))
-const { requireAuth, isAdmin } = useAuth()
-const { fetchUsers } = useUserManagement()
+const authStore = useAuthStore()
+const { isAdmin } = authStore
+const userStore = useUserStore()
 
 // const apiUrl = process.env.VUE_APP_API_URL;
 // console.log('API Base URL from users page:', apiUrl);
@@ -33,9 +34,6 @@ const { fetchUsers } = useUserManagement()
 let desc = ref<string>("List Of User Accounts");
 
 onMounted(async () => {
-	const hasAccess = await requireAuth('admin')
-	if (!hasAccess) return
-
-	await fetchUsers()
+	await userStore.fetchUsers()
 })
 </script>

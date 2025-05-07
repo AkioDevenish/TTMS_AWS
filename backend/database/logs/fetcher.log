@@ -938,3 +938,349 @@ Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-03-12 01:36:22,227 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-11 09:36:22.227047-04:00 to 2025-03-11 21:36:22.227047-04:00
 2025-03-12 01:36:22,227 - database.management.commands.data_fetcher - INFO - Starting data fetchers
 2025-03-12 01:37:44,393 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-19 01:56:43,955 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-19 01:56:43,956 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-18 09:56:43.956480-04:00 to 2025-03-18 21:56:43.956480-04:00
+2025-03-19 01:56:43,956 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-19 01:57:14,150 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-27 23:37:55,228 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-27 23:37:55,229 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-27 07:37:55.229312-04:00 to 2025-03-27 19:37:55.229312-04:00
+2025-03-27 23:37:55,229 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-27 23:38:24,484 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-27 23:55:07,291 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-27 23:55:07,291 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-27 07:55:07.291855-04:00 to 2025-03-27 19:55:07.291855-04:00
+2025-03-27 23:55:07,291 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-27 23:55:35,345 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-28 02:13:10,675 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-28 02:13:10,675 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-27 10:13:10.675746-04:00 to 2025-03-27 22:13:10.675746-04:00
+2025-03-28 02:13:10,675 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-29 00:46:54,185 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-29 00:46:54,186 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-28 08:46:54.186002-04:00 to 2025-03-28 20:46:54.186002-04:00
+2025-03-29 00:46:54,186 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-29 00:47:22,276 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-03-29 01:06:16,555 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-03-29 01:06:16,556 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-03-28 09:06:16.556338-04:00 to 2025-03-28 21:06:16.556338-04:00
+2025-03-29 01:06:16,556 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-03-29 01:06:44,331 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-02 01:21:21,201 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-02 01:21:21,202 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-01 09:21:21.202296-04:00 to 2025-04-01 21:21:21.202296-04:00
+2025-04-02 01:21:21,202 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-02 01:21:56,512 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-03 02:37:28,757 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-03 02:37:28,757 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-02 10:37:28.757960-04:00 to 2025-04-02 22:37:28.757960-04:00
+2025-04-03 02:37:28,758 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-03 02:38:06,140 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-07 23:48:56,003 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-07 23:48:56,004 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-07 07:48:56.004004-04:00 to 2025-04-07 19:48:56.004004-04:00
+2025-04-07 23:48:56,004 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-07 23:49:26,341 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-10 02:07:58,785 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-10 02:07:58,787 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-09 10:07:58.787374-04:00 to 2025-04-09 22:07:58.787374-04:00
+2025-04-10 02:07:58,788 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-10 02:08:28,184 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-17 01:42:20,325 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-17 01:42:20,326 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-16 09:42:20.326224-04:00 to 2025-04-16 21:42:20.326224-04:00
+2025-04-17 01:42:20,326 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-17 01:42:48,929 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-25 23:40:41,473 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-25 23:40:41,475 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 07:40:41.475207-04:00 to 2025-04-25 19:40:41.475207-04:00
+2025-04-25 23:40:41,475 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-25 23:41:11,102 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 00:33:24,871 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 00:33:24,872 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 08:33:24.872378-04:00 to 2025-04-25 20:33:24.872378-04:00
+2025-04-26 00:33:24,872 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 00:33:59,388 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 01:34:44,645 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 01:34:44,646 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 09:34:44.646518-04:00 to 2025-04-25 21:34:44.646518-04:00
+2025-04-26 01:34:44,647 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 01:34:53,785 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 01:34:53,786 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 09:34:53.786405-04:00 to 2025-04-25 21:34:53.786405-04:00
+2025-04-26 01:34:53,787 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 01:35:22,950 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 01:36:03,375 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 02:00:00,063 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 02:00:00,064 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 10:00:00.064569-04:00 to 2025-04-25 22:00:00.064569-04:00
+2025-04-26 02:00:00,065 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 02:00:33,554 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 03:00:00,221 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 03:00:00,232 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 11:00:00.231959-04:00 to 2025-04-25 23:00:00.231959-04:00
+2025-04-26 03:00:00,238 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 03:00:39,690 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 04:05:24,574 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 04:05:24,576 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 12:05:24.575856-04:00 to 2025-04-26 00:05:24.575856-04:00
+2025-04-26 04:05:24,577 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 04:06:01,249 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 05:00:00,026 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 05:00:00,028 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 13:00:00.028395-04:00 to 2025-04-26 01:00:00.028395-04:00
+2025-04-26 05:00:00,029 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 05:00:37,923 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 06:09:09,752 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 06:09:09,753 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 14:09:09.753147-04:00 to 2025-04-26 02:09:09.753147-04:00
+2025-04-26 06:09:09,754 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 06:09:45,638 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 07:00:00,029 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 07:00:00,031 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 15:00:00.031825-04:00 to 2025-04-26 03:00:00.031825-04:00
+2025-04-26 07:00:00,033 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 07:02:22,474 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 07:02:47,685 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 08:00:00,027 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 08:00:00,030 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 16:00:00.030949-04:00 to 2025-04-26 04:00:00.030949-04:00
+2025-04-26 08:00:00,032 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 08:00:31,398 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 09:00:00,019 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 09:00:00,022 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 17:00:00.022160-04:00 to 2025-04-26 05:00:00.022160-04:00
+2025-04-26 09:00:00,023 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 09:03:22,590 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 09:34:00,908 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 10:04:23,248 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 10:04:23,249 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 18:04:23.249420-04:00 to 2025-04-26 06:04:23.249420-04:00
+2025-04-26 10:04:23,251 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 10:04:25,249 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 10:19:46,285 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 10:20:01,409 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 10:20:05,076 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 10:20:05,077 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 18:20:05.077365-04:00 to 2025-04-26 06:20:05.077365-04:00
+2025-04-26 10:20:05,078 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 10:35:10,017 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 10:35:16,052 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 10:35:27,070 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 11:05:26,263 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 11:05:26,268 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 19:05:26.268151-04:00 to 2025-04-26 07:05:26.268151-04:00
+2025-04-26 11:05:26,269 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 11:20:59,296 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 12:06:23,291 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 12:06:23,293 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 20:06:23.293322-04:00 to 2025-04-26 08:06:23.293322-04:00
+2025-04-26 12:06:23,294 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 12:21:46,130 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 12:22:03,105 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 13:07:27,572 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 13:07:27,573 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 21:07:27.573182-04:00 to 2025-04-26 09:07:27.573182-04:00
+2025-04-26 13:07:27,573 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 13:38:21,212 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 14:08:26,241 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 14:08:26,241 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 22:08:26.241968-04:00 to 2025-04-26 10:08:26.241968-04:00
+2025-04-26 14:08:26,242 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 14:08:30,619 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 14:08:37,042 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 14:39:17,678 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 14:52:44,923 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 14:52:51,580 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 15:00:00,019 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 15:00:00,020 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 23:00:00.020877-04:00 to 2025-04-26 11:00:00.020877-04:00
+2025-04-26 15:00:00,021 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 15:00:32,861 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 15:32:23,163 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 15:32:23,165 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 23:32:23.165234-04:00 to 2025-04-26 11:32:23.165234-04:00
+2025-04-26 15:32:23,165 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 15:32:52,323 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 15:36:26,008 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 15:36:26,008 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-25 23:36:26.008870-04:00 to 2025-04-26 11:36:26.008870-04:00
+2025-04-26 15:36:26,008 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 15:36:56,103 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 16:00:00,048 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 16:00:00,050 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 00:00:00.050085-04:00 to 2025-04-26 12:00:00.050085-04:00
+2025-04-26 16:00:00,051 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 16:00:33,340 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 17:00:00,042 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 17:00:00,045 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 01:00:00.045209-04:00 to 2025-04-26 13:00:00.045209-04:00
+2025-04-26 17:00:00,046 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 17:00:40,496 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 18:56:13,589 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 18:56:13,591 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 02:56:13.591146-04:00 to 2025-04-26 14:56:13.591146-04:00
+2025-04-26 18:56:13,592 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 19:11:39,408 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 19:11:39,409 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 03:11:39.409796-04:00 to 2025-04-26 15:11:39.409796-04:00
+2025-04-26 19:11:39,411 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 19:11:47,878 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 19:26:58,090 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 19:27:19,576 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 20:04:15,985 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 20:04:15,986 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 04:04:15.986924-04:00 to 2025-04-26 16:04:15.986924-04:00
+2025-04-26 20:04:15,988 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 20:35:06,577 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 21:05:14,911 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 21:05:14,912 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 05:05:14.912447-04:00 to 2025-04-26 17:05:14.912447-04:00
+2025-04-26 21:05:14,913 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 21:05:21,068 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 21:05:29,668 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 21:20:38,904 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-26 21:20:58,756 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 22:06:18,375 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 22:06:18,377 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 06:06:18.377136-04:00 to 2025-04-26 18:06:18.377136-04:00
+2025-04-26 22:06:18,377 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 22:21:50,237 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-26 23:07:20,729 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-26 23:07:20,731 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 07:07:20.731153-04:00 to 2025-04-26 19:07:20.731153-04:00
+2025-04-26 23:07:20,732 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-26 23:38:10,048 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 00:08:19,648 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 00:08:19,649 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 08:08:19.649742-04:00 to 2025-04-26 20:08:19.649742-04:00
+2025-04-27 00:08:19,651 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 00:08:23,997 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 00:08:35,216 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 00:39:06,604 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 00:54:00,106 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 01:09:18,769 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 01:09:18,769 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 09:09:18.769603-04:00 to 2025-04-26 21:09:18.769603-04:00
+2025-04-27 01:09:18,770 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 01:22:50,219 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 01:23:07,900 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 02:11:03,237 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 02:11:03,239 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 10:11:03.238942-04:00 to 2025-04-26 22:11:03.238942-04:00
+2025-04-27 02:11:03,240 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 02:26:25,748 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 02:26:45,467 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 03:13:38,149 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 03:13:38,154 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 11:13:38.154548-04:00 to 2025-04-26 23:13:38.154548-04:00
+2025-04-27 03:13:38,157 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 03:44:33,285 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 03:44:48,031 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 04:00:00,666 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 04:00:00,667 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 12:00:00.667262-04:00 to 2025-04-27 00:00:00.667262-04:00
+2025-04-27 04:00:00,668 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 04:30:55,575 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 04:31:11,219 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 05:14:50,635 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 05:14:50,636 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 13:14:50.636377-04:00 to 2025-04-27 01:14:50.636377-04:00
+2025-04-27 05:14:50,637 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 05:45:21,860 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 06:00:59,749 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 06:00:59,750 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 14:00:59.750541-04:00 to 2025-04-27 02:00:59.750541-04:00
+2025-04-27 06:00:59,751 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 06:31:48,360 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 07:01:29,922 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 07:01:30,634 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 07:01:30,635 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 15:01:30.635030-04:00 to 2025-04-27 03:01:30.635030-04:00
+2025-04-27 07:01:30,637 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 07:01:32,270 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 07:01:32,271 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 15:01:32.271474-04:00 to 2025-04-27 03:01:32.271474-04:00
+2025-04-27 07:01:32,272 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 07:32:17,471 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 07:32:20,124 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 07:32:30,690 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 07:47:04,160 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 07:47:14,471 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 08:02:29,163 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 08:02:29,163 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 16:02:29.163913-04:00 to 2025-04-27 04:02:29.163913-04:00
+2025-04-27 08:02:29,164 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 08:33:19,704 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 09:03:27,536 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 09:03:27,540 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 17:03:27.540018-04:00 to 2025-04-27 05:03:27.540018-04:00
+2025-04-27 09:03:27,540 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 09:03:33,359 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 09:03:48,460 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 09:03:48,526 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 09:03:48,527 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 17:03:48.527471-04:00 to 2025-04-27 05:03:48.527471-04:00
+2025-04-27 09:03:48,528 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 09:34:24,698 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 09:34:26,123 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 09:34:47,044 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 10:04:28,824 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 10:04:28,825 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 18:04:28.825038-04:00 to 2025-04-27 06:04:28.825038-04:00
+2025-04-27 10:04:28,825 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 10:04:33,944 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 10:04:48,719 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 10:19:59,426 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 11:05:31,928 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 11:05:31,929 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 19:05:31.929216-04:00 to 2025-04-27 07:05:31.929216-04:00
+2025-04-27 11:05:31,929 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 11:12:54,420 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 11:28:02,398 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 11:28:10,708 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 12:00:00,027 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 12:00:00,029 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 20:00:00.029409-04:00 to 2025-04-27 08:00:00.029409-04:00
+2025-04-27 12:00:00,031 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 12:01:03,114 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 13:00:00,027 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 13:00:00,029 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 21:00:00.029323-04:00 to 2025-04-27 09:00:00.029323-04:00
+2025-04-27 13:00:00,030 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 13:01:03,620 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 14:00:00,042 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 14:00:00,044 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 22:00:00.044285-04:00 to 2025-04-27 10:00:00.044285-04:00
+2025-04-27 14:00:00,045 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 14:01:03,147 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 15:00:00,030 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 15:00:00,031 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-26 23:00:00.031794-04:00 to 2025-04-27 11:00:00.031794-04:00
+2025-04-27 15:00:00,033 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 15:01:07,537 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 16:00:00,015 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 16:00:00,017 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 00:00:00.017290-04:00 to 2025-04-27 12:00:00.017290-04:00
+2025-04-27 16:00:00,018 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 16:01:02,568 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 17:00:00,029 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 17:00:00,030 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 01:00:00.030917-04:00 to 2025-04-27 13:00:00.030917-04:00
+2025-04-27 17:00:00,031 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 17:01:02,560 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 18:04:35,820 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 18:04:35,821 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 02:04:35.821356-04:00 to 2025-04-27 14:04:35.821356-04:00
+2025-04-27 18:04:35,822 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 18:05:09,956 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 19:00:00,019 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 19:00:00,022 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 03:00:00.022097-04:00 to 2025-04-27 15:00:00.022097-04:00
+2025-04-27 19:00:00,023 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 19:01:02,684 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 20:10:16,578 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 20:10:16,580 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 04:10:16.580002-04:00 to 2025-04-27 16:10:16.580002-04:00
+2025-04-27 20:10:16,580 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 20:13:26,019 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 21:14:30,525 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 21:14:30,526 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 05:14:30.526786-04:00 to 2025-04-27 17:14:30.526786-04:00
+2025-04-27 21:14:30,527 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 22:05:01,373 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 22:05:01,375 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 06:05:01.375113-04:00 to 2025-04-27 18:05:01.375113-04:00
+2025-04-27 22:05:01,377 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 22:15:29,709 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 22:26:42,906 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 22:26:50,458 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-27 22:26:51,729 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 22:26:51,730 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 06:26:51.730410-04:00 to 2025-04-27 18:26:51.730410-04:00
+2025-04-27 22:26:51,731 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 22:26:51,730 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 22:26:51,731 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 06:26:51.731552-04:00 to 2025-04-27 18:26:51.731552-04:00
+2025-04-27 22:26:51,732 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-27 22:27:13,786 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 22:27:27,017 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 22:27:54,462 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-27 23:47:43,941 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-27 23:47:43,943 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 07:47:43.943528-04:00 to 2025-04-27 19:47:43.943528-04:00
+2025-04-27 23:47:43,944 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-28 00:03:09,680 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-28 00:03:09,681 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 08:03:09.681400-04:00 to 2025-04-27 20:03:09.681400-04:00
+2025-04-28 00:03:09,682 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-28 00:03:18,791 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-28 00:05:09,560 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-04-28 00:05:09,562 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-27 08:05:09.562162-04:00 to 2025-04-27 20:05:09.562162-04:00
+2025-04-28 00:05:09,563 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-04-28 00:05:15,192 - database.management.commands.data_fetcher - WARNING - Attempt 1 failed, retrying in 5 seconds...
+2025-04-28 00:05:33,802 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-04-28 00:05:42,539 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-01 01:40:15,577 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-01 01:40:15,577 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-04-30 09:40:15.577617-04:00 to 2025-04-30 21:40:15.577617-04:00
+2025-05-01 01:40:15,577 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-01 01:40:43,090 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-03 17:42:26,360 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-03 17:42:26,360 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-03 01:42:26.360835-04:00 to 2025-05-03 13:42:26.360835-04:00
+2025-05-03 17:42:26,360 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-03 17:42:57,717 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-04 20:28:23,515 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-04 20:28:23,516 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-04 04:28:23.516495-04:00 to 2025-05-04 16:28:23.516495-04:00
+2025-05-04 20:28:23,516 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-04 20:28:56,168 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-06 02:50:56,784 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-06 02:50:56,784 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-05 10:50:56.784806-04:00 to 2025-05-05 22:50:56.784806-04:00
+2025-05-06 02:50:56,784 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-06 02:51:30,421 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-06 22:04:11,933 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-06 22:04:11,933 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-06 06:04:11.933476-04:00 to 2025-05-06 18:04:11.933476-04:00
+2025-05-06 22:04:11,933 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-06 22:04:40,734 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-07 00:24:49,536 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-07 00:24:49,537 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-06 08:24:49.537020-04:00 to 2025-05-06 20:24:49.537020-04:00
+2025-05-07 00:24:49,537 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-07 00:25:21,004 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-07 01:06:26,820 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-07 01:06:26,820 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-06 09:06:26.820430-04:00 to 2025-05-06 21:06:26.820430-04:00
+2025-05-07 01:06:26,820 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-07 02:53:29,814 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-07 02:53:29,815 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-06 10:53:29.815078-04:00 to 2025-05-06 22:53:29.815078-04:00
+2025-05-07 02:53:29,815 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-07 02:54:01,536 - database.management.commands.data_fetcher - INFO - All fetchers completed

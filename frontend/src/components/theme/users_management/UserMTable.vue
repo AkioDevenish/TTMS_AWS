@@ -19,7 +19,7 @@
                 </tr>
             </tbody>
             <tbody v-else>
-                <tr v-for="user in allData" :key="user.id" class="user-row">
+                <tr v-for="user in users" :key="user.id" class="user-row">
                     <td class="clickable" @click="navigateToProfile(user.id)" colspan="6">
                         <div class="d-flex">
                             <div class="user-info">
@@ -73,44 +73,33 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
-import { useUserManagement } from '@/composables/useUserManagement'
-import { useAuth } from '@/composables/useAuth'
+import { computed, onMounted } from 'vue'
+import { useUserStore } from '@/store/user'
+import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 
-const { 
-    loading, 
-    filterQuery, 
-    toggleSuspendUser, 
-    deleteUser, 
-    updateUserStatus, 
-    fetchUsers, 
-    allData,
-    errorMessage,
-    getHeaders 
-} = useUserManagement()
+const userStore = useUserStore()
+const users = computed(() => userStore.users)
+const loading = computed(() => userStore.loading)
 
-const { currentUser, checkAuth } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 const router = useRouter()
 
 onMounted(async () => {
-    await checkAuth()
     if (!currentUser.value?.is_superuser) {
         router.go(-1)
         return
     }
-    await fetchUsers()
 })
 
 const cycleStatus = async (user: any) => {
     const hasVerifiedBills = user.bills?.some((bill: any) => bill.receipt_verified) || false
-    
     if (!hasVerifiedBills && !user.is_staff && !user.is_superuser) {
-        errorMessage.value = 'Cannot change status until receipt is verified'
+        userStore.error = 'Cannot change status until receipt is verified'
         return
     }
-    
     try {
         const statusMap = {
             'Active': 'Inactive',
@@ -118,10 +107,8 @@ const cycleStatus = async (user: any) => {
             'Suspended': 'Active',
             'Pending': hasVerifiedBills ? 'Active' : 'Pending'
         } as const
-        
         const newStatus = statusMap[user.status as keyof typeof statusMap] || 'Active'
-        const success = await updateUserStatus(user.id, newStatus)
-        
+        const success = await userStore.updateUserStatus(user.id, newStatus)
         if (success) {
             Swal.fire({
                 title: 'Status Updated',
@@ -136,7 +123,7 @@ const cycleStatus = async (user: any) => {
     } catch (error) {
         Swal.fire({
             title: 'Error',
-            text: errorMessage.value || 'Failed to update status',
+            text: userStore.error || 'Failed to update status',
             icon: 'error',
             toast: true,
             position: 'top-end',
@@ -160,20 +147,19 @@ const handleDeleteUser = async (userId: number) => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const success = await deleteUser(userId)
+                    const success = await userStore.deleteUser(userId)
                     if (!success) {
-                        throw new Error(errorMessage.value || 'Failed to delete user')
+                        throw new Error(userStore.error || 'Failed to delete user')
                     }
                     return success
                 } catch (error) {
                     Swal.showValidationMessage(
-                        `Delete failed: ${errorMessage.value || 'Unknown error occurred'}`
+                        `Delete failed: ${userStore.error || 'Unknown error occurred'}`
                     )
                 }
             },
             allowOutsideClick: () => !Swal.isLoading()
         })
-
         if (result.isConfirmed) {
             Swal.fire({
                 title: 'Deleted!',
@@ -184,13 +170,13 @@ const handleDeleteUser = async (userId: number) => {
                 showConfirmButton: false,
                 timer: 3000
             })
-            await fetchUsers() // Refresh the list
+            await userStore.fetchUsers() // Refresh the list
         }
     } catch (error) {
         console.error('Error in handleDeleteUser:', error)
         Swal.fire({
             title: 'Error',
-            text: errorMessage.value || 'An unexpected error occurred',
+            text: userStore.error || 'An unexpected error occurred',
             icon: 'error',
             toast: true,
             position: 'top-end',
@@ -201,9 +187,8 @@ const handleDeleteUser = async (userId: number) => {
 }
 
 const handleSuspendUser = async (userId: number) => {
-    const user = allData.value.find(u => u.id === userId)
+    const user = users.value.find(u => u.id === userId)
     const isSuspended = user?.status === 'Suspended'
-    
     try {
         const result = await Swal.fire({
             title: `${isSuspended ? 'Reactivate' : 'Suspend'} User Account`,
@@ -217,9 +202,8 @@ const handleSuspendUser = async (userId: number) => {
             confirmButtonText: `Yes, ${isSuspended ? 'reactivate' : 'suspend'} account`,
             cancelButtonText: 'Cancel'
         })
-
         if (result.isConfirmed) {
-            const success = await toggleSuspendUser(userId)
+            const success = await userStore.toggleSuspendUser(userId)
             if (success) {
                 Swal.fire({
                     title: 'Success',
@@ -233,14 +217,14 @@ const handleSuspendUser = async (userId: number) => {
                     timer: 3000
                 })
             } else {
-                throw new Error(errorMessage.value)
+                throw new Error(userStore.error)
             }
         }
     } catch (error) {
         console.error('Error in handleSuspendUser:', error)
         Swal.fire({
             title: 'Error',
-            text: errorMessage.value || 'An unexpected error occurred',
+            text: userStore.error || 'An unexpected error occurred',
             icon: 'error',
             toast: true,
             position: 'top-end',

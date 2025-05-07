@@ -7,13 +7,15 @@ export interface AWSStation {
     latestHealth?: {
         connectivity_status: string;
         battery_status: string;
+        created_at: string | null;
     };
     parameters: {
         temperature?: number;
         humidity?: number;
         windSpeed?: number;
         rainfall?: number;
-    }
+    };
+    brand?: string;
 }
 
 export const getOfflineStations = (stations: AWSStation[]) => {

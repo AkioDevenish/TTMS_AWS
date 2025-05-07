@@ -59,15 +59,21 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUserManagement } from '@/composables/useUserManagement'
-import { useAuth } from '@/composables/useAuth'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
+import { useUserStore } from '@/store/user'
 
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 const route = useRoute()
-const router = useRouter()
-const { allData, fetchUsers } = useUserManagement()
-const { currentUser, checkAuth } = useAuth()
+const userStore = useUserStore()
+
+const userId = computed(() => route.query.id)
+const userFromStore = computed(() => {
+  if (!userId.value) return null
+  return userStore.users.find(u => u.id === parseInt(userId.value as string))
+})
 
 const username = ref('')
 const subscription = ref('')
@@ -86,11 +92,10 @@ const setUserData = (user: any) => {
     dateCreated.value = user.created_at || new Date().toISOString()
 }
 
-// Watch for route changes
 watch(() => route.query.id, async (newId) => {
     if (newId) {
-        await fetchUsers()
-        const user = allData.value.find(u => u.id === parseInt(newId as string))
+        if (!userStore.initialized) await userStore.fetchUsers()
+        const user = userStore.users.find(u => u.id === parseInt(newId as string))
         if (user) {
             setUserData(user)
         }
@@ -105,10 +110,6 @@ watch(currentUser, (newUser) => {
         setUserData(newUser)
     }
 }, { immediate: true })
-
-onMounted(async () => {
-    await checkAuth()
-})
 
 const statusClass = computed(() => {
     return {

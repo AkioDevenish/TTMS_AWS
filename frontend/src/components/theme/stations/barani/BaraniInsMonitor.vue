@@ -66,7 +66,8 @@ const {
     getLatestMeasurement,
     formatDateTime,
     isLoading,
-    fetchStationData
+    fetchStationData,
+    getLast24HoursMeasurements
 } = useStationData();
 
 const latestData = ref<StationData[]>([]);
@@ -81,7 +82,7 @@ watch(() => props.selectedStation, (newStationId) => {
 }, { immediate: true });
 
 // Watch for data changes
-watch([() => measurements.value, () => stationInfo.value, () => getLatestMeasurement.value], 
+watch([() => getLast24HoursMeasurements.value, () => stationInfo.value, () => getLatestMeasurement.value], 
     ([newMeasurements, newStationInfo, latestMeasurement]) => {
     if (!newMeasurements?.length || !newStationInfo || !latestMeasurement) {
         latestData.value = [];

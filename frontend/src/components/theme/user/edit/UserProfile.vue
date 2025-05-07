@@ -56,11 +56,12 @@
 
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue'
-import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/store/auth'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 
-const { currentUser } = useAuth()
+const authStore = useAuthStore()
+const currentUser = computed(() => authStore.currentUser)
 const route = useRoute()
 const isUploading = ref(false)
 const successMessage = ref('')
