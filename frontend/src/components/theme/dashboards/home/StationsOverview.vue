@@ -398,7 +398,7 @@ async function fetchStationData(forceRefresh = false) {
   apiError.value = null;
   
   try {
-    // First fetch the station overview data
+    // Fetch the station overview data with pagination
     const params = {
       brand: selectedBrand.value,
       sensor_type: selectedSensorType.value,
@@ -419,7 +419,7 @@ async function fetchStationData(forceRefresh = false) {
       // Create a list of stations to fetch historical data for
       const stationIds = response.data.stations.map(station => station.id);
       
-      // Fetch historical data for these stations (last 24 hours)
+      // Fetch historical data for these stations (last 12 hours)
       const historicalData = {};
       
       if (stationIds.length > 0) {
@@ -432,8 +432,6 @@ async function fetchStationData(forceRefresh = false) {
           }
         });
         
-        console.log("History response:", historyResponse.data);
-        
         // Process historical data by station
         if (historyResponse.data && historyResponse.data.measurements) {
           historyResponse.data.measurements.forEach(measurement => {
@@ -443,22 +441,22 @@ async function fetchStationData(forceRefresh = false) {
             
             historicalData[measurement.station_id].push({
               x: new Date(`${measurement.date}T${measurement.time}`).getTime(),
-              y: parseFloat(measurement.value)
+              y: measurement.value // Value is already converted to float in backend
             });
           });
         }
       }
       
-      // Now update the stations with chart data
-      pawsStations.value = response.data.stations.map(station => {
-        return {
-          ...station,
-          chartData: [{
-            name: currentSensorConfig.value[selectedSensorType.value]?.name || selectedSensorType.value,
-            data: historicalData[station.id] || []
-          }]
-        };
-      });
+      // Update stations with chart data
+      pawsStations.value = response.data.stations.map(station => ({
+        ...station,
+        value: station.latest_value,
+        last_updated: station.latest_date && station.latest_time ? `${station.latest_date}T${station.latest_time}` : null,
+        chartData: [{
+          name: currentSensorConfig.value[selectedSensorType.value]?.name || selectedSensorType.value,
+          data: historicalData[station.id] || []
+        }]
+      }));
       
       console.log(`Loaded ${pawsStations.value.length} stations for ${selectedBrand.value} (Page ${currentPage.value} of ${totalPages.value})`);
     } else {
@@ -473,7 +471,7 @@ async function fetchStationData(forceRefresh = false) {
   }
 }
 
-// Update the navigation methods
+// Update the navigation methods to fetch new data
 const next = () => {
     if (currentPage.value < totalPages.value) {
         currentPage.value++;
@@ -504,7 +502,6 @@ watch(() => selectedSensorType.value, (newSensorType, oldSensorType) => {
 // Initialize on component mount
 onMounted(() => {
   console.log("Component mounted, fetching initial data");
-  // Just call fetchStationData directly
   fetchStationData();
   
   // Set up refresh interval (every 5 minutes)
