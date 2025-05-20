@@ -73,8 +73,8 @@
                                 <h5 class="card-title mb-0">{{ station.name }}</h5>
                                 <span :class="getStatusClass(station)">
                                     {{ getStatusText(station) }}
-                                </span>
-                            </div>
+                                            </span>
+                                        </div>
                             <div class="station-info">
                                 <p class="mb-2">
                                     <VueFeather :type="currentSensorIcon" size="16" class="me-2" />
@@ -83,7 +83,7 @@
                                 <p class="mb-2 text-muted">
                                     <small>Last Updated: {{ formatDateTime(station.latest_measurement) }}</small>
                                 </p>
-                            </div>
+                                    </div>
                             <div class="chart-container">
                                 <apexchart
                                     v-if="station.chartData && station.chartData[0].data.length > 0"
@@ -248,17 +248,17 @@ const currentSensorIcon = computed(() => {
 
 // Navigation methods
 const next = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
     store.fetchStationData();
-  }
+    }
 };
 
 const prev = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
+    if (currentPage.value > 1) {
+        currentPage.value--;
     store.fetchStationData();
-  }
+    }
 };
 
 // Virtual scrolling implementation
@@ -368,178 +368,178 @@ const getSensorIcon = (sensorType) => {
 
 // Get chart options
 const getChartOptions = (sensorUnit, sensorType) => {
-  const colorScheme = getSensorColorScheme(sensorType);
+    const colorScheme = getSensorColorScheme(sensorType);
 
-  return {
-    chart: {
-      type: 'area',
-      height: 160,
-      toolbar: {
-        show: false
-      },
-      sparkline: {
+    return {
+        chart: {
+            type: 'area',
+            height: 160,
+            toolbar: {
+                show: false
+            },
+            sparkline: {
         enabled: false
-      },
-      background: 'transparent',
-      animations: {
-        enabled: true,
-        easing: 'easeinout',
-        speed: 800
-      }
-    },
-    grid: {
-      show: true,
-      borderColor: '#f0f0f0',
-      strokeDashArray: 0,
-      position: 'back',
-      xaxis: {
-        lines: {
-          show: true
-        }
-      },
-      yaxis: {
-        lines: {
-          show: true
-        }
-      },
-      padding: {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0
-      }
-    },
-    stroke: {
-      curve: 'smooth',
-      width: 2
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.45,
-        opacityTo: 0.05,
-        stops: [50, 100],
-        colorStops: [
-          {
-            offset: 0,
-            color: colorScheme.gradient.from,
-            opacity: 0.45
-          },
-          {
-            offset: 100,
-            color: colorScheme.gradient.to,
-            opacity: 0.05
-          }
-        ]
-      }
-    },
-    xaxis: {
-      type: 'datetime',
-      labels: {
-        show: true,
-        style: {
-          fontSize: '10px',
-          fontFamily: 'Inter, sans-serif',
-          color: '#666'
+            },
+            background: 'transparent',
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            }
         },
-        formatter: function(val) {
-          const date = new Date(val);
-          return date.toLocaleString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
+        grid: {
+            show: true,
+            borderColor: '#f0f0f0',
+            strokeDashArray: 0,
+            position: 'back',
+            xaxis: {
+                lines: {
+                    show: true
+                }
+            },
+            yaxis: {
+                lines: {
+                    show: true
+                }
+            },
+            padding: {
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0
+            }
         },
-        datetimeUTC: false
-      },
-      axisBorder: {
-        show: true,
-        color: '#f0f0f0'
-      },
-      axisTicks: {
-        show: true,
-        color: '#f0f0f0'
-      }
-    },
-    yaxis: {
-      show: true,
-      labels: {
-        show: true,
-        style: {
-          fontSize: '10px',
-          fontFamily: 'Inter, sans-serif',
-          color: '#666'
+        stroke: {
+            curve: 'smooth',
+            width: 2
         },
-        formatter: (value) => `${value.toFixed(1)}${sensorUnit}`
-      },
-      axisBorder: {
-        show: true,
-        color: '#f0f0f0'
-      }
-    },
-    tooltip: {
-      enabled: true,
-      shared: true,
-      intersect: false,
-      followCursor: false,
-      fixed: {
-        enabled: false,
-        position: 'topRight',
-        offsetX: 0,
-        offsetY: 0,
-      },
-      onDatasetHover: {
-        highlightDataSeries: false,
-      },
-      marker: {
-        show: true,
-      },
-      items: {
-        display: 'flex',
-      },
-      x: {
-        show: true,
-      },
-      custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-        try {
-          const value = series[seriesIndex][dataPointIndex];
-          const dataPoint = w.config.series[seriesIndex].data[dataPointIndex];
-          const timestamp = new Date(dataPoint.x);
-          const formattedTime = timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-          const formattedDate = timestamp.toLocaleDateString([], {month: 'numeric', day: 'numeric', year: 'numeric'});
-          
-          return `
-            <div class="nier-tooltip">
-              <div class="tooltip-header">
-                <div class="tooltip-date">${formattedDate}</div>
-                <div class="tooltip-time">${formattedTime}</div>
-              </div>
-              <div class="tooltip-value">${value.toFixed(1)} ${sensorUnit}</div>
-            </div>
-          `;
-        } catch (err) {
-          console.error('Error in tooltip formatter:', err);
-          return '';
-        }
-      }
-    },
-    colors: [colorScheme.main]
-  };
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.45,
+                opacityTo: 0.05,
+                stops: [50, 100],
+                colorStops: [
+                    {
+                        offset: 0,
+                        color: colorScheme.gradient.from,
+                        opacity: 0.45
+                    },
+                    {
+                        offset: 100,
+                        color: colorScheme.gradient.to,
+                        opacity: 0.05
+                    }
+                ]
+            }
+        },
+        xaxis: {
+            type: 'datetime',
+            labels: {
+                show: true,
+                style: {
+                    fontSize: '10px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#666'
+                },
+                formatter: function(val) {
+                    const date = new Date(val);
+                    return date.toLocaleString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                },
+                datetimeUTC: false
+            },
+            axisBorder: {
+                show: true,
+                color: '#f0f0f0'
+            },
+            axisTicks: {
+                show: true,
+                color: '#f0f0f0'
+            }
+        },
+        yaxis: {
+            show: true,
+            labels: {
+                show: true,
+                style: {
+                    fontSize: '10px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: '#666'
+                },
+                formatter: (value) => `${value.toFixed(1)}${sensorUnit}`
+            },
+            axisBorder: {
+                show: true,
+                color: '#f0f0f0'
+            }
+        },
+        tooltip: {
+            enabled: true,
+            shared: true,
+            intersect: false,
+            followCursor: false, 
+            fixed: {
+                enabled: false,
+                position: 'topRight',
+                offsetX: 0,
+                offsetY: 0,
+            },
+            onDatasetHover: {
+                highlightDataSeries: false,
+            },
+            marker: {
+                show: true,
+            },
+            items: {
+                display: 'flex',
+            },
+            x: {
+                show: true,
+            },
+            custom: ({ series, seriesIndex, dataPointIndex, w }) => {
+                try {
+                    const value = series[seriesIndex][dataPointIndex];
+                    const dataPoint = w.config.series[seriesIndex].data[dataPointIndex];
+                    const timestamp = new Date(dataPoint.x);
+                    const formattedTime = timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const formattedDate = timestamp.toLocaleDateString([], {month: 'numeric', day: 'numeric', year: 'numeric'});
+                    
+                    return `
+                        <div class="nier-tooltip">
+                            <div class="tooltip-header">
+                                <div class="tooltip-date">${formattedDate}</div>
+                                <div class="tooltip-time">${formattedTime}</div>
+                            </div>
+                            <div class="tooltip-value">${value.toFixed(1)} ${sensorUnit}</div>
+                        </div>
+                    `;
+                } catch (err) {
+                    console.error('Error in tooltip formatter:', err);
+                    return '';
+                }
+            }
+        },
+        colors: [colorScheme.main]
+    };
 };
 
 // Get sensor color scheme
 const getSensorColorScheme = (sensorType) => {
-  const colorSchemes = {
+    const colorSchemes = {
     'bt1': { main: '#48A3D7', gradient: { from: '#48A3D7', to: '#48A3D7' } },
     'mt1': { main: '#48A3D7', gradient: { from: '#48A3D7', to: '#48A3D7' } },
     'rh': { main: '#7A70BA', gradient: { from: '#7A70BA', to: '#7A70BA' } },
     'ws': { main: '#D77748', gradient: { from: '#D77748', to: '#D77748' } },
     'rg': { main: '#C95E9E', gradient: { from: '#C95E9E', to: '#C95E9E' } },
     'bp': { main: '#51bb25', gradient: { from: '#51bb25', to: '#51bb25' } }
-  };
+    };
 
-  return colorSchemes[sensorType] || { main: '#7A70BA', gradient: { from: '#7A70BA', to: '#7A70BA' } };
+    return colorSchemes[sensorType] || { main: '#7A70BA', gradient: { from: '#7A70BA', to: '#7A70BA' } };
 };
 
 // Function to select a brand
@@ -562,7 +562,7 @@ function selectBrand(brand) {
       store.stations = [];
       store.isLoading = false;
       console.log('No sensors found for this brand, clearing stations.');
-    }
+}
   }
 }
 
@@ -573,7 +573,7 @@ function selectSensorType(type) {
     selectedSensorType.value = type;
     // Fetch data after sensor type is set
     store.fetchStationData(true);
-  }
+}
 }
 </script>
 
@@ -587,20 +587,20 @@ function selectSensorType(type) {
 }
 
 .sensor-dropdown {
-  min-width: 200px;
+    min-width: 200px;
 }
 
 .sensor-name {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .chart-container {
   position: relative;
-  height: 160px;
+    height: 160px;
 }
 
 .no-data-placeholder {
@@ -629,7 +629,7 @@ function selectSensorType(type) {
 }
 
 .tooltip-header {
-  display: flex;
+    display: flex;
   justify-content: space-between;
   margin-bottom: 4px;
   font-size: 12px;
@@ -641,4 +641,4 @@ function selectSensorType(type) {
   font-weight: 500;
   color: #333;
 }
-</style> 
+</style>

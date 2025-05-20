@@ -1925,53 +1925,116 @@ class Command(BaseCommand):
 def inactive_sensors(request):
     try:
         now = timezone.now()
-   
-        # First get all stations with their sensors
-        stations = Station.objects.filter(
+        twenty_four_hours_ago = now - timedelta(hours=24)
+
+        # Get query parameters
+        brand = request.query_params.get('brand')
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 5)) # Default to 5 as per frontend component
+
+        # Get stations, filtered by brand if provided
+        stations_queryset = Station.objects.filter(
             brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
-        ).prefetch_related('station_sensors', 'station_sensors__sensor')
-        
-        inactive_sensors = []
-        
-        for station in stations:
-            # Get all sensors for this station
+        ).select_related('brand')
+
+        if brand:
+            stations_queryset = stations_queryset.filter(brand__name=brand)
+
+        # Get all station IDs for the filtered stations
+        station_ids = list(stations_queryset.values_list('id', flat=True))
+
+        # Fetch the latest measurement for *each* sensor associated with these stations within the last 24 hours
+        # This uses a Window function to get the latest measurement per sensor
+        latest_measurements_subquery = Measurement.objects.filter(
+            station_id__in=station_ids,
+            date__gte=twenty_four_hours_ago.date() # Filter by date for potentially large tables
+        ).annotate(
+            row_number=Window(
+                expression=RowNumber(),
+                partition_by=['station', 'sensor'],
+                order_by=['-date', '-time']
+            )
+        ).filter(row_number=1)
+
+        # Execute the subquery and create a lookup dictionary
+        latest_measurements_dict = {}
+        for m in latest_measurements_subquery:
+            # Use a combined key for station and sensor
+            latest_measurements_dict[(m.station_id, m.sensor_id)] = m
+
+        # Collect all potential inactive sensors
+        all_inactive_sensors_list = []
+        available_brands = set()
+
+        # Iterate through stations and their sensors to determine inactivity
+        # Prefetch sensors to avoid N+1 queries in this loop
+        stations_with_sensors = stations_queryset.prefetch_related('station_sensors__sensor')
+
+        for station in stations_with_sensors:
+            available_brands.add(station.brand.name)
             station_sensors = station.station_sensors.all()
-            
+
             for station_sensor in station_sensors:
-                sensor_type = station_sensor.sensor.type
-                
-                # Check if there are any recent measurements for this sensor
-                latest = Measurement.objects.filter(
-                    station=station,
-                    sensor=station_sensor.sensor,
-                    date__gte=(now - timedelta(hours=10))  
-                ).order_by('-date', '-time').first()
-                
-                if not latest:
-                    # No measurements in last 24 hours
-                    inactive_sensors.append({
+                sensor = station_sensor.sensor
+                if not sensor: # Skip if sensor relationship is null
+                    continue
+
+                # Look up the latest measurement from the pre-fetched dictionary
+                latest = latest_measurements_dict.get((station.id, sensor.id))
+
+                # Determine status and add to the list if inactive or no data
+                status = 'Active' # Assume active initially
+                last_reading_dt = None
+
+                if latest:
+                     last_reading_dt = timezone.make_aware(datetime.combine(latest.date, latest.time)) if latest.date and latest.time else None
+                     # Consider a sensor inactive if its last reading is older than 24 hours or value is invalid
+                     if last_reading_dt < twenty_four_hours_ago:
+                          status = 'Inactive'
+                     elif latest.value is None or latest.value == -999:
+                           status = 'No Reading' # Or another appropriate status for invalid data
+                     # If latest exists and is within 24 hours and value is valid, status remains 'Active'
+                else:
+                    status = 'No Data' # No measurements found at all within the last 24 hours
+
+                if status != 'Active':
+                     all_inactive_sensors_list.append({
                         'station_name': station.name,
                         'brand_name': station.brand.name,
-                        'sensor_type': sensor_type,
-                        'last_reading': None,
-                        'status': 'No Data'
+                        'sensor_type': sensor.type, # Use sensor.type here
+                        'last_reading': last_reading_dt.isoformat() if last_reading_dt else None,
+                        'status': status
                     })
-                elif latest.value is None or latest.value == -999:
-                    # Invalid reading
-                    inactive_sensors.append({
-                        'station_name': station.name,
-                        'brand_name': station.brand.name,
-                        'sensor_type': sensor_type,
-                        'last_reading': timezone.make_aware(
-                            datetime.combine(latest.date, latest.time)
-                        ).isoformat() if latest.date and latest.time else None,
-                        'status': 'No Reading'
-                    })
-        
-        return Response(inactive_sensors)
+
+        # Apply pagination to the collected list
+        total_count = len(all_inactive_sensors_list)
+        total_pages = (total_count + page_size - 1) // page_size
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_inactive_sensors = all_inactive_sensors_list[start:end]
+
+        return Response({
+            'results': paginated_inactive_sensors,
+            'total_count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': total_pages,
+            'available_brands': sorted(list(available_brands))
+        })
+
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
         logger.error(f"Error in inactive_sensors view: {str(e)}")
-        return Response({'detail': str(e)}, status=500)
+        return Response({
+            'results': [],
+            'total_count': 0,
+            'page': 1,
+            'page_size': page_size,
+            'total_pages': 1,
+            'error': str(e)
+        }, status=500)
 
 class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
     queryset = ApiKeyUsageLog.objects.all()
