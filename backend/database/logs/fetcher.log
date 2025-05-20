@@ -1352,3 +1352,7 @@ Processing Zentra station: TTMS ATMOS (ID: 26, Serial: z6-26732)
 2025-05-08 02:21:14,352 - database.management.commands.data_fetcher - ERROR - Error fetching data for PAWS station 12: 413 Client Error: Payload Too Large for url: https://3d-trinidad.icdp.ucar.edu/api/v1/data/12?start=2023-01-01T00:00:00&end=2023-12-31T23:59:59&email=jerome.ramirez@metoffice.gov.tt&api_key=sVALwcRMyQmjtwYpDPW-
 2025-05-08 02:21:14,355 - database.management.commands.data_fetcher - WARNING - No data received for station T07 Wild Fowl Trust
 2025-05-08 02:25:37,483 - database.management.commands.data_fetcher - INFO - All fetchers completed
+2025-05-20 00:44:58,248 - database.management.commands.data_fetcher - INFO - Starting data_fetcher management command
+2025-05-20 00:44:58,249 - database.management.commands.data_fetcher - INFO - Fetching data from 2025-05-19 08:44:58.249157-04:00 to 2025-05-19 20:44:58.249157-04:00
+2025-05-20 00:44:58,249 - database.management.commands.data_fetcher - INFO - Starting data fetchers
+2025-05-20 00:45:35,239 - database.management.commands.data_fetcher - INFO - All fetchers completed
