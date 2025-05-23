@@ -49,6 +49,7 @@ from rest_framework_xml.renderers import XMLRenderer
 from .renderers import MeasurementCSVRenderer, StationCSVRenderer
 from django.core.cache import cache
 from django.db import models
+from django.db.models import Prefetch
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -496,121 +497,93 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def station_overview(self, request):
         try:
-            sensor_type = request.query_params.get('sensor_type')
-            brand = request.query_params.get('brand')
+            # Get query parameters
+            brand = request.GET.get('brand')
+            sensor_type = request.GET.get('sensor_type')
+            page = int(request.GET.get('page', 1))
+            page_size = int(request.GET.get('page_size', 10))
+            latest = request.GET.get('latest', 'true').lower() == 'true'
+
+            # Create cache key
+            cache_key = f'station_overview_{brand}_{sensor_type}_{page}_{page_size}_{latest}'
+            cached_data = cache.get(cache_key)
             
-            if not sensor_type:
-                return Response({"error": "sensor_type parameter is required"}, 
-                              status=status.HTTP_400_BAD_REQUEST)
-            
-            # First get stations by brand if specified
-            if brand:
-                # Try both brand relationship patterns
-                stations = Station.objects.filter(brand__name=brand)
-                if not stations.exists():
-                    stations = Station.objects.filter(brand=brand)
-                station_ids = stations.values_list('id', flat=True)
-            else:
-                station_ids = Station.objects.all().values_list('id', flat=True)
-            
-            # Get measurements for this sensor type and these stations
-            latest_measurements = {}
-            
-            # Calculate threshold for 2 hours ago
+            if cached_data:
+                return Response(cached_data)
+
+            # Get current time and 12 hours ago
             now = timezone.now()
-            two_hours_ago = now - timedelta(hours=2)
-            threshold_date = two_hours_ago.date()
-            threshold_time = two_hours_ago.time()
+            yesterday = now - timedelta(hours=12)
             
-            # For each station, find latest measurement and compare with 2-hour old data
-            for station_id in station_ids:
-                # Get latest measurement
-                latest = Measurement.objects.filter(
-                    station_id=station_id,
-                    sensor__type=sensor_type
-                ).order_by('-date', '-time').first()
+            # Base queryset with select_related and prefetch_related
+            stations = Station.objects.filter(
+                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
+            ).select_related('brand').prefetch_related(
+                Prefetch(
+                    'measurements',
+                    queryset=Measurement.objects.filter(
+                        sensor__type=sensor_type,
+                        date__gte=yesterday.date()
+                    ).order_by('-date', '-time')
+                )
+            )
+
+            if brand:
+                stations = stations.filter(brand__name=brand)
+
+            # Get total count for pagination
+            total_count = stations.count()
+            total_pages = (total_count + page_size - 1) // page_size
+
+            # Apply pagination
+            start = (page - 1) * page_size
+            end = start + page_size
+            stations = stations[start:end]
+
+            # Process stations data
+            response_data = []
+            for station in stations:
+                latest_measurement = station.measurements.first() if station.measurements.exists() else None
                 
-                if not latest:
-                    continue
-                    
-                # Get measurement from ~2 hours ago
-                old_measurements = Measurement.objects.filter(
-                    station_id=station_id,
-                    sensor__type=sensor_type
-                ).filter(
-                    (Q(date=threshold_date) & Q(time__lte=threshold_time)) |
-                    (Q(date__lt=threshold_date))
-                ).order_by('-date', '-time')
-                
-                old_measurement = old_measurements.first()
-                
-                # Determine trend (add logging)
-                trend = 'stable'
-                if old_measurement:
-                    current_value = float(latest.value)
-                    old_value = float(old_measurement.value)
-                    
-                    # Define percentage threshold based on sensor type
-                    threshold_pct = 0.01  # Lower threshold to 1% to make trends more visible
-                    
-                    # Calculate absolute and percentage change
-                    abs_change = current_value - old_value
-                    pct_change = abs(abs_change) / max(abs(old_value), 0.1)
-                    
-                    # Add debug logging
-                    print(f"Station {station_id} trend calculation: current={current_value}, old={old_value}, abs_change={abs_change}, pct_change={pct_change}")
-                    
-                    # Make trend detection more sensitive
-                    if abs_change > 0 and pct_change > threshold_pct:
-                        trend = 'increasing'
-                        print(f"Station {station_id} TREND: INCREASING")
-                    elif abs_change < 0 and pct_change > threshold_pct:
-                        trend = 'decreasing'
-                        print(f"Station {station_id} TREND: DECREASING")
-                    else:
-                        print(f"Station {station_id} TREND: STABLE")
-                
-                latest_measurements[station_id] = {
-                    'id': station_id,
-                    'station_name': latest.station.name,
-                    'value': float(latest.value),
-                    'sensor_type': latest.sensor.type,
-                    'sensor_unit': latest.sensor.unit,
-                    'last_updated': f"{latest.date}T{latest.time}",
-                    'trend': trend
+                station_data = {
+                    'id': station.id,
+                    'name': station.name,
+                    'address': station.address,
+                    'brand': station.brand.name,
+                    'sensor_unit': self.get_sensor_unit(sensor_type),
+                    'latest_measurement': {
+                        'value': float(latest_measurement.value) if latest_measurement else None,
+                        'date': latest_measurement.date.isoformat() if latest_measurement else None,
+                        'time': latest_measurement.time.isoformat() if latest_measurement else None,
+                        'status': latest_measurement.status if latest_measurement else 'No Data'
+                    } if latest_measurement else None
                 }
-            
-            station_data = list(latest_measurements.values())
-            
-            # Handle pagination
-            page_size = int(request.query_params.get('page_size', 6))
-            page = int(request.query_params.get('page', 1))
-            
-            # Calculate pagination
-            total_stations = len(station_data)
-            total_pages = math.ceil(total_stations / page_size)
-            start_idx = (page - 1) * page_size
-            end_idx = min(start_idx + page_size, total_stations)
-            
-            # Paginate the data
-            paginated_data = station_data[start_idx:end_idx]
-            
-            return Response({
-                'stations': paginated_data,
-                'total_pages': total_pages,
+                response_data.append(station_data)
+
+            result = {
+                'stations': response_data,
+                'total': total_count,
                 'page': page,
                 'page_size': page_size,
-                'count': total_stations
-            })
-        
+                'total_pages': total_pages
+            }
+
+            # Cache the result for 5 minutes
+            cache.set(cache_key, result, timeout=300)
+            
+            return Response(result)
+
         except Exception as e:
             import traceback
             print(f"Error in station_overview: {str(e)}")
             print(traceback.format_exc())
-            return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            return Response({
+                'stations': [],
+                'total': 0,
+                'page': 1,
+                'page_size': page_size,
+                'error': str(e)
+            })
 
     def get_sensor_unit(self, sensor_type):
         """Helper function to get the unit for a sensor type"""
@@ -649,12 +622,18 @@ class MeasurementViewSet(viewsets.ModelViewSet):
         - hours: Number of hours to look back (default: 12)
         """
         try:
+            # Debug logging for request parameters
+            print("History endpoint called with params:", request.query_params)
+            
             # Parse parameters
             station_ids_param = request.query_params.get('station_ids', '')
             sensor_type = request.query_params.get('sensor_type')
             hours = int(request.query_params.get('hours', 12))
             
+            print(f"Parsed parameters: station_ids={station_ids_param}, sensor_type={sensor_type}, hours={hours}")
+            
             if not station_ids_param or not sensor_type:
+                print("Missing required parameters")
                 return Response(
                     {"detail": "station_ids and sensor_type parameters are required"},
                     status=status.HTTP_400_BAD_REQUEST
@@ -663,7 +642,9 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             # Parse station IDs
             try:
                 station_ids = [int(id) for id in station_ids_param.split(',')]
+                print(f"Parsed station IDs: {station_ids}")
             except ValueError:
+                print("Invalid station_ids format")
                 return Response(
                     {"detail": "Invalid station_ids format. Use comma-separated integers"},
                     status=status.HTTP_400_BAD_REQUEST
@@ -675,6 +656,8 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             threshold_date = time_threshold.date()
             threshold_time = time_threshold.time()
             
+            print(f"Time threshold: {threshold_date} {threshold_time}")
+            
             # Query for measurements within the time range
             measurements = Measurement.objects.filter(
                 station_id__in=station_ids,
@@ -684,12 +667,14 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 (Q(date__gt=threshold_date))
             ).order_by('station_id', 'date', 'time')
             
+            print(f"Found {measurements.count()} measurements")
+            
             # Format data for frontend
             result_data = []
             for m in measurements:
                 result_data.append({
                     'station_id': m.station_id,
-                    'sensor_type': m.sensor.type,
+                    'sensor_type': sensor_type,
                     'value': m.value,
                     'date': m.date.strftime('%Y-%m-%d'),
                     'time': m.time.strftime('%H:%M:%S')
@@ -1940,53 +1925,116 @@ class Command(BaseCommand):
 def inactive_sensors(request):
     try:
         now = timezone.now()
-   
-        # First get all stations with their sensors
-        stations = Station.objects.filter(
+        twenty_four_hours_ago = now - timedelta(hours=24)
+
+        # Get query parameters
+        brand = request.query_params.get('brand')
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 5)) # Default to 5 as per frontend component
+
+        # Get stations, filtered by brand if provided
+        stations_queryset = Station.objects.filter(
             brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
-        ).prefetch_related('station_sensors', 'station_sensors__sensor')
-        
-        inactive_sensors = []
-        
-        for station in stations:
-            # Get all sensors for this station
+        ).select_related('brand')
+
+        if brand:
+            stations_queryset = stations_queryset.filter(brand__name=brand)
+
+        # Get all station IDs for the filtered stations
+        station_ids = list(stations_queryset.values_list('id', flat=True))
+
+        # Fetch the latest measurement for *each* sensor associated with these stations within the last 24 hours
+        # This uses a Window function to get the latest measurement per sensor
+        latest_measurements_subquery = Measurement.objects.filter(
+            station_id__in=station_ids,
+            date__gte=twenty_four_hours_ago.date() # Filter by date for potentially large tables
+        ).annotate(
+            row_number=Window(
+                expression=RowNumber(),
+                partition_by=['station', 'sensor'],
+                order_by=['-date', '-time']
+            )
+        ).filter(row_number=1)
+
+        # Execute the subquery and create a lookup dictionary
+        latest_measurements_dict = {}
+        for m in latest_measurements_subquery:
+            # Use a combined key for station and sensor
+            latest_measurements_dict[(m.station_id, m.sensor_id)] = m
+
+        # Collect all potential inactive sensors
+        all_inactive_sensors_list = []
+        available_brands = set()
+
+        # Iterate through stations and their sensors to determine inactivity
+        # Prefetch sensors to avoid N+1 queries in this loop
+        stations_with_sensors = stations_queryset.prefetch_related('station_sensors__sensor')
+
+        for station in stations_with_sensors:
+            available_brands.add(station.brand.name)
             station_sensors = station.station_sensors.all()
-            
+
             for station_sensor in station_sensors:
-                sensor_type = station_sensor.sensor.type
-                
-                # Check if there are any recent measurements for this sensor
-                latest = Measurement.objects.filter(
-                    station=station,
-                    sensor=station_sensor.sensor,
-                    date__gte=(now - timedelta(hours=10))  
-                ).order_by('-date', '-time').first()
-                
-                if not latest:
-                    # No measurements in last 24 hours
-                    inactive_sensors.append({
+                sensor = station_sensor.sensor
+                if not sensor: # Skip if sensor relationship is null
+                    continue
+
+                # Look up the latest measurement from the pre-fetched dictionary
+                latest = latest_measurements_dict.get((station.id, sensor.id))
+
+                # Determine status and add to the list if inactive or no data
+                status = 'Active' # Assume active initially
+                last_reading_dt = None
+
+                if latest:
+                     last_reading_dt = timezone.make_aware(datetime.combine(latest.date, latest.time)) if latest.date and latest.time else None
+                     # Consider a sensor inactive if its last reading is older than 24 hours or value is invalid
+                     if last_reading_dt < twenty_four_hours_ago:
+                          status = 'Inactive'
+                     elif latest.value is None or latest.value == -999:
+                           status = 'No Reading' # Or another appropriate status for invalid data
+                     # If latest exists and is within 24 hours and value is valid, status remains 'Active'
+                else:
+                    status = 'No Data' # No measurements found at all within the last 24 hours
+
+                if status != 'Active':
+                     all_inactive_sensors_list.append({
                         'station_name': station.name,
                         'brand_name': station.brand.name,
-                        'sensor_type': sensor_type,
-                        'last_reading': None,
-                        'status': 'No Data'
+                        'sensor_type': sensor.type, # Use sensor.type here
+                        'last_reading': last_reading_dt.isoformat() if last_reading_dt else None,
+                        'status': status
                     })
-                elif latest.value is None or latest.value == -999:
-                    # Invalid reading
-                    inactive_sensors.append({
-                        'station_name': station.name,
-                        'brand_name': station.brand.name,
-                        'sensor_type': sensor_type,
-                        'last_reading': timezone.make_aware(
-                            datetime.combine(latest.date, latest.time)
-                        ).isoformat() if latest.date and latest.time else None,
-                        'status': 'No Reading'
-                    })
-        
-        return Response(inactive_sensors)
+
+        # Apply pagination to the collected list
+        total_count = len(all_inactive_sensors_list)
+        total_pages = (total_count + page_size - 1) // page_size
+
+        start = (page - 1) * page_size
+        end = start + page_size
+        paginated_inactive_sensors = all_inactive_sensors_list[start:end]
+
+        return Response({
+            'results': paginated_inactive_sensors,
+            'total_count': total_count,
+            'page': page,
+            'page_size': page_size,
+            'total_pages': total_pages,
+            'available_brands': sorted(list(available_brands))
+        })
+
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
         logger.error(f"Error in inactive_sensors view: {str(e)}")
-        return Response({'detail': str(e)}, status=500)
+        return Response({
+            'results': [],
+            'total_count': 0,
+            'page': 1,
+            'page_size': page_size,
+            'total_pages': 1,
+            'error': str(e)
+        }, status=500)
 
 class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
     queryset = ApiKeyUsageLog.objects.all()

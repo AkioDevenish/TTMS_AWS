@@ -9,7 +9,7 @@
         <ul class="nav nav-tabs border-tab nav-primary mb-4" role="tablist">
             <li class="nav-item" v-for="brand in uniqueBrands" :key="brand">
                 <a class="nav-link" :class="{ active: selectedBrand === brand }" 
-                   @click="selectedBrand = brand">
+                   @click="selectBrand(brand)">
                     {{ brand }}
                 </a>
             </li>
@@ -27,7 +27,7 @@
             <div class="empty-state">
                 <VueFeather type="alert-circle" size="48" class="text-muted mb-3" />
                 <h5>No Data Available</h5>
-                <p class="text-muted">No inactive sensors found in the last 24 hours.</p>
+                <p class="text-muted">No inactive sensors found for the selected criteria.</p>
             </div>
         </div>
 
@@ -43,7 +43,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(sensor, index) in paginatedSensors" :key="index">
+                    <tr v-for="(sensor, index) in inactiveSensors" :key="index">
                         <td class="px-3">
                             <div class="d-flex align-items-center">
                                 <h6 class="mb-0">{{ sensor.station_name }}</h6>
@@ -60,17 +60,17 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
-        <ul class="pagination mx-3 mt-3 justify-content-end" v-if="hasRecentData">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+        <ul class="pagination mx-3 mt-3 justify-content-end" v-if="totalPages > 1">
+            <li class="page-item" :class="{ disabled: currentPage === 1 || isLoading }">
                 <a class="page-link cursor-pointer" @click="prev()">Previous</a>
             </li>
-            <li class="page-item" v-for="i in totalPages" :key="i" 
+            <li class="page-item" v-for="i in totalPages" :key="i"
                 :class="{ active: i === currentPage }">
-                <a class="page-link cursor-pointer" @click="currentPage = i">{{ i }}</a>
+                <a class="page-link cursor-pointer" @click="setPage(i)">{{ i }}</a>
             </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <li class="page-item" :class="{ disabled: currentPage === totalPages || isLoading }">
                 <a class="page-link cursor-pointer" @click="next()">Next</a>
             </li>
         </ul>
@@ -78,89 +78,36 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, watch, computed, onUnmounted } from 'vue'
-import axios from 'axios'
-import VueFeather from 'vue-feather'
+import { defineAsyncComponent, onMounted, computed } from 'vue';
+import { useInactiveSensorsStore, type InactiveSensor } from '@/store/inactiveSensors';
+import VueFeather from 'vue-feather';
 
-const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
+const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
 
-interface InactiveSensor {
-    station_name: string;
-    brand_name: string;
-    sensor_type: string;
-    lastReading: string | null;
-    status: string;
-}
+// Use the store
+const store = useInactiveSensorsStore();
 
-const elementsPerPage = ref<number>(5)
-const currentPage = ref<number>(1)
-const selectedBrand = ref<string>("")
-const inactiveSensors = ref<InactiveSensor[]>([])
-const isLoading = ref<boolean>(true)
-
-// Fetch inactive sensors data
-const fetchInactiveSensors = async () => {
-    try {
-        isLoading.value = true;
-        const response = await axios.get('/measurements/inactive_sensors/');
-        
-        if (response.data) {
-            inactiveSensors.value = response.data.map((sensor: any) => ({
-                station_name: sensor.station_name,
-                brand_name: sensor.brand_name,
-                sensor_type: sensor.sensor_type,
-                lastReading: sensor.last_reading,
-                status: sensor.status
-            }));
-        }
-    } catch (error) {
-        console.error('Error fetching inactive sensor data:', error);
-        inactiveSensors.value = [];
-    } finally {
-        isLoading.value = false;
-    }
-};
-
-// Check if we have any recent data (within last 24 hours)
-const hasRecentData = computed(() => {
-    return inactiveSensors.value.some(sensor => {
-        if (!sensor.lastReading) return false;
-        const lastUpdate = new Date(sensor.lastReading);
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-        return lastUpdate >= twentyFourHoursAgo;
-    });
+// Get state and actions from the store
+const isLoading = computed(() => store.isLoading);
+const inactiveSensors = computed(() => store.sensors); // This now gets the paginated/filtered sensors from the store
+const currentPage = computed(() => store.currentPage);
+const totalPages = computed(() => store.totalPages);
+const selectedBrand = computed(() => {
+    console.log('Component: selectedBrand computed property:', store.selectedBrand);
+    return store.selectedBrand;
 });
-
 const uniqueBrands = computed(() => {
-    const brands = [...new Set(inactiveSensors.value.map(sensor => sensor.brand_name))];
-    if (!selectedBrand.value && brands.length > 0) {
-        selectedBrand.value = brands[0];
-    }
-    return brands;
+    console.log('Component: uniqueBrands computed property:', store.availableBrands);
+    return store.availableBrands;
 });
 
-const filteredSensors = computed(() => {
-    return inactiveSensors.value.filter(sensor => {
-        if (!sensor.lastReading) return false;
-        const lastUpdate = new Date(sensor.lastReading);
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-        return lastUpdate >= twentyFourHoursAgo && sensor.brand_name === selectedBrand.value;
-    });
+// Check if we have any data to display (considering the current page)
+const hasRecentData = computed(() => {
+    console.log('Component: hasRecentData computed property:', inactiveSensors.value && inactiveSensors.value.length > 0);
+    return inactiveSensors.value && inactiveSensors.value.length > 0;
 });
 
-const totalPages = computed(() => 
-    Math.ceil(filteredSensors.value.length / elementsPerPage.value)
-);
-
-const paginatedSensors = computed(() => {
-    const start = (currentPage.value - 1) * elementsPerPage.value;
-    const end = start + elementsPerPage.value;
-    return filteredSensors.value.slice(start, end);
-});
-
-// Helper functions
+// Helper functions (keep these as they work with the data structure)
 const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never';
     try {
@@ -185,34 +132,38 @@ const getStationClass = (sensor: InactiveSensor) => {
     };
 };
 
-// Pagination methods
+// Pagination methods dispatching to store actions
+const setPage = (page: number) => {
+    store.setPage(page);
+};
+
 const next = () => {
-    if (currentPage.value < totalPages.value) currentPage.value++;
+    if (currentPage.value < totalPages.value) {
+        setPage(currentPage.value + 1); // Use local setPage which calls store action
+    }
 };
 
 const prev = () => {
-    if (currentPage.value > 1) currentPage.value--;
+    if (currentPage.value > 1) {
+        setPage(currentPage.value - 1); // Use local setPage which calls store action
+    }
 };
 
-// Watch for brand changes
-watch(selectedBrand, () => {
-    currentPage.value = 1;
-});
+// Brand selection method dispatching to store action
+const selectBrand = (brand: string) => {
+    store.setBrand(brand);
+};
 
-// Add after onMounted
-let refreshInterval: number;
-
+// Fetch data on component mount
 onMounted(() => {
-    fetchInactiveSensors();
-    // Refresh every 5 minutes
-    refreshInterval = window.setInterval(fetchInactiveSensors, 300000);
+    // Initial fetch when the component is mounted
+    store.fetchInactiveSensors();
+    // Note: The store should handle the refresh interval internally if needed.
 });
 
-onUnmounted(() => {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-    }
-});
+// Note: The component no longer needs the watch on selectedBrand or its own refresh interval.
+// These concerns are now managed within the Pinia store.
+
 </script>
 
 <style scoped>
