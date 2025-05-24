@@ -542,6 +542,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
 
             # Process stations data
             response_data = []
+            # Remove the for loop and change the following code 
             for station in stations:
                 latest_measurement = station.measurements.first() if station.measurements.exists() else None
                 
