@@ -41,61 +41,77 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, watch } from 'vue'
-import { useStationData } from '@/composables/useStationData'
-
+import { ref, defineAsyncComponent, watch, defineProps } from 'vue'
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
-
-interface StationData {
-    id: string;
-    name: string;
-    status: string;
-    lastUpdated: string;
-}
-
 const props = defineProps({
     selectedStation: {
         type: Number,
         required: true
+    },
+    measurements: {
+        type: Array,
+        default: () => []
+    },
+    stationInfo: {
+        type: Object,
+        default: () => ({})
     }
 });
-
-const { 
-    measurements,
-    stationInfo,
-    getLatestMeasurement,
-    formatDateTime,
-    isLoading,
-    fetchStationData,
-    getLast24HoursMeasurements
-} = useStationData();
-
-const latestData = ref<StationData[]>([]);
-const connectionStatus = ref<string>('Unsuccessful');
-const monitorTitle = ref<string>('Barani Monitor');
-
-// Watch for station changes
-watch(() => props.selectedStation, (newStationId) => {
-    if (newStationId) {
-        fetchStationData(newStationId);
+const latestData = ref<any[]>([])
+const connectionStatus = ref<string>('Unsuccessful')
+const monitorTitle = ref<string>('Barani Monitor')
+// Local date/time formatter
+const formatDateTime = {
+    date: (timestamp: string) => {
+        try {
+            if (!timestamp) return 'Invalid Date';
+            const date = new Date(timestamp);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        } catch {
+            return 'Invalid Date';
+        }
+    },
+    time: (timestamp: string) => {
+        try {
+            const date = new Date(timestamp);
+            if (isNaN(date.getTime())) return 'Invalid Time';
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        } catch {
+            return 'Invalid Time';
+        }
     }
-}, { immediate: true });
-
-// Watch for data changes
-watch([() => getLast24HoursMeasurements.value, () => stationInfo.value, () => getLatestMeasurement.value], 
-    ([newMeasurements, newStationInfo, latestMeasurement]) => {
-    if (!newMeasurements?.length || !newStationInfo || !latestMeasurement) {
+};
+watch([
+    () => props.measurements,
+    () => props.stationInfo
+], ([newMeasurements, newStationInfo]) => {
+    if (!newMeasurements?.length || !newStationInfo) {
         latestData.value = [];
-        connectionStatus.value = isLoading.value ? 'Loading...' : 'Unsuccessful';
+        connectionStatus.value = 'Unsuccessful';
         return;
     }
-
     try {
+        // Find the latest measurement by date/time
+        const latestMeasurement: any = [...newMeasurements].sort((a: any, b: any) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateB.getTime() - dateA.getTime();
+        })[0];
         latestData.value = [{
             id: newStationInfo.serial_number,
             name: newStationInfo.name,
-            status: latestMeasurement.status || 'Unknown',
-            lastUpdated: `${latestMeasurement.date}T${latestMeasurement.time}`,
+            status: latestMeasurement?.status || 'Unknown',
+            lastUpdated: `${latestMeasurement?.date || ''}T${latestMeasurement?.time || ''}`,
         }];
         connectionStatus.value = 'Successful';
     } catch (error) {

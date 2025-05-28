@@ -22,19 +22,27 @@
 				</div>
 			</div>
 		</div>
-		<div class="row">
-			<template v-if="selectedStation">
-				<div class="row">
-					<BaraniInsMonitor :selectedStation="selectedStation" :measurements="baraniData.measurements?.value || []" :stationInfo="baraniData.stationInfo?.value || {}" />
-					<BaraniStatistics :selectedStation="selectedStation" :measurements="baraniData.getLast24HoursMeasurements?.value || []" :stationInfo="baraniData.stationInfo?.value || {}" />
-					<BaraniTempCard :selectedStation="selectedStation" :measurements="baraniData.measurements?.value || []" :stationInfo="baraniData.stationInfo?.value || {}" />
-				</div>
-			</template>
-			<template v-else>
-				<div class="text-center py-4">
-					<p>Please select a station</p>
-				</div>
-			</template>
+		
+		<div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+			<div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
+		<div v-else>
+			<div class="row">
+				<template v-if="selectedStation">
+					<div class="row">
+						<BaraniInsMonitor :selectedStation="selectedStation" :measurements="baraniData.measurements?.value || []" :stationInfo="baraniData.stationInfo?.value || {}" />
+						<BaraniStatistics :selectedStation="selectedStation" :measurements="baraniData.getLast24HoursMeasurements?.value || []" :stationInfo="baraniData.stationInfo?.value || {}" />
+						<BaraniTempCard :selectedStation="selectedStation" :measurements="baraniData.measurements?.value || []" :stationInfo="baraniData.stationInfo?.value || {}" />
+					</div>
+				</template>
+				<template v-else>
+					<div class="text-center py-4">
+						<p>Please select a station</p>
+					</div>
+				</template>
+			</div>
 		</div>
 	</div>
 </template>
@@ -59,6 +67,7 @@ const StationDataExport = defineAsyncComponent(() => import("@/components/theme/
 const stationNames = ref<Station[]>([]);
 const selectedStation = ref<number>(0);
 const baraniData = useStationData();
+const isLoading = ref(false);
 
 // Get the name of the selected station
 const getSelectedStationName = computed(() => {
@@ -75,6 +84,7 @@ const availableSensors = computed(() => [
 
 const fetchStationNames = async () => {
 	try {
+		isLoading.value = true;
 		const response = await axios.get<Station[]>('/stations/');
 		const baraniStations = response.data.filter(station => station.brand_name === "Allmeteo");
 		stationNames.value = baraniStations;
@@ -82,14 +92,33 @@ const fetchStationNames = async () => {
 		if (baraniStations.length > 0 && !selectedStation.value) {
 			selectedStation.value = baraniStations[0].id;
 		}
+		// Always fetch with both station_ids and sensor_type
+		const firstSensor = availableSensors.value[0];
+		if (baraniStations.length > 0 && firstSensor) {
+			await baraniData.fetchStationData(baraniStations.map(s => s.id), firstSensor, 12);
+		} else if (baraniStations.length > 0) {
+			console.warn('No sensors available for Barani stations');
+		}
 	} catch (err) {
 		console.error('Error fetching station names:', err);
+	} finally {
+		isLoading.value = false;
 	}
 };
 
 watch(() => selectedStation.value, async (newVal) => {
-	if (newVal) {
-		await baraniData.fetchStationData(newVal);
+	const firstSensor = availableSensors.value[0];
+	if (newVal && firstSensor) {
+		isLoading.value = true;
+		try {
+			await baraniData.fetchStationData(newVal, firstSensor, 12);
+		} catch (err) {
+			console.error('Error fetching station data:', err);
+		} finally {
+			isLoading.value = false;
+		}
+	} else if (newVal) {
+		console.warn('No sensors available for selected station');
 	}
 }, { immediate: true });
 

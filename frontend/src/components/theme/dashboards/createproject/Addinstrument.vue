@@ -220,9 +220,8 @@ const getBrandRoute = (brandId: number): string => {
 	const brandRoutes: { [key: number]: string } = {
 		1: '/stations/AWS_Barani',
 		2: '/stations/AWS_3D_Paws',
-		3: '/stations/AWS_Sutron',
-		4: '/stations/AWS_OTT_Hyrdomet',
-		5: '/stations/AWS_Zentra'
+		3: '/stations/AWS_OTT_Hyrdomet',
+		4: '/stations/AWS_Zentra'
 	};
 
 	return brandRoutes[brandId] || '/stations';

@@ -24,41 +24,53 @@ export function useStationData() {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  const fetchStationData = async (stationId: number) => {
-    if (!stationId) return;
-
+  /**
+   * Fetch measurements for one or more stations using the /measurements/history/ endpoint.
+   * @param stationIds - A single station ID or an array of station IDs
+   * @param sensorType - The sensor type to fetch (e.g., 'bt1')
+   * @param hours - How many hours back to fetch (default 12)
+   */
+  const fetchStationData = async (stationIds: number | number[], sensorType: string = '', hours: number = 12) => {
+    if (!stationIds || (Array.isArray(stationIds) && stationIds.length === 0)) {
+      console.warn('No station IDs provided to fetchStationData');
+      return;
+    }
+    if (!sensorType) {
+      console.warn('No sensor type provided to fetchStationData');
+      return;
+    }
     isLoading.value = true;
     error.value = null;
-
     try {
-      const [stationResponse, measurementsResponse] = await Promise.all([
-        axios.get(`/stations/${stationId}/`),
-        axios.get(`/measurements/by_station/`, {
-          params: {
-            station_id: stationId,
-            hours: 24 // Get last 24 hours of data
-          }
-        })
-      ]);
-
-      stationInfo.value = stationResponse.data;
-      
-      // Ensure measurements is an array and has the correct structure
-      if (Array.isArray(measurementsResponse.data)) {
-        measurements.value = measurementsResponse.data.map(m => ({
+      let idsParam = Array.isArray(stationIds) ? stationIds.join(',') : stationIds.toString();
+      const params: any = {
+        station_ids: idsParam,
+        hours,
+        sensor_type: sensorType
+      };
+      // Fetch measurements for all stations in one call
+      const response = await axios.get('/measurements/history/', { params });
+      // The response is expected to be { measurements: [...] }
+      if (response.data && Array.isArray(response.data.measurements)) {
+        measurements.value = response.data.measurements.map((m: any) => ({
           ...m,
           value: parseFloat(m.value),
           date: m.date,
           time: m.time,
           sensor_type: m.sensor_type,
-          status: m.status,
           station_id: m.station_id
         }));
       } else {
         measurements.value = [];
       }
-      
-      console.log('Fetched measurements:', measurements.value);
+      // Optionally, fetch station info for the first station (if single)
+      if (!Array.isArray(stationIds) || stationIds.length === 1) {
+        const id = Array.isArray(stationIds) ? stationIds[0] : stationIds;
+        const stationResponse = await axios.get(`/stations/${id}/`);
+        stationInfo.value = stationResponse.data;
+      } else {
+        stationInfo.value = null;
+      }
     } catch (err: any) {
       console.error('Error fetching station data:', err);
       error.value = err.message;

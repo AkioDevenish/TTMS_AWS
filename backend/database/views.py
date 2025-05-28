@@ -615,32 +615,24 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def history(self, request):
         """
-        Get historical measurements for specific stations and sensor type.
-        
+        Get historical measurements for specific stations and sensor type(s).
         Query parameters:
         - station_ids: Comma-separated list of station IDs
-        - sensor_type: Type of sensor (e.g., bt1, rg, ws)
+        - sensor_type: Comma-separated list of sensor types (e.g., bt1,rg,ws)
         - hours: Number of hours to look back (default: 12)
         """
         try:
-            # Debug logging for request parameters
             print("History endpoint called with params:", request.query_params)
-            
-            # Parse parameters
             station_ids_param = request.query_params.get('station_ids', '')
-            sensor_type = request.query_params.get('sensor_type')
+            sensor_type_param = request.query_params.get('sensor_type')
             hours = int(request.query_params.get('hours', 12))
-            
-            print(f"Parsed parameters: station_ids={station_ids_param}, sensor_type={sensor_type}, hours={hours}")
-            
-            if not station_ids_param or not sensor_type:
+            print(f"Parsed parameters: station_ids={station_ids_param}, sensor_type={sensor_type_param}, hours={hours}")
+            if not station_ids_param or not sensor_type_param:
                 print("Missing required parameters")
                 return Response(
                     {"detail": "station_ids and sensor_type parameters are required"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Parse station IDs
             try:
                 station_ids = [int(id) for id in station_ids_param.split(',')]
                 print(f"Parsed station IDs: {station_ids}")
@@ -650,39 +642,37 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     {"detail": "Invalid station_ids format. Use comma-separated integers"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Calculate the time threshold
+            # Support multiple sensor types
+            sensor_types = [s.strip() for s in sensor_type_param.split(',') if s.strip()]
+            if not sensor_types:
+                print("No valid sensor types provided")
+                return Response(
+                    {"detail": "At least one sensor_type must be provided"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             now = timezone.now()
             time_threshold = now - timedelta(hours=hours)
             threshold_date = time_threshold.date()
             threshold_time = time_threshold.time()
-            
             print(f"Time threshold: {threshold_date} {threshold_time}")
-            
-            # Query for measurements within the time range
             measurements = Measurement.objects.filter(
                 station_id__in=station_ids,
-                sensor__type=sensor_type
+                sensor__type__in=sensor_types
             ).filter(
                 (Q(date=threshold_date) & Q(time__gte=threshold_time)) | 
                 (Q(date__gt=threshold_date))
-            ).order_by('station_id', 'date', 'time')
-            
+            ).order_by('station_id', 'sensor__type', 'date', 'time')
             print(f"Found {measurements.count()} measurements")
-            
-            # Format data for frontend
             result_data = []
             for m in measurements:
                 result_data.append({
                     'station_id': m.station_id,
-                    'sensor_type': sensor_type,
+                    'sensor_type': m.sensor.type,
                     'value': m.value,
                     'date': m.date.strftime('%Y-%m-%d'),
                     'time': m.time.strftime('%H:%M:%S')
                 })
-            
             return Response({'measurements': result_data})
-        
         except Exception as e:
             import traceback
             print(f"Error in history endpoint: {str(e)}")
@@ -1965,14 +1955,14 @@ def inactive_sensors(request):
 
         # Collect all potential inactive sensors
         all_inactive_sensors_list = []
-        available_brands = set()
+        # Always show all brands in the tab list
+        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra']
 
         # Iterate through stations and their sensors to determine inactivity
         # Prefetch sensors to avoid N+1 queries in this loop
         stations_with_sensors = stations_queryset.prefetch_related('station_sensors__sensor')
 
         for station in stations_with_sensors:
-            available_brands.add(station.brand.name)
             station_sensors = station.station_sensors.all()
 
             for station_sensor in station_sensors:
@@ -2021,7 +2011,7 @@ def inactive_sensors(request):
             'page': page,
             'page_size': page_size,
             'total_pages': total_pages,
-            'available_brands': sorted(list(available_brands))
+            'available_brands': available_brands
         })
 
     except Exception as e:

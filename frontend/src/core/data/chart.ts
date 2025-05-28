@@ -181,19 +181,6 @@ export const zentrastats = [
     }
 ];
 
-export const sutronstats = [
-    {
-        name: 'Humidity',
-        data: [80.3, 73.5, 72.7, 54.2, 84.3, 75.4, 63.5, 89.2, 56.4, 60.6, 65.8, 70.2,
-               75.5, 78.3, 82.1, 85.4, 87.2, 88.5, 86.3, 84.1, 82.4, 80.7, 78.9, 77.2].map(v => v.toFixed(1) + '%'),
-    },
-    {
-        name: 'Rainfall',
-        data: [1, 2, 3, 4, 5, 10, 8, 4, 5, 4, 3, 2,
-               1, 0, 0, 1, 2, 3, 4, 3, 2, 1, 0, 0].map(v => v + 'mm'),
-    }
-];
-
 export const ott_hydromet_stats = [
     {
         name: 'Humidity',
@@ -2305,16 +2292,16 @@ export const chartOptions13 = {
             },
             series: [{
                 name: 'PRODUCT A',
-                data: [2, 4, 3.8, 3, 4]
+                data: [2, 4, 3.8, 3, 4, 3, 2]
             }, {
                 name: 'PRODUCT B',
-                data: [5, 4, 5, 5, 4]
+                data: [5, 4, 5, 5, 4, 5, 5]
             }, {
                 name: 'PRODUCT C',
-                data: [7, 6, 6, 7, 6]
+                data: [7, 6, 6, 7, 6, 4, 7]
             }, {
                 name: 'PRODUCT C',
-                data: [8.9, 8.9, 8.9, 8.9, 8.9]
+                data: [8.9, 8.9, 8.9, 8.9, 8.9, 8.9, 8.9]
             }]
         }
     }],

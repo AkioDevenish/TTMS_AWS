@@ -69,15 +69,17 @@ const getSelectedStationName = computed(() => {
 	return station?.name || '';
 });
 
-// List of available sensors for Zentra stations
-const availableSensors = computed(() => [
-	'Air Temperature',
-	'Wind Speed',
-	'Solar Radiation',
-	'Precipitation',
-	'Relative Humidity',
-	'Atmospheric Pressure'
-]);
+// Add type for sensorCodeMap to allow string indexing
+const sensorCodeMap: { [key: string]: string } = {
+	'Air Temperature': 'Air Temperature',
+	'Wind Speed': 'Wind Speed',
+	'Solar Radiation': 'Solar Radiation',
+	'Precipitation': 'Precipitation',
+	'Relative Humidity': 'Relative Humidity',
+	'Atmospheric Pressure': 'Atmospheric Pressure'
+};
+
+const availableSensors = computed(() => Object.keys(sensorCodeMap));
 
 const fetchStationNames = async () => {
 	try {
@@ -96,7 +98,8 @@ const fetchStationNames = async () => {
 
 watch(() => selectedStation.value, async (newVal) => {
 	if (newVal) {
-		await zentraData.fetchStationData(newVal);
+		// Fetch all sensors for the last 12 hours, using mapped codes
+		await zentraData.fetchStationData(newVal, availableSensors.value.map(s => sensorCodeMap[s]).join(','), 12);
 	}
 }, { immediate: true });
 

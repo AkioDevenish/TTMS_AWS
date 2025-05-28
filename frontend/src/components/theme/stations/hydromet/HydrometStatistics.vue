@@ -48,26 +48,23 @@
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, computed, watch, defineProps } from 'vue';
 import { OTTOptions1 } from '@/core/data/chart';
-import { useStationData } from '@/composables/useStationData';
-
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
-
 const props = defineProps({
   selectedStation: {
     type: Number,
     required: true
+  },
+  measurements: {
+    type: Array,
+    default: () => []
+  },
+  stationInfo: {
+    type: Object,
+    default: () => ({})
   }
 });
-
-const { measurements, stationInfo, getLast24HoursMeasurements, fetchStationData, fetchLast24HoursSensorData } = useStationData();
-
-// Define a type for the sensor keys
 type SensorType = keyof typeof sensorConfig;
-
-// Initialize with proper type
 const selectedSensorType = ref<SensorType>('Air Temperature');
-
-// Define sensor configuration with names and units for OTT sensors
 const sensorConfig = {
   '5 min rain': { name: '5 min Rain', unit: 'mm' },
   'Air Temperature': { name: 'Air Temperature', unit: '°C' },
@@ -92,23 +89,19 @@ const sensorConfig = {
 const sensorTypes = computed(() => Object.keys(sensorConfig) as SensorType[]);
 const currentSensorName = computed(() => sensorConfig[selectedSensorType.value].name || selectedSensorType.value);
 const currentSensorUnit = computed(() => sensorConfig[selectedSensorType.value].unit || '');
-
 const chartData = computed(() => {
-  const filteredData = getLast24HoursMeasurements.value.filter(
-    measurement => measurement.sensor_type === selectedSensorType.value
+  const filteredData = props.measurements.filter(
+    (measurement: any) => measurement.sensor_type === selectedSensorType.value
   );
-
   if (!filteredData.length) return [];
-
   return [{
     name: currentSensorName.value,
-    data: filteredData.map(item => ({
+    data: filteredData.map((item: any) => ({
       x: new Date(`${item.date}T${item.time}`).getTime(),
       y: parseFloat(item.value.toString())
     }))
   }];
 });
-
 const chartOptions = computed(() => ({
   ...OTTOptions1,
   yaxis: {
@@ -158,12 +151,9 @@ const chartOptions = computed(() => ({
     }
   }
 }));
-
 watch([() => props.selectedStation, () => selectedSensorType.value], 
   ([newStationId, sensorType]) => {
-    if (newStationId && sensorType) {
-      fetchLast24HoursSensorData(newStationId, sensorType);
-    }
+    // No fetching, just update chartData via computed
   }, 
   { immediate: true }
 );

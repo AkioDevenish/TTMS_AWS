@@ -8,7 +8,6 @@ import indexEcommerce from "@/pages/dashbords/indexEcommerce.vue"
 import indexZentra from "@/pages/dashbords/indexZentra.vue"
 import indexBarani from "@/pages/dashbords/indexBarani.vue"
 import indexHydromet from "@/pages/dashbords/indexHydromet.vue"
-import indexSutron from "@/pages/dashbords/indexSutron.vue"
 import indexPaws from "@/pages/dashbords/indexPaws.vue"
 import indexGeneral from "@/pages/widgets/indexGeneral.vue"
 import indexChart from "@/pages/widgets/indexChart.vue"
@@ -304,15 +303,6 @@ const routes: Array<RouteRecordRaw> = [
         path: "AWS_3D_Paws",
         name: "3DPaws",
         component: indexPaws,
-        meta: {
-          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
-          requiresAuth: true
-        }
-      },
-      {
-        path: "AWS_Sutron",
-        name: "Sutron",
-        component: indexSutron,
         meta: {
           title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
           requiresAuth: true

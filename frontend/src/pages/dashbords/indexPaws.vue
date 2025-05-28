@@ -26,8 +26,8 @@
 			<template v-if="selectedStation">
 				<div class="row">
 					<PawsInsMonitor :selectedStation="selectedStation" :measurements="pawsData.measurements?.value || []" :stationInfo="pawsData.stationInfo?.value || {}" />
-					<PawsStatistics :selectedStation="selectedStation" :measurements="pawsData.getLast24HoursMeasurements?.value || []" :stationInfo="pawsData.stationInfo?.value || {}" />
-					<PawsTempCard :selectedStation="selectedStation" :measurements="pawsData.measurements?.value || []" :stationInfo="pawsData.stationInfo?.value || {}" />
+					<PawsStatistics :selectedStation="selectedStation" :measurements="last24HoursPawsMeasurements" :stationInfo="pawsData.stationInfo?.value || {}" />
+					<PawsTempCard :selectedStation="selectedStation" :measurements="allPawsMeasurements" :stationInfo="pawsData.stationInfo?.value || {}" />
 				</div>
 			</template>
 			<template v-else>
@@ -36,11 +36,16 @@
 				</div>
 			</template>
 		</div>
+		<div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+			<div class="spinner-border text-primary" role="status">
+				<span class="visually-hidden">Loading...</span>
+			</div>
+		</div>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch, computed, Ref } from 'vue';
 import { defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { useStationData } from '@/composables/useStationData';
@@ -59,6 +64,8 @@ const StationDataExport = defineAsyncComponent(() => import("@/components/theme/
 
 const stationNames = ref<Station[]>([]); // Explicitly define the type as an array of Station
 const selectedStation = ref<number>(0); // Default to 0 instead of null
+const isLoading = ref(false);
+const allPawsMeasurements: Ref<any[]> = ref([]);
 
 const pawsData = useStationData();
 
@@ -83,8 +90,27 @@ const availableSensors = computed(() => [
 	'css'
 ]);
 
+// Helper to fetch all sensors' data for a station and merge
+const fetchAllSensorsData = async (stationId: number) => {
+	allPawsMeasurements.value = [];
+	if (!stationId) return;
+	isLoading.value = true;
+	try {
+		await pawsData.fetchStationData(stationId, availableSensors.value.join(','), 12);
+		if (Array.isArray(pawsData.measurements.value)) {
+			allPawsMeasurements.value = pawsData.measurements.value.map(m => ({ ...m }));
+		}
+	} catch (err) {
+		console.error('Error fetching all sensors data:', err);
+		allPawsMeasurements.value = [];
+	} finally {
+		isLoading.value = false;
+	}
+};
+
 const fetchStationNames = async () => {
 	try {
+		isLoading.value = true;
 		const response = await axios.get<Station[]>('/stations/');
 		const pawsStations = response.data.filter(station => station.brand_name === "3D_Paws");
 		stationNames.value = pawsStations;
@@ -92,17 +118,34 @@ const fetchStationNames = async () => {
 		if (pawsStations.length > 0 && !selectedStation.value) {
 			selectedStation.value = pawsStations[0].id;
 		}
+		if (pawsStations.length > 0) {
+			await fetchAllSensorsData(selectedStation.value);
+		} else if (pawsStations.length > 0) {
+			console.warn('No sensors available for PAWS stations');
+		}
 	} catch (error) {
 		console.error('Error fetching station names:', error);
+	} finally {
+		isLoading.value = false;
 	}
 };
 
-// Watch for station changes to refetch data
 watch(() => selectedStation.value, async (newVal) => {
 	if (newVal) {
-		await pawsData.fetchStationData(newVal);
+		await fetchAllSensorsData(newVal);
+	} else if (newVal) {
+		console.warn('No sensors available for selected station');
 	}
 }, { immediate: true });
+
+const last24HoursPawsMeasurements = computed(() => {
+	const now = Date.now();
+	const oneDayAgo = now - (24 * 60 * 60 * 1000);
+	return allPawsMeasurements.value.filter(m => {
+		const measurementTime = new Date(`${m.date}T${m.time}`).getTime();
+		return measurementTime >= oneDayAgo;
+	});
+});
 
 onMounted(fetchStationNames);
 </script>

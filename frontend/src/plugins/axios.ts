@@ -51,7 +51,7 @@ axios.interceptors.response.use(
     stopProgress()
     return response
   },
-  (error) => {
+  async (error) => {
     stopProgress()
 
     // Check for suspended status in error response
@@ -64,11 +64,32 @@ axios.interceptors.response.use(
       router.push('/auth/login?error=suspended')
     }
 
-    // Handle other 401 errors
+    // Handle 401 errors with token refresh logic
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-      router.push('/auth/login')
+      const refreshToken = localStorage.getItem('refresh_token');
+      // Prevent infinite loop
+      if (refreshToken && !error.config._retry) {
+        error.config._retry = true;
+        try {
+          const refreshResponse = await axios.post('/token/refresh/', { refresh: refreshToken });
+          const newAccessToken = refreshResponse.data.access;
+          localStorage.setItem('access_token', newAccessToken);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+          error.config.headers['Authorization'] = `Bearer ${newAccessToken}`;
+          // Retry the original request
+          return axios(error.config);
+        } catch (refreshError) {
+          // Refresh failed, log out
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          router.push('/auth/login');
+        }
+      } else {
+        // No refresh token or already retried, log out
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        router.push('/auth/login');
+      }
     }
 
     return Promise.reject(error)

@@ -1,40 +1,47 @@
 <template>
-	<div class="container-fluid dashboard-4">
-		<div class="row mb-4">
-			<div class="col-12">
-				<div class="d-flex align-items-start gap-4">
-					<div class="station-selector">
-						<label for="stationSelect" class="form-label">Select OTT Station</label>
-						<select id="stationSelect" v-model="selectedStation" class="form-select">
-							<option v-for="station in stationNames" :key="station.id" :value="station.id">
-								{{ station.name }}
-							</option>
-						</select>
-					</div>
-					<div class="station-export flex-grow-1" v-if="selectedStation">
-						<StationDataExport 
-							:stationId="selectedStation"
-							:stationName="getSelectedStationName"
-							:sensors="availableSensors"
-							brand="OTT"
-						/>
+	<div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 300px;">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Loading...</span>
+		</div>
+	</div>
+	<div v-else>
+		<div class="container-fluid dashboard-4">
+			<div class="row mb-4">
+				<div class="col-12">
+					<div class="d-flex align-items-start gap-4">
+						<div class="station-selector">
+							<label for="stationSelect" class="form-label">Select OTT Station</label>
+							<select id="stationSelect" v-model="selectedStation" class="form-select">
+								<option v-for="station in stationNames" :key="station.id" :value="station.id">
+									{{ station.name }}
+								</option>
+							</select>
+						</div>
+						<div class="station-export flex-grow-1" v-if="selectedStation">
+							<StationDataExport 
+								:stationId="selectedStation"
+								:stationName="getSelectedStationName"
+								:sensors="availableSensors"
+								brand="OTT"
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="row">
-			<template v-if="selectedStation">
-				<div class="row">
-					<HydrometInsMonitor :selectedStation="selectedStation" :measurements="ottData.measurements?.value || []" :stationInfo="ottData.stationInfo?.value || {}" />
-					<HydrometStatistics :selectedStation="selectedStation" :measurements="ottData.getLast24HoursMeasurements?.value || []" :stationInfo="ottData.stationInfo?.value || {}" />
-					<HydrometTempCard :selectedStation="selectedStation" :measurements="ottData.measurements?.value || []" :stationInfo="ottData.stationInfo?.value || {}" />
-				</div>
-			</template>
-			<template v-else>
-				<div class="text-center py-4">
-					<p>Please select a station</p>
-				</div>
-			</template>
+			<div class="row">
+				<template v-if="selectedStation">
+					<div class="row">
+						<HydrometInsMonitor :selectedStation="selectedStation" :measurements="ottData.measurements?.value || []" :stationInfo="ottData.stationInfo?.value || {}" />
+						<HydrometStatistics :selectedStation="selectedStation" :measurements="ottData.getLast24HoursMeasurements?.value || []" :stationInfo="ottData.stationInfo?.value || {}" />
+						<HydrometTempCard :selectedStation="selectedStation" :measurements="ottData.measurements?.value || []" :stationInfo="ottData.stationInfo?.value || {}" />
+					</div>
+				</template>
+				<template v-else>
+					<div class="text-center py-4">
+						<p>Please select a station</p>
+					</div>
+				</template>
+			</div>
 		</div>
 	</div>
 </template>
@@ -59,6 +66,7 @@ const StationDataExport = defineAsyncComponent(() => import("@/components/theme/
 const stationNames = ref<Station[]>([]);
 const selectedStation = ref<number>(0);
 const ottData = useStationData();
+const isLoading = ref(false);
 
 // Get the name of the selected station
 const getSelectedStationName = computed(() => {
@@ -91,6 +99,7 @@ const availableSensors = computed(() => [
 
 const fetchStationNames = async () => {
 	try {
+		isLoading.value = true;
 		const response = await axios.get<Station[]>('/stations/');
 		const ottStations = response.data.filter(station => station.brand_name === "OTT");
 		stationNames.value = ottStations;
@@ -98,14 +107,33 @@ const fetchStationNames = async () => {
 		if (ottStations.length > 0 && !selectedStation.value) {
 			selectedStation.value = ottStations[0].id;
 		}
+		// Always fetch with both station_ids and sensor_type
+		const firstSensor = availableSensors.value[0];
+		if (ottStations.length > 0 && firstSensor) {
+			await ottData.fetchStationData(ottStations.map(s => s.id), firstSensor, 12);
+		} else if (ottStations.length > 0) {
+			console.warn('No sensors available for OTT stations');
+		}
 	} catch (err) {
 		console.error('Error fetching station names:', err);
+	} finally {
+		isLoading.value = false;
 	}
 };
 
 watch(() => selectedStation.value, async (newVal) => {
-	if (newVal) {
-		await ottData.fetchStationData(newVal);
+	const firstSensor = availableSensors.value[0];
+	if (newVal && firstSensor) {
+		isLoading.value = true;
+		try {
+			await ottData.fetchStationData(newVal, firstSensor, 12);
+		} catch (err) {
+			console.error('Error fetching station data:', err);
+		} finally {
+			isLoading.value = false;
+		}
+	} else if (newVal) {
+		console.warn('No sensors available for selected station');
 	}
 }, { immediate: true });
 

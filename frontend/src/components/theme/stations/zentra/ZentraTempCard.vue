@@ -27,10 +27,24 @@
 
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, watch, defineProps } from 'vue';
-import { useStationData } from '@/composables/useStationData';
 import { getImages } from "@/composables/common/getImages";
-
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
+const props = defineProps({
+    selectedStation: {
+        type: Number,
+        required: true
+    },
+    measurements: {
+        type: Array,
+        default: () => []
+    },
+    stationInfo: {
+        type: Object,
+        default: () => ({})
+    }
+});
+const localZentraData = ref<any[]>([]);
+const fallbackImg = 'dashboard-4/icon/student.png';
 
 interface CardData {
   number: string;
@@ -50,22 +64,36 @@ interface CardData {
   unit: string;
 }
 
-const props = defineProps({
-  selectedStation: {
-    type: Number,
-    required: true
+const formatDateTime = {
+  date: (timestamp: string) => {
+    try {
+      if (!timestamp) return 'Invalid Date';
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } catch {
+      return 'Invalid Date';
+    }
+  },
+  time: (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return 'Invalid Time';
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return 'Invalid Time';
+    }
   }
-});
-
-const { 
-  measurements,
-  stationInfo,
-  fetchStationData,
-  formatDateTime,
-  getLast24HoursMeasurements
-} = useStationData();
-
-const localZentraData = ref<CardData[]>([]);
+};
 
 // Memoize date parsing to avoid repeated operations
 const dateCache = new Map<string, number>();
@@ -183,20 +211,12 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
     .filter(Boolean) as CardData[];
 };
 
-// Watch for station changes
-watch(() => props.selectedStation, (newStationId) => {
-  if (newStationId) {
-    fetchStationData(newStationId);
-  }
-}, { immediate: true });
-
-// Watch for measurements changes
-watch(() => getLast24HoursMeasurements.value, (newMeasurements) => {
-  if (!newMeasurements?.length) {
-    localZentraData.value = [];
-    return;
-  }
-  localZentraData.value = transformMeasurements(newMeasurements);
+watch(() => props.measurements, (newMeasurements) => {
+  localZentraData.value = transformMeasurements(newMeasurements).map(item => ({
+    ...item,
+    img: item.img || fallbackImg,
+    month: formatDateTime.date(item.timestamp) + ' ' + formatDateTime.time(item.timestamp)
+  }));
 }, { immediate: true });
 </script>
 

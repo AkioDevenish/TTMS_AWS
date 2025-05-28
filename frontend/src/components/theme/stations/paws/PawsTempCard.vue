@@ -28,9 +28,7 @@
 
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, watch, defineProps } from 'vue';
-import { useStationData } from '@/composables/useStationData';
 import { getImages } from "@/composables/common/getImages";
-
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
 
 interface CardData {
@@ -55,21 +53,19 @@ const props = defineProps({
     selectedStation: {
         type: Number,
         required: true
+    },
+    measurements: {
+        type: Array,
+        default: () => []
+    },
+    stationInfo: {
+        type: Object,
+        default: () => ({})
     }
 });
 
-const { 
-    measurements,
-    stationInfo,
-    fetchStationData,
-    formatDateTime,
-    getLast24HoursMeasurements
-} = useStationData();
-
 const localPawsData = ref<CardData[]>([]);
-const sensors = ref([]);
 
-// Memoize date parsing to avoid repeated operations
 const dateCache = new Map<string, number>();
 const getDateTime = (date: string, time: string): number => {
     const key = `${date}T${time}`;
@@ -79,16 +75,13 @@ const getDateTime = (date: string, time: string): number => {
     return dateCache.get(key)!;
 };
 
-// Optimized sorting function
 const sortMeasurementsByDate = (a: any, b: any): number => {
     const dateTimeA = getDateTime(a.date, a.time);
     const dateTimeB = getDateTime(b.date, b.time);
     return dateTimeB - dateTimeA;
 };
 
-// Enhanced sensor configuration with thresholds
 const sensorConfig: Record<string, { name: string; unit: string; threshold: number }> = {
-    // PAWS sensors
     'bp1': { name: 'BMX280 Pressure', unit: 'hPa', threshold: 0.5 },
     'bt1': { name: 'BMX280 Temperature', unit: '°C', threshold: 0.1 },
     'mt1': { name: 'MCP9808 Temperature', unit: '°C', threshold: 0.1 },
@@ -102,7 +95,6 @@ const sensorConfig: Record<string, { name: string; unit: string; threshold: numb
     'css': { name: 'Cell Signal Strength', unit: '%', threshold: 1 }
 };
 
-// Optimized value change calculation
 const calculateValueChange = (measurements: any[], sensorType: string) => {
     if (!measurements?.length || measurements.length < 2) {
         return { 
@@ -112,15 +104,11 @@ const calculateValueChange = (measurements: any[], sensorType: string) => {
             timeDiff: '2.0'
         };
     }
-
     const sortedMeasurements = measurements.sort(sortMeasurementsByDate);
     const latest = sortedMeasurements[0];
     const latestTime = getDateTime(latest.date, latest.time);
-    
-    // Find measurement closest to 2 hours ago
     const twoHoursAgo = latestTime - (2 * 60 * 60 * 1000);
     let previous = sortedMeasurements[1];
-    
     for (let i = 1; i < sortedMeasurements.length; i++) {
         const measurement = sortedMeasurements[i];
         const measurementTime = getDateTime(measurement.date, measurement.time);
@@ -129,15 +117,12 @@ const calculateValueChange = (measurements: any[], sensorType: string) => {
             break;
         }
     }
-
     const latestValue = parseFloat(latest.value);
     const previousValue = parseFloat(previous.value);
     const change = latestValue - previousValue;
-
     const threshold = sensorConfig[sensorType]?.threshold || 0.1;
     const trend = Math.abs(change) < threshold ? 'stable' : 
                  change > 0 ? 'increasing' : 'decreasing';
-
     return {
         change: change.toFixed(1),
         rateOfChange: (change / 2).toFixed(1),
@@ -146,7 +131,6 @@ const calculateValueChange = (measurements: any[], sensorType: string) => {
     };
 };
 
-// Transform measurements into card data
 const transformMeasurements = (measurements: any[]): CardData[] => {
     if (!measurements?.length) return [];
 
@@ -172,7 +156,7 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                 number: `${value.toFixed(1)} ${config.unit}`,
                 text: config.name,
                 iconclass: `bg-light-${changes.trend === 'increasing' ? 'success' : 
-                                     changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
+                             changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
                 icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
                              changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
                 img: 'dashboard-4/icon/student.png',
@@ -180,8 +164,7 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                 fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                                   changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
                 total: Math.abs(value).toFixed(1),
-                month: formatDateTime.date(`${latest.date}T${latest.time}`) + ' ' + 
-                      formatDateTime.time(`${latest.date}T${latest.time}`),
+                month: latest.date + ' ' + latest.time,
                 timestamp: `${latest.date}T${latest.time}`,
                 change: changes.change,
                 rateOfChange: `${changes.rateOfChange}${config.unit}`,
@@ -193,19 +176,7 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
         .filter(Boolean) as CardData[];
 };
 
-// Watch for station changes
-watch(() => props.selectedStation, (newStationId) => {
-    if (newStationId) {
-        fetchStationData(newStationId);
-    }
-}, { immediate: true });
-
-// Watch for measurements changes
-watch(() => getLast24HoursMeasurements.value, (newMeasurements) => {
-    if (!newMeasurements?.length) {
-        localPawsData.value = [];
-        return;
-    }
+watch(() => props.measurements, (newMeasurements) => {
     localPawsData.value = transformMeasurements(newMeasurements);
 }, { immediate: true });
 </script>

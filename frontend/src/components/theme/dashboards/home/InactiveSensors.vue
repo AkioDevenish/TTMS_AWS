@@ -62,18 +62,29 @@
         </div>
 
         <!-- Pagination -->
-        <ul class="pagination mx-3 mt-3 justify-content-end" v-if="totalPages > 1">
-            <li class="page-item" :class="{ disabled: currentPage === 1 || isLoading }">
-                <a class="page-link cursor-pointer" @click="prev()">Previous</a>
-            </li>
-            <li class="page-item" v-for="i in totalPages" :key="i"
-                :class="{ active: i === currentPage }">
-                <a class="page-link cursor-pointer" @click="setPage(i)">{{ i }}</a>
-            </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages || isLoading }">
-                <a class="page-link cursor-pointer" @click="next()">Next</a>
-            </li>
-        </ul>
+        <div class="pagination-scroll-x">
+            <ul class="pagination mx-3 mt-3 justify-content-end" v-if="totalPages > 1">
+                <li class="page-item" :class="{ disabled: currentPage === 1 || isLoading }">
+                    <a class="page-link cursor-pointer" @click="prev()">Previous</a>
+                </li>
+                <li
+                    v-for="page in visiblePages"
+                    :key="page"
+                    class="page-item"
+                    :class="{ active: page === currentPage, disabled: page === '...' }"
+                >
+                    <a
+                        v-if="page !== '...'"
+                        class="page-link cursor-pointer"
+                        @click="setPage(page as number)"
+                    >{{ page }}</a>
+                    <span v-else class="page-link">...</span>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages || isLoading }">
+                    <a class="page-link cursor-pointer" @click="next()">Next</a>
+                </li>
+            </ul>
+        </div>
     </Card1>
 </template>
 
@@ -164,6 +175,31 @@ onMounted(() => {
 // Note: The component no longer needs the watch on selectedBrand or its own refresh interval.
 // These concerns are now managed within the Pinia store.
 
+const visiblePages = computed(() => {
+    const pages = [];
+    const windowSize = 2; // how many pages before/after current to show
+    let start = Math.max(1, currentPage.value - windowSize);
+    let end = Math.min(totalPages.value, currentPage.value + windowSize);
+
+    // Always show first page
+    if (start > 1) {
+        pages.push(1);
+        if (start > 2) pages.push('...');
+    }
+
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+
+    // Always show last page
+    if (end < totalPages.value) {
+        if (end < totalPages.value - 1) pages.push('...');
+        pages.push(totalPages.value);
+    }
+
+    return pages;
+});
+
 </script>
 
 <style scoped>
@@ -215,5 +251,16 @@ onMounted(() => {
 
 .empty-state p {
     color: #6c757d;
+}
+
+.pagination-scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+.pagination {
+    min-width: 400px;
+    white-space: nowrap;
 }
 </style>

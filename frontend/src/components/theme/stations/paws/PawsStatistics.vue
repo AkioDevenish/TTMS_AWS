@@ -48,11 +48,8 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, onMounted, watch, computed, defineProps, onUnmounted, PropType } from 'vue';
-import VueApexCharts from 'vue3-apexcharts';
+import { defineAsyncComponent, ref, watch, computed, defineProps } from 'vue';
 import { zentraOptions1 } from '@/core/data/chart';
-import { useStationData } from '@/composables/useStationData';
-
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
 const props = defineProps({
@@ -61,7 +58,7 @@ const props = defineProps({
 		required: true
 	},
 	measurements: {
-		type: Array as PropType<any[]>,
+		type: Array,
 		default: () => []
 	},
 	stationInfo: {
@@ -69,13 +66,10 @@ const props = defineProps({
 		default: () => ({})
 	}
 });
-
-const { measurements: stationMeasurements, stationInfo: stationInfoData, getLast24HoursMeasurements, fetchStationData } = useStationData();
 const selectedSensorType = ref<string>('bt1');
 const chartData = ref<any[]>([]);
 const isLoading = ref(false);
 
-// Mapping of sensor types to display names and units
 const sensorConfig: Record<string, { name: string; unit: string }> = {
 	'bp1': { name: 'BMX280 Pressure', unit: 'hPa' },
 	'bt1': { name: 'BMX280 Temperature', unit: '°C' },
@@ -89,18 +83,12 @@ const sensorConfig: Record<string, { name: string; unit: string }> = {
 	'bpc': { name: 'Battery Percent', unit: '%' },
 	'css': { name: 'Cell Signal Strength', unit: '%' }
 };
-
-// Get the current sensor's display name
 const currentSensorName = computed(() => {
 	return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
 });
-
-// Get the current sensor's unit
 const currentSensorUnit = computed(() => {
 	return sensorConfig[selectedSensorType.value]?.unit || '';
 });
-
-// Chart options
 const chartOptions = computed(() => ({
 	...zentraOptions1,
 	yaxis: {
@@ -150,31 +138,19 @@ const chartOptions = computed(() => ({
 		}
 	}
 }));
-
-// Watch for measurements and selected sensor type changes
-watch([() => getLast24HoursMeasurements.value, () => selectedSensorType.value], 
+watch([() => props.measurements, () => selectedSensorType.value], 
 	([newMeasurements, newSensorType]) => {
-		console.log('New measurements:', newMeasurements);
-		console.log('Selected sensor type:', newSensorType);
-		
 		if (!newMeasurements?.length) {
-			console.log('No measurements available');
 			chartData.value = [];
 			return;
 		}
-
 		const filteredData = newMeasurements.filter(
 			measurement => measurement.sensor_type === newSensorType
 		);
-		
-		console.log('Filtered data:', filteredData);
-
 		if (!filteredData.length) {
-			console.log('No data for selected sensor type');
 			chartData.value = [];
 			return;
 		}
-
 		chartData.value = [{
 			name: sensorConfig[newSensorType]?.name || newSensorType,
 			data: filteredData.map(item => ({
@@ -182,41 +158,12 @@ watch([() => getLast24HoursMeasurements.value, () => selectedSensorType.value],
 				y: parseFloat(item.value.toString())
 			}))
 		}];
-		
-		console.log('Chart data:', chartData.value);
 	}, 
 	{ immediate: true }
 );
-
-// Handle measurement selection
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
 };
-
-// Add auto-refresh interval
-let refreshInterval: number | undefined;
-
-onMounted(() => {
-	refreshInterval = setInterval(() => {
-		if (chartData.value.length > 0) {
-			chartData.value = [...chartData.value];
-		}
-	}, 1000);
-});
-
-onUnmounted(() => {
-	if (refreshInterval) {
-		clearInterval(refreshInterval);
-	}
-});
-
-// Watch for station changes
-watch(() => props.selectedStation, (newStationId) => {
-	if (newStationId) {
-		console.log('Fetching data for station:', newStationId);
-		fetchStationData(newStationId);
-	}
-}, { immediate: true });
 </script>
 
 <style scoped>
