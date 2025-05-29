@@ -77,9 +77,9 @@ const getSelectedStationName = computed(() => {
 
 // List of available sensors for Barani stations
 const availableSensors = computed(() => [
-	'wind_ave10',
-	'dir_ave10',
-	'battery'
+	'wind_ave10', 'wind_max10', 'wind_min10', 'dir_ave10', 'dir_max10', 'dir_hi10', 'dir_lo10',
+	'battery', 'humidity', 'irradiation', 'irr_max', 'pressure', 'temperature', 'temperature_max',
+	'temperature_min', 'rain_counter', 'rain_intensity_max'
 ]);
 
 const fetchStationNames = async () => {
@@ -107,18 +107,15 @@ const fetchStationNames = async () => {
 };
 
 watch(() => selectedStation.value, async (newVal) => {
-	const firstSensor = availableSensors.value[0];
-	if (newVal && firstSensor) {
+	if (newVal) {
 		isLoading.value = true;
 		try {
-			await baraniData.fetchStationData(newVal, firstSensor, 12);
+			await baraniData.fetchStationData(newVal, availableSensors.value.join(','), 12);
 		} catch (err) {
 			console.error('Error fetching station data:', err);
 		} finally {
 			isLoading.value = false;
 		}
-	} else if (newVal) {
-		console.warn('No sensors available for selected station');
 	}
 }, { immediate: true });
 

@@ -157,8 +157,22 @@ const sensorConfigs: SensorConfigs = {
   },
   'Barani': {
     'wind_ave10': { name: 'Wind Speed (Average)', unit: 'm/s' },
+    'wind_max10': { name: 'Wind Speed (Max)', unit: 'm/s' },
+    'wind_min10': { name: 'Wind Speed (Min)', unit: 'm/s' },
     'dir_ave10': { name: 'Wind Direction (Average)', unit: '°' },
-    'battery': { name: 'Battery', unit: 'V' }
+    'dir_max10': { name: 'Wind Direction (Max)', unit: '°' },
+    'dir_hi10': { name: 'Wind Direction (High)', unit: '°' },
+    'dir_lo10': { name: 'Wind Direction (Low)', unit: '°' },
+    'battery': { name: 'Battery', unit: 'V' },
+    'humidity': { name: 'Humidity', unit: '%' },
+    'irradiation': { name: 'Irradiation', unit: 'W/m²' },
+    'irr_max': { name: 'Irradiation (Max)', unit: 'W/m²' },
+    'pressure': { name: 'Pressure', unit: 'Pa' },
+    'temperature': { name: 'Temperature', unit: '°C' },
+    'temperature_max': { name: 'Temperature (Max)', unit: '°C' },
+    'temperature_min': { name: 'Temperature (Min)', unit: '°C' },
+    'rain_counter': { name: 'Rain Counter', unit: 'mm' },
+    'rain_intensity_max': { name: 'Rain Intensity (Max)', unit: 'mm/h' }
   },
   'OTT': {
     '5 min rain': { name: '5 min Rain', unit: 'mm' },

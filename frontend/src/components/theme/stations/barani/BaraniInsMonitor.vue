@@ -24,7 +24,7 @@
                               <div class="d-flex align-items-center">
                                   <div class="d-flex align-items-center">
                                       <h6>{{ item.name }}</h6>
-                                      <i class="status-dot" :class="{ 'online': item.status === 'Successful', 'offline': item.status !== 'Successful' }"></i>
+                                      <i class="status-dot" :class="{ 'online': item.status === 'Online', 'offline': item.status !== 'Online' }"></i>
                                   </div>
                               </div>
                           </td>
@@ -43,13 +43,32 @@
 <script lang="ts" setup>
 import { ref, defineAsyncComponent, watch, defineProps } from 'vue'
 const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
+
+// Add Measurement interface
+interface Measurement {
+  sensor_type: string;
+  date: string;
+  time: string;
+  value: number;
+  status?: string;
+}
+
+// Add MonitorRow interface for table rows
+interface MonitorRow {
+  id: string;
+  name: string;
+  status: string;
+  lastUpdated: string;
+  lastUpdatedAgo: string;
+}
+
 const props = defineProps({
     selectedStation: {
         type: Number,
         required: true
     },
     measurements: {
-        type: Array,
+        type: Array as () => Measurement[],
         default: () => []
     },
     stationInfo: {
@@ -57,7 +76,7 @@ const props = defineProps({
         default: () => ({})
     }
 });
-const latestData = ref<any[]>([])
+const latestData = ref<MonitorRow[]>([])
 const connectionStatus = ref<string>('Unsuccessful')
 const monitorTitle = ref<string>('Barani Monitor')
 // Local date/time formatter
@@ -91,6 +110,28 @@ const formatDateTime = {
         }
     }
 };
+
+// Barani/Allmeteo sensor config
+const sensorConfig: Record<string, { name: string }> = {
+    'wind_ave10': { name: 'Wind Speed (Average)' },
+    'wind_max10': { name: 'Wind Speed (Max)' },
+    'wind_min10': { name: 'Wind Speed (Min)' },
+    'dir_ave10': { name: 'Wind Direction (Average)' },
+    'dir_max10': { name: 'Wind Direction (Max)' },
+    'dir_hi10': { name: 'Wind Direction (High)' },
+    'dir_lo10': { name: 'Wind Direction (Low)' },
+    'battery': { name: 'Battery' },
+    'humidity': { name: 'Humidity' },
+    'irradiation': { name: 'Irradiation' },
+    'irr_max': { name: 'Irradiation (Max)' },
+    'pressure': { name: 'Pressure' },
+    'temperature': { name: 'Temperature' },
+    'temperature_max': { name: 'Temperature (Max)' },
+    'temperature_min': { name: 'Temperature (Min)' },
+    'rain_counter': { name: 'Rain Counter' },
+    'rain_intensity_max': { name: 'Rain Intensity (Max)' }
+};
+
 watch([
     () => props.measurements,
     () => props.stationInfo
@@ -101,17 +142,43 @@ watch([
         return;
     }
     try {
-        // Find the latest measurement by date/time
-        const latestMeasurement: any = [...newMeasurements].sort((a: any, b: any) => {
+        // Sort all measurements by date/time descending
+        const sorted = [...newMeasurements].sort((a: any, b: any) => {
             const dateA = new Date(`${a.date}T${a.time}`);
             const dateB = new Date(`${b.date}T${b.time}`);
             return dateB.getTime() - dateA.getTime();
-        })[0];
+        });
+        const now = Date.now();
+        // Find any measurement in the last 60 minutes
+        const onlineThresholdMinutes = 60;
+        const recentMeasurement = sorted.find((m: any) => {
+            const measurementTime = new Date(`${m.date}T${m.time}`).getTime();
+            const diffMinutes = (now - measurementTime) / (1000 * 60);
+            return diffMinutes <= onlineThresholdMinutes;
+        });
+        let status = 'Offline';
+        let lastUpdated = 'N/A';
+        let lastUpdatedAgo = '';
+        let latest = sorted[0];
+        if (recentMeasurement) {
+            status = 'Online';
+            latest = recentMeasurement;
+        }
+        if (latest) {
+            lastUpdated = `${latest.date}T${latest.time}`;
+            const measurementTime = new Date(`${latest.date}T${latest.time}`).getTime();
+            const diffMinutes = Math.round((now - measurementTime) / (1000 * 60));
+            lastUpdatedAgo = diffMinutes === 0 ? 'just now' : `${diffMinutes} min ago`;
+        } else {
+            lastUpdated = 'N/A';
+            lastUpdatedAgo = '';
+        }
         latestData.value = [{
-            id: newStationInfo.serial_number,
-            name: newStationInfo.name,
-            status: latestMeasurement?.status || 'Unknown',
-            lastUpdated: `${latestMeasurement?.date || ''}T${latestMeasurement?.time || ''}`,
+            id: newStationInfo.serial_number ?? newStationInfo.serialNumber ?? newStationInfo.id ?? 'N/A',
+            name: newStationInfo.name ?? newStationInfo.station_name ?? 'N/A',
+            status,
+            lastUpdated,
+            lastUpdatedAgo
         }];
         connectionStatus.value = 'Successful';
     } catch (error) {
@@ -120,6 +187,14 @@ watch([
         connectionStatus.value = 'Error processing data';
     }
 }, { immediate: true });
+
+watch(
+  () => props.stationInfo,
+  (val) => {
+    console.log('BaraniInsMonitor stationInfo:', val);
+  },
+  { immediate: true }
+);
 </script>
 
 

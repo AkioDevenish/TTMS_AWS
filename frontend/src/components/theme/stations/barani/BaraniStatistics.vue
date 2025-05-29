@@ -22,9 +22,9 @@
           class="dropdown-menu dropdown-menu-end position-absolute"
           aria-labelledby="measurementDropdown"
         >
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wind_ave10')">Wind Speed (Average)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('dir_ave10')">Wind Direction (Average)</a>
-          <a class="dropdown-item" href="#" @click.prevent="selectMeasurement('battery')">Battery</a>
+          <a v-for="sensor in sensorTypes" :key="sensor" class="dropdown-item" href="#" @click.prevent="selectMeasurement(sensor)">
+            {{ sensorConfig[sensor]?.name || sensor }}
+          </a>
         </div>
       </div>
     </div>
@@ -48,13 +48,21 @@
 <script lang="ts" setup>
 import { defineAsyncComponent, ref, watch, computed, defineProps } from 'vue';
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
+
+interface Measurement {
+	sensor_type: string;
+	date: string;
+	time: string;
+	value: number;
+}
+
 const props = defineProps({
 	selectedStation: {
 		type: Number,
 		required: true
 	},
 	measurements: {
-		type: Array,
+		type: Array as () => Measurement[],
 		default: () => []
 	},
 	stationInfo: {
@@ -62,20 +70,39 @@ const props = defineProps({
 		default: () => ({})
 	}
 });
+
 const selectedSensorType = ref<string>('wind_ave10');
 const chartData = ref<any[]>([]);
 const isLoading = ref(false);
+
 const sensorConfig: Record<string, { name: string; unit: string }> = {
 	'wind_ave10': { name: 'Wind Speed (Average)', unit: 'm/s' },
+	'wind_max10': { name: 'Wind Speed (Max)', unit: 'm/s' },
+	'wind_min10': { name: 'Wind Speed (Min)', unit: 'm/s' },
 	'dir_ave10': { name: 'Wind Direction (Average)', unit: '°' },
-	'battery': { name: 'Battery', unit: 'V' }
+	'dir_max10': { name: 'Wind Direction (Max)', unit: '°' },
+	'dir_hi10': { name: 'Wind Direction (High)', unit: '°' },
+	'dir_lo10': { name: 'Wind Direction (Low)', unit: '°' },
+	'battery': { name: 'Battery', unit: 'V' },
+	'humidity': { name: 'Humidity', unit: '%' },
+	'irradiation': { name: 'Irradiation', unit: 'W/m²' },
+	'irr_max': { name: 'Irradiation (Max)', unit: 'W/m²' },
+	'pressure': { name: 'Pressure', unit: 'Pa' },
+	'temperature': { name: 'Temperature', unit: '°C' },
+	'temperature_max': { name: 'Temperature (Max)', unit: '°C' },
+	'temperature_min': { name: 'Temperature (Min)', unit: '°C' },
+	'rain_counter': { name: 'Rain Counter', unit: 'mm' },
+	'rain_intensity_max': { name: 'Rain Intensity (Max)', unit: 'mm/h' }
 };
+
 const currentSensorName = computed(() => {
 	return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
 });
+
 const currentSensorUnit = computed(() => {
 	return sensorConfig[selectedSensorType.value]?.unit || '';
 });
+
 const chartOptions = computed(() => ({
 	yaxis: {
 		title: {
@@ -120,8 +147,10 @@ const chartOptions = computed(() => ({
 		y: {
 			formatter: (val: number) => `${val.toFixed(1)} ${currentSensorUnit.value}`
 		}
-	}
+	},
+	colors: ['#7A70BA']
 }));
+
 watch([() => props.measurements, () => selectedSensorType.value], 
 	([newMeasurements, newSensorType]) => {
 		if (!newMeasurements?.length) {
@@ -129,7 +158,7 @@ watch([() => props.measurements, () => selectedSensorType.value],
 			return;
 		}
 		const filteredData = newMeasurements.filter(
-			measurement => measurement.sensor_type === newSensorType
+			(measurement: Measurement) => measurement.sensor_type === newSensorType
 		);
 		if (!filteredData.length) {
 			chartData.value = [];
@@ -137,7 +166,7 @@ watch([() => props.measurements, () => selectedSensorType.value],
 		}
 		chartData.value = [{
 			name: sensorConfig[newSensorType]?.name || newSensorType,
-			data: filteredData.map(item => ({
+			data: filteredData.map((item: Measurement) => ({
 				x: new Date(`${item.date}T${item.time}`).getTime(),
 				y: parseFloat(item.value.toString())
 			}))
@@ -145,9 +174,21 @@ watch([() => props.measurements, () => selectedSensorType.value],
 	}, 
 	{ immediate: true }
 );
+
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
 };
+
+const sensorTypes = computed(() => {
+	const availableTypes = new Set(props.measurements.map(m => m.sensor_type));
+	return Object.keys(sensorConfig).filter(type => availableTypes.has(type));
+});
+
+watch([sensorTypes], ([types]) => {
+	if (!types.includes(selectedSensorType.value) && types.length > 0) {
+		selectedSensorType.value = types[0];
+	}
+}, { immediate: true });
 </script>
 
 <style scoped>

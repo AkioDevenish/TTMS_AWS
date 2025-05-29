@@ -191,8 +191,22 @@ export const useStationOverviewStore = defineStore('stationOverview', {
         },
         'Allmeteo': {
           'wind_ave10': 'Wind Speed (Average)',
+          'wind_max10': 'Wind Speed (Max)',
+          'wind_min10': 'Wind Speed (Min)',
           'dir_ave10': 'Wind Direction (Average)',
-          'battery': 'Battery'
+          'dir_max10': 'Wind Direction (Max)',
+          'dir_hi10': 'Wind Direction (High)',
+          'dir_lo10': 'Wind Direction (Low)',
+          'battery': 'Battery',
+          'humidity': 'Humidity',
+          'irradiation': 'Irradiation',
+          'irr_max': 'Irradiation (Max)',
+          'pressure': 'Pressure',
+          'temperature': 'Temperature',
+          'temperature_max': 'Temperature (Max)',
+          'temperature_min': 'Temperature (Min)',
+          'rain_counter': 'Rain Counter',
+          'rain_intensity_max': 'Rain Intensity (Max)'
         }
       };
 

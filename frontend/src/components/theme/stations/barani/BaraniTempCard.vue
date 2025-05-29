@@ -76,7 +76,31 @@ const sensorConfig: Record<string, { name: string; unit: string; threshold: numb
     'dir_max10': { name: 'Wind Direction (Max)', unit: '°', threshold: 5 },
     'dir_hi10': { name: 'Wind Direction (High)', unit: '°', threshold: 5 },
     'dir_lo10': { name: 'Wind Direction (Low)', unit: '°', threshold: 5 },
-    'battery': { name: 'Battery', unit: 'V', threshold: 5 }
+    'battery': { name: 'Battery', unit: 'V', threshold: 5 },
+    'humidity': { name: 'Humidity', unit: '%', threshold: 1 },
+    'irradiation': { name: 'Irradiation', unit: 'W/m²', threshold: 1 },
+    'irr_max': { name: 'Irradiation (Max)', unit: 'W/m²', threshold: 1 },
+    'pressure': { name: 'Pressure', unit: 'Pa', threshold: 0.5 },
+    'temperature': { name: 'Temperature', unit: '°C', threshold: 0.1 },
+    'temperature_max': { name: 'Temperature (Max)', unit: '°C', threshold: 0.1 },
+    'temperature_min': { name: 'Temperature (Min)', unit: '°C', threshold: 0.1 },
+    'rain_counter': { name: 'Rain Counter', unit: 'mm', threshold: 0.1 },
+    'rain_intensity_max': { name: 'Rain Intensity (Max)', unit: 'mm/h', threshold: 0.1 }
+};
+
+const dateCache = new Map<string, number>();
+const getDateTime = (date: string, time: string): number => {
+    const key = `${date}T${time}`;
+    if (!dateCache.has(key)) {
+        dateCache.set(key, new Date(key).getTime());
+    }
+    return dateCache.get(key)!;
+};
+
+const sortMeasurementsByDate = (a: any, b: any): number => {
+    const dateTimeA = getDateTime(a.date, a.time);
+    const dateTimeB = getDateTime(b.date, b.time);
+    return dateTimeB - dateTimeA;
 };
 
 const calculateValueChange = (measurements: any[], sensorType: string) => {
@@ -88,27 +112,30 @@ const calculateValueChange = (measurements: any[], sensorType: string) => {
             timeDiff: '2.0'
         };
     }
-
-    const sortedMeasurements = [...measurements].sort((a, b) => 
-        new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()
-    );
-    
+    const sortedMeasurements = measurements.sort(sortMeasurementsByDate);
     const latest = sortedMeasurements[0];
-    const previous = sortedMeasurements[1];
-
+    const latestTime = getDateTime(latest.date, latest.time);
+    const twoHoursAgo = latestTime - (2 * 60 * 60 * 1000);
+    let previous = sortedMeasurements[1];
+    for (let i = 1; i < sortedMeasurements.length; i++) {
+        const measurement = sortedMeasurements[i];
+        const measurementTime = getDateTime(measurement.date, measurement.time);
+        if (measurementTime <= twoHoursAgo) {
+            previous = measurement;
+            break;
+        }
+    }
     const latestValue = parseFloat(latest.value);
     const previousValue = parseFloat(previous.value);
-    const timeDiffHours = (new Date(`${latest.date}T${latest.time}`).getTime() - 
-                          new Date(`${previous.date}T${previous.time}`).getTime()) / (1000 * 60 * 60);
-
-    const valueDiff = latestValue - previousValue;
-    const rateOfChange = valueDiff / timeDiffHours;
-
+    const change = latestValue - previousValue;
+    const threshold = sensorConfig[sensorType]?.threshold || 0.1;
+    const trend = Math.abs(change) < threshold ? 'stable' : 
+                 change > 0 ? 'increasing' : 'decreasing';
     return {
-        change: valueDiff.toFixed(1),
-        trend: valueDiff > 0 ? 'increasing' : valueDiff < 0 ? 'decreasing' : 'stable',
-        rateOfChange: rateOfChange.toFixed(2),
-        timeDiff: timeDiffHours.toFixed(1)
+        change: change.toFixed(1),
+        rateOfChange: (change / 2).toFixed(1),
+        trend,
+        timeDiff: '2.0'
     };
 };
 
@@ -130,23 +157,22 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
             if (!config) return null;
 
             const changes = calculateValueChange(sensorMeasurements, sensorType);
-            const latest = sensorMeasurements[0];
+            const latest = sensorMeasurements.sort(sortMeasurementsByDate)[0];
             const value = parseFloat(latest.value);
 
             return {
                 number: `${value.toFixed(1)} ${config.unit}`,
                 text: config.name,
                 iconclass: `bg-light-${changes.trend === 'increasing' ? 'success' : 
-                                     changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
+                                 changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
                 icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
-                             changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
+                                 changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
                 img: 'dashboard-4/icon/student.png',
                 cardclass: "student",
                 fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
-                                  changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
+                                      changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
                 total: Math.abs(value).toFixed(1),
-                month: formatDateTime.date(`${latest.date}T${latest.time}`) + ' ' + 
-                      formatDateTime.time(`${latest.date}T${latest.time}`),
+                month: latest.date + ' ' + latest.time,
                 timestamp: `${latest.date}T${latest.time}`,
                 change: changes.change,
                 rateOfChange: `${changes.rateOfChange}${config.unit}`,
