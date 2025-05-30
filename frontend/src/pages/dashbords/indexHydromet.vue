@@ -100,16 +100,21 @@ const availableSensors = computed(() => [
 const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
+		console.log('Fetching station names...');
 		const response = await axios.get<Station[]>('/stations/');
+		console.log('All stations response:', response.data);
 		const ottStations = response.data.filter(station => station.brand_name === "OTT");
+		console.log('Filtered OTT stations:', ottStations);
 		stationNames.value = ottStations;
 
 		if (ottStations.length > 0 && !selectedStation.value) {
 			selectedStation.value = ottStations[0].id;
+			console.log('Auto-selected first OTT station:', ottStations[0]);
 		}
 		// Always fetch with both station_ids and sensor_type
 		const firstSensor = availableSensors.value[0];
 		if (ottStations.length > 0 && firstSensor) {
+			console.log('Fetching initial data for first sensor:', firstSensor);
 			await ottData.fetchStationData(ottStations.map(s => s.id), firstSensor, 12);
 		} else if (ottStations.length > 0) {
 			console.warn('No sensors available for OTT stations');
@@ -122,18 +127,19 @@ const fetchStationNames = async () => {
 };
 
 watch(() => selectedStation.value, async (newVal) => {
-	const firstSensor = availableSensors.value[0];
-	if (newVal && firstSensor) {
+	if (newVal) {
 		isLoading.value = true;
 		try {
-			await ottData.fetchStationData(newVal, firstSensor, 12);
+			console.log('Selected station changed to:', newVal);
+			console.log('Available sensors:', availableSensors.value);
+			await ottData.fetchStationData(newVal, availableSensors.value.join(','), 12);
+			console.log('Updated measurements:', ottData.measurements.value);
+			console.log('Updated station info:', ottData.stationInfo.value);
 		} catch (err) {
 			console.error('Error fetching station data:', err);
 		} finally {
 			isLoading.value = false;
 		}
-	} else if (newVal) {
-		console.warn('No sensors available for selected station');
 	}
 }, { immediate: true });
 

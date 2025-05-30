@@ -50,17 +50,18 @@ class Command(BaseCommand):
             self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
             self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
-            # Run fetchers concurrently
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            # Run fetchers concurrently (only OTT Hydromet active)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 logger.info("Starting data fetchers")
-                # Start all fetchers
-                paws_future = executor.submit(self.fetch_paws_data)
-                zentra_future = executor.submit(self.fetch_zentra_data)
-                barani_future = executor.submit(self.fetch_barani_data)
+                # Start only OTT Hydromet fetcher
+                # paws_future = executor.submit(self.fetch_paws_data)
+                # zentra_future = executor.submit(self.fetch_zentra_data)
+                # barani_future = executor.submit(self.fetch_barani_data)
+                ott_future = executor.submit(self.fetch_ott_hydromet_data)
 
-                # Wait for all to complete
-                concurrent.futures.wait([paws_future, zentra_future, barani_future])
-                logger.info("All fetchers completed")
+                # Wait for OTT Hydromet fetcher to complete
+                concurrent.futures.wait([ott_future])
+                logger.info("OTT Hydromet fetcher completed")
                 
         except Exception as e:
             logger.error(f"Error in data_fetcher command: {str(e)}")
@@ -247,7 +248,7 @@ class Command(BaseCommand):
                 "devices": (None, f'["{station.serial_number.strip()}"]')  # Ensure clean serial number
             }
 
-            self.stdout.write(f"Fetching data for Barani station: {station.name} (Serial: {station.serial_number})")
+            self.stdout.write(f"Fetcring data for Barani station: {station.name} (Serial: {station.serial_number})")
             
             try:
                 response = requests.post(
@@ -269,6 +270,64 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"  Request error: {str(e)}"))
 
         self.stdout.write(self.style.SUCCESS("=== Barani Data Fetch Complete ===\n"))
+
+    def fetch_ott_hydromet_data(self):
+        """Fetch data from OTT Hydromet instruments"""
+        self.stdout.write(self.style.SUCCESS('\n=== Starting OTT Hydromet Data Fetch ==='))
+
+        BASE_URL = "https://www.hydrometcloud.com/Data/rest/api/"
+        API_KEY = "3235DzYLcYfYD1S8"
+        CLIENT_ID = "207"
+        HEADERS = {
+            "api-key": API_KEY,
+            "clientId": str(CLIENT_ID)
+        }
+
+        # Use the same time range as other fetchers
+        START_DATE = parse_datetime(self.start_datetime)
+        END_DATE = parse_datetime(self.end_datetime)
+        start_time = START_DATE.strftime("%Y-%m-%d %H:%M:%S")
+        end_time = END_DATE.strftime("%Y-%m-%d %H:%M:%S")
+
+        # List of station IDs and names
+        stations = [
+            {"id": 2303, "name": "POS_SAT"},
+            {"id": 2304, "name": "SYNOP_SAT"},
+            {"id": 2305, "name": "TOCO_SAT"},
+        ]
+
+        sensor_map = self.get_sensor_map()
+
+        for station in stations:
+            self.stdout.write(f"Fetching sensors for OTT station: {station['name']} ({station['id']})")
+            sensors_url = f"{BASE_URL}sensors?stationId={station['id']}"
+            sensors_resp = requests.get(sensors_url, headers=HEADERS)
+            self.stdout.write(f"  Sensors API status: {sensors_resp.status_code}, response: {sensors_resp.text[:300]}")
+            if sensors_resp.status_code != 200:
+                self.stdout.write(self.style.ERROR(f"  Failed to fetch sensors. Status code: {sensors_resp.status_code}"))
+                continue
+            sensors = sensors_resp.json()
+            for sensor in sensors:
+                sensor_name = sensor['sensorName']
+                self.stdout.write(f"  Fetching data for sensor: {sensor_name}")
+                data_url = (
+                    f"{BASE_URL}sensordata?stationId={station['id']}&sensorName={sensor_name}"
+                    f"&startTime={start_time}&endTime={end_time}"
+                )
+                data_resp = requests.get(data_url, headers=HEADERS)
+                self.stdout.write(f"    Data API status: {data_resp.status_code}, response: {data_resp.text[:300]}")
+                if data_resp.status_code != 200:
+                    self.stdout.write(self.style.ERROR(f"    Failed to fetch data. Status code: {data_resp.status_code}"))
+                    continue
+                data = data_resp.json()
+                # Save/process the data
+                try:
+                    processed = self.process_ott_hydromet_data(station['id'], sensor_name, data, sensor_map)
+                    self.stdout.write(self.style.SUCCESS(f"    Successfully processed {len(processed)} measurements for {sensor_name}"))
+                except Exception as e:
+                    self.stdout.write(self.style.ERROR(f"    Error processing data: {e}"))
+
+        self.stdout.write(self.style.SUCCESS("=== OTT Hydromet Data Fetch Complete ===\n"))
 
     def fetch_paws_station_data(self, portal_url, station_id, start, end, user_email, api_key):
         """Fetch data for a specific PAWS station"""
@@ -607,6 +666,103 @@ class Command(BaseCommand):
         # After processing measurements, process health data
         for rounded_hour in measurements_by_hour.keys():
             self.process_station_health(station_id, measurements_by_hour, rounded_hour, "Allmeteo")
+
+        return processed_data
+
+    def process_ott_hydromet_data(self, station_id, sensor_name, data, sensor_map):
+        """Process and save OTT Hydromet data, auto-creating Station and Sensor if missing"""
+        processed_data = []
+        measurements_by_hour = {}
+
+        # --- Auto-create or update Station if missing (brand_id=3 for OTT) ---
+        from database.models import Station, Sensor
+        from django.utils import timezone
+        ott_brand_id = 3
+        # Try to get by serial_number first
+        station_obj = Station.objects.filter(serial_number=str(station_id)).first()
+        if not station_obj:
+            station_obj = Station.objects.create(
+                id=station_id,
+                serial_number=str(station_id),
+                name=str(station_id),
+                brand_id=ott_brand_id,
+                last_updated_at=timezone.now(),
+                address='',
+                installation_date=timezone.now().date(),
+                created_at=timezone.now()
+            )
+        # Use the actual station id for all downstream logic
+        station_id = station_obj.id
+
+        try:
+            # The data is expected to have a 'sensorData' key with a list of measurements
+            sensor_data = data.get('sensorData', [])
+            self.stdout.write(f"    Raw sensor_data for {sensor_name}: {sensor_data}")
+            if not isinstance(sensor_data, list):
+                self.stdout.write(self.style.ERROR(f"  sensorData missing or not a list for {sensor_name}"))
+                return []
+
+            for entry in sensor_data:
+                timestamp_str = entry.get('sampleTime')
+                value = entry.get('value')
+                self.stdout.write(f"      Entry: sampleTime={timestamp_str}, value={value}")
+                if not timestamp_str or value is None:
+                    continue
+                timestamp = self.parse_datetime(timestamp_str)
+                if not timestamp:
+                    continue
+                rounded_timestamp = self.round_to_nearest_hour(timestamp.isoformat())
+                if rounded_timestamp not in measurements_by_hour:
+                    measurements_by_hour[rounded_timestamp] = {}
+                if sensor_name not in measurements_by_hour[rounded_timestamp]:
+                    measurements_by_hour[rounded_timestamp][sensor_name] = []
+                try:
+                    value = float(value)
+                except (ValueError, TypeError):
+                    continue
+                measurements_by_hour[rounded_timestamp][sensor_name].append({
+                    'timestamp': timestamp,
+                    'value': value
+                })
+
+            # Save measurements for each rounded hour
+            for rounded_hour, sensor_readings in measurements_by_hour.items():
+                for field, readings in sensor_readings.items():
+                    # --- Auto-create Sensor if missing ---
+                    sensor_obj, created = Sensor.objects.get_or_create(
+                        type=field,
+                        unit=''
+                    )
+                    if created:
+                        sensor_map[field] = sensor_obj.id
+                    sensor_id = sensor_obj.id
+                    # Get closest reading to rounded hour
+                    closest_reading = min(readings, key=lambda x: abs(x['timestamp'] - rounded_hour))
+                    try:
+                        self.ensure_station_sensor_relationship(station_id, sensor_id)
+                        Measurement.objects.create(
+                            station_id=station_id,
+                            sensor_id=sensor_id,
+                            date=rounded_hour.date(),
+                            time=rounded_hour.time(),
+                            value=closest_reading['value'],
+                            status="Successful",
+                            note="Data Acquired",
+                            created_at=timezone.now()
+                        )
+                        self.stdout.write(f"      Saved measurement: station_id={station_id}, sensor={field}, value={closest_reading['value']}, time={rounded_hour}")
+                        processed_data.append(f"Saved OTT Hydromet measurement for station {station_id} at {rounded_hour}")
+                    except Exception as e:
+                        logger.error(f"Error saving measurement: {e}")
+                        self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
+
+            # After processing measurements, process health data
+            for rounded_hour in measurements_by_hour.keys():
+                self.process_station_health(station_id, measurements_by_hour, rounded_hour, "OTT")
+
+        except Exception as e:
+            logger.error(f"Error processing OTT Hydromet data: {e}")
+            self.stdout.write(self.style.ERROR(f"Error processing OTT Hydromet data: {e}"))
 
         return processed_data
 

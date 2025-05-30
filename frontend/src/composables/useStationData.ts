@@ -39,34 +39,48 @@ export function useStationData() {
       console.warn('No sensor type provided to fetchStationData');
       return;
     }
+    console.log('Fetching station data with params:', { stationIds, sensorType, hours });
     isLoading.value = true;
     error.value = null;
     try {
       let idsParam = Array.isArray(stationIds) ? stationIds.join(',') : stationIds.toString();
-      const params: any = {
-        station_ids: idsParam,
-        hours,
-        sensor_type: sensorType
-      };
-      // Fetch measurements for all stations in one call
-      const response = await axios.get('/measurements/history/', { params });
-      // The response is expected to be { measurements: [...] }
-      if (response.data && Array.isArray(response.data.measurements)) {
-        measurements.value = response.data.measurements.map((m: any) => ({
-          ...m,
-          value: parseFloat(m.value),
-          date: m.date,
-          time: m.time,
-          sensor_type: m.sensor_type,
-          station_id: m.station_id
-        }));
-      } else {
-        measurements.value = [];
+      let allMeasurements: any[] = [];
+      // If sensorType is a comma-separated list, fetch each and merge
+      const sensorTypes = sensorType.split(',').map(s => s.trim()).filter(Boolean);
+      console.log('Processing sensor types:', sensorTypes);
+      
+      for (const sType of sensorTypes) {
+        const params: any = {
+          station_ids: idsParam,
+          hours,
+          sensor_type: sType
+        };
+        console.log('Fetching measurements for sensor type:', sType, 'with params:', params);
+        const response = await axios.get('/measurements/history/', { params });
+        console.log('Raw API response for sensor type', sType, ':', response.data);
+        
+        if (response.data && Array.isArray(response.data.measurements)) {
+          const processedMeasurements = response.data.measurements.map((m: any) => ({
+            ...m,
+            value: parseFloat(m.value),
+            date: m.date,
+            time: m.time,
+            sensor_type: m.sensor_type,
+            station_id: m.station_id
+          }));
+          console.log('Processed measurements for sensor type', sType, ':', processedMeasurements);
+          allMeasurements.push(...processedMeasurements);
+        }
       }
+      console.log('All merged measurements:', allMeasurements);
+      measurements.value = allMeasurements;
+      
       // Optionally, fetch station info for the first station (if single)
       if (!Array.isArray(stationIds) || stationIds.length === 1) {
         const id = Array.isArray(stationIds) ? stationIds[0] : stationIds;
+        console.log('Fetching station info for ID:', id);
         const stationResponse = await axios.get(`/stations/${id}/`);
+        console.log('Station info response:', stationResponse.data);
         stationInfo.value = stationResponse.data;
       } else {
         stationInfo.value = null;
@@ -83,7 +97,7 @@ export function useStationData() {
 
   const getLast24HoursMeasurements = computed(() => {
     if (!measurements.value?.length) {
-      console.log('No measurements available');
+      console.log('No measurements available for last 24 hours calculation');
       return [];
     }
 
@@ -106,13 +120,18 @@ export function useStationData() {
   });
 
   const getLatestMeasurement = computed(() => {
-    if (!measurements.value?.length) return null;
+    if (!measurements.value?.length) {
+      console.log('No measurements available for latest measurement calculation');
+      return null;
+    }
 
-    return [...measurements.value].sort((a, b) => {
+    const latest = [...measurements.value].sort((a, b) => {
       const dateA = new Date(`${a.date}T${a.time}`);
       const dateB = new Date(`${b.date}T${b.time}`);
       return dateB.getTime() - dateA.getTime();
     })[0];
+    console.log('Latest measurement:', latest);
+    return latest;
   });
 
   const formatDateTime = {
