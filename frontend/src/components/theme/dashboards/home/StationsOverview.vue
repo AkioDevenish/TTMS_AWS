@@ -162,7 +162,7 @@ const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardDa
 const store = useStationOverviewStore();
 
 // Initialize reactive variables
-const uniqueBrandsData = ref(['3D_Paws', 'Allmeteo', 'Zentra']); // Pre-populate with known brands
+const uniqueBrandsData = ref(['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']); // Add OTT
 const stationContainer = ref(null);
 const visibleStations = ref([]);
 let refreshIntervalId = null;
@@ -233,6 +233,27 @@ const sensorConfigs = {
     'temperature_min': { name: 'Temperature (Min)', unit: '°C' },
     'rain_counter': { name: 'Rain Counter', unit: 'mm' },
     'rain_intensity_max': { name: 'Rain Intensity (Max)', unit: 'mm/h' }
+  },
+  'OTT': {
+    '5 min rain': { name: '5 min Rain', unit: 'mm' },
+    'Air Temperature': { name: 'Air Temperature', unit: '°C' },
+    'Barometric Pressure': { name: 'Barometric Pressure', unit: 'hPa' },
+    'Baro Tendency': { name: 'Baro Tendency', unit: 'hPa' },
+    'Battery': { name: 'Battery', unit: 'V' },
+    'Daily Rain': { name: 'Daily Rain', unit: 'mm' },
+    'Dew Point': { name: 'Dew Point', unit: '°C' },
+    'Gust Direction': { name: 'Gust Direction', unit: '°' },
+    'Gust Speed': { name: 'Gust Speed', unit: 'knots' },
+    'Hours of Sunshine': { name: 'Hours of Sunshine', unit: 'hr' },
+    'Maximum Air Temperature': { name: 'Maximum Air Temperature', unit: '°C' },
+    'Minimum Air Temperature': { name: 'Minimum Air Temperature', unit: '°C' },
+    'Relative Humidity': { name: 'Relative Humidity', unit: '%' },
+    'Solar Radiation Avg': { name: 'Solar Radiation Average', unit: 'Wh/m²' },
+    'Solar Radiation Total': { name: 'Solar Radiation Total', unit: 'Wh/m²' },
+    'Wind Dir Average': { name: 'Wind Direction Average', unit: '°' },
+    'Wind Dir Inst': { name: 'Wind Direction Instantaneous', unit: '°' },
+    'Wind Speed Average': { name: 'Wind Speed Average', unit: 'knots' },
+    'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots' }
   }
 };
 

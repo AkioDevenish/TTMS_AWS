@@ -517,7 +517,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             
             # Base queryset with select_related and prefetch_related
             stations = Station.objects.filter(
-                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
+                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
             ).select_related('brand').prefetch_related(
                 Prefetch(
                     'measurements',
@@ -542,7 +542,6 @@ class MeasurementViewSet(viewsets.ModelViewSet):
 
             # Process stations data
             response_data = []
-            # Remove the for loop and change the following code 
             for station in stations:
                 latest_measurement = station.measurements.first() if station.measurements.exists() else None
                 

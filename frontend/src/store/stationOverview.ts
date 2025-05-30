@@ -207,6 +207,27 @@ export const useStationOverviewStore = defineStore('stationOverview', {
           'temperature_min': 'Temperature (Min)',
           'rain_counter': 'Rain Counter',
           'rain_intensity_max': 'Rain Intensity (Max)'
+        },
+        'OTT': {
+          '5 min rain': '5 min Rain',
+          'Air Temperature': 'Air Temperature',
+          'Barometric Pressure': 'Barometric Pressure',
+          'Baro Tendency': 'Baro Tendency',
+          'Battery': 'Battery',
+          'Daily Rain': 'Daily Rain',
+          'Dew Point': 'Dew Point',
+          'Gust Direction': 'Gust Direction',
+          'Gust Speed': 'Gust Speed',
+          'Hours of Sunshine': 'Hours of Sunshine',
+          'Maximum Air Temperature': 'Maximum Air Temperature',
+          'Minimum Air Temperature': 'Minimum Air Temperature',
+          'Relative Humidity': 'Relative Humidity',
+          'Solar Radiation Avg': 'Solar Radiation Average',
+          'Solar Radiation Total': 'Solar Radiation Total',
+          'Wind Dir Average': 'Wind Direction Average',
+          'Wind Dir Inst': 'Wind Direction Instantaneous',
+          'Wind Speed Average': 'Wind Speed Average',
+          'Wind Speed Inst': 'Wind Speed Instantaneous'
         }
       };
 
