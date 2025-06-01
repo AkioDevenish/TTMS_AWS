@@ -62,7 +62,11 @@ export const useInactiveSensorsStore = defineStore('inactiveSensors', {
                         this.selectedBrand = response.data.available_brands[0];
                     }
                      // Store available brands from the backend response
-                    // Move this outside the results check
+                     // Always ensure OTT is included
+                     if (response.data.available_brands && !response.data.available_brands.includes('OTT')) {
+                        response.data.available_brands.push('OTT');
+                     }
+                     this.availableBrands = response.data.available_brands;
 
                      console.log('Store: State updated - sensors count:', this.sensors.length, 'availableBrands count:', this.availableBrands.length);
 
@@ -75,6 +79,10 @@ export const useInactiveSensorsStore = defineStore('inactiveSensors', {
 
                  // Always update available brands if present in the response
                 if (response.data && response.data.available_brands) {
+                     // Always ensure OTT is included
+                     if (!response.data.available_brands.includes('OTT')) {
+                        response.data.available_brands.push('OTT');
+                     }
                      this.availableBrands = response.data.available_brands;
                 }
 

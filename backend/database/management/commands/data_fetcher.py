@@ -51,17 +51,17 @@ class Command(BaseCommand):
             self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
             # Run fetchers concurrently (only OTT Hydromet active)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 logger.info("Starting data fetchers")
-                # Start only OTT Hydromet fetcher
-                # paws_future = executor.submit(self.fetch_paws_data)
-                # zentra_future = executor.submit(self.fetch_zentra_data)
-                # barani_future = executor.submit(self.fetch_barani_data)
+                # Start all fetchers
+                paws_future = executor.submit(self.fetch_paws_data)
+                zentra_future = executor.submit(self.fetch_zentra_data)
+                barani_future = executor.submit(self.fetch_barani_data)
                 ott_future = executor.submit(self.fetch_ott_hydromet_data)
 
-                # Wait for OTT Hydromet fetcher to complete
-                concurrent.futures.wait([ott_future])
-                logger.info("OTT Hydromet fetcher completed")
+                # Wait for all fetchers to complete
+                concurrent.futures.wait([paws_future, zentra_future, barani_future, ott_future])
+                logger.info("All data fetchers completed")
                 
         except Exception as e:
             logger.error(f"Error in data_fetcher command: {str(e)}")

@@ -1924,7 +1924,7 @@ def inactive_sensors(request):
 
         # Get stations, filtered by brand if provided
         stations_queryset = Station.objects.filter(
-            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
+            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
         ).select_related('brand')
 
         if brand:
@@ -1955,7 +1955,7 @@ def inactive_sensors(request):
         # Collect all potential inactive sensors
         all_inactive_sensors_list = []
         # Always show all brands in the tab list
-        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra']
+        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
 
         # Iterate through stations and their sensors to determine inactivity
         # Prefetch sensors to avoid N+1 queries in this loop

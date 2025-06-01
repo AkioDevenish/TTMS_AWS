@@ -10,47 +10,36 @@
             <table class="table display dataTable" id="basic-6">
                 <thead>
                     <tr>
-                        <th colspan="4"></th>
-                        <th colspan="4"></th>
-                    </tr>
-                    <tr>
-                        <th>User Account</th>
-                        <th>Key</th>
-                        <th>First Used</th>
+                        <th>UUID</th>
+                        <th>Name</th>
+                        <th>User</th>
+                        <th>Created At</th>
                         <th>Last Used</th>
+                        <th>Expires At</th>
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody v-if="!get_rows().length">
-                    <tr class="odd">
-                        <td valign="top" colspan="6" class="dataTables_empty">No matching records found</td>
-                    </tr>
-                </tbody>
-                <tbody v-if="get_rows().length">
-                    <tr v-for="(row, index) in get_rows()" :key="index">
-                        <td>
-                            <div class="d-flex"><img class="rounded-circle img-30 me-3" :src="getImages(row.img)"
-                                    alt="Generic placeholder image">
-                                <div class="flex-grow-1 align-self-center">
-                                    <div>{{ row.name }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ row.key }}</td>
-                        <td>{{ row.first_used }}</td>
-                        <td>{{ row.last_used }}</td>
-                        <td>{{ row.status }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
+                <tbody v-if="isLoading">
                     <tr>
-                        <th>User Account</th>
-                        <th>Key</th>
-                        <th>First Used</th>
-                        <th>Last Used</th>
-                        <th>Status</th>
+                        <td colspan="7" class="text-center">Loading...</td>
                     </tr>
-                </tfoot>
+                </tbody>
+                <tbody v-else-if="!get_rows().length">
+                    <tr class="odd">
+                        <td valign="top" colspan="7" class="dataTables_empty">No matching records found</td>
+                    </tr>
+                </tbody>
+                <tbody v-else>
+                    <tr v-for="(row, index) in get_rows()" :key="row.id">
+                        <td>{{ row.uuid }}</td>
+                        <td>{{ row.token_name }}</td>
+                        <td>{{ row.user_email || row.user || '-' }}</td>
+                        <td>{{ formatDate(row.created_at) }}</td>
+                        <td>{{ row.last_used ? formatDate(row.last_used) : 'Never' }}</td>
+                        <td>{{ formatDate(row.expires_at) }}</td>
+                        <td>{{ getStatus(row) }}</td>
+                    </tr>
+                </tbody>
             </table>
             <ul class="pagination m-2 justify-content-end pagination-primary">
                 <li class="page-item"><a class="page-link" @click="prev()">Previous</a></li>
@@ -65,24 +54,45 @@
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, watch } from "vue"
-import { items } from "@/core/data/support"
-import { getImages } from "@/composables/common/getImages"
+import axios from "axios"
 let elementsPerPage = ref<number>(10)
 let currentPage = ref<number>(1)
 let filterQuery = ref<string>("")
 let allData = ref<any[]>([])
-onMounted(() => {
-    allData.value = items;
-})
-watch(filterQuery, (search: string) => {
+let isLoading = ref<boolean>(true)
 
-    var filteredData = items.filter((row) => {
+onMounted(async () => {
+    await fetchApiAccessKeys();
+})
+
+async function fetchApiAccessKeys() {
+    isLoading.value = true;
+    try {
+        const response = await axios.get('/api-keys/');
+        allData.value = response.data;
+    } catch (error) {
+        allData.value = [];
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+watch(filterQuery, (search: string) => {
+    if (!search) {
+        fetchApiAccessKeys();
+        return;
+    }
+    const lower = search.toLowerCase();
+    allData.value = allData.value.filter((row) => {
         return (
-            row.name.toLowerCase().includes(search.toLowerCase()) || row.first_used.toLowerCase().includes(search.toLowerCase()) || row.last_used.toLowerCase().includes(search.toLowerCase()) || row.status.toLowerCase().includes(search.toLowerCase())
+            (row.token_name && row.token_name.toLowerCase().includes(lower)) ||
+            (row.uuid && row.uuid.toLowerCase().includes(lower)) ||
+            (row.user_email && row.user_email.toLowerCase().includes(lower)) ||
+            (row.user && row.user.toString().toLowerCase().includes(lower))
         );
     });
-    search == "" ? allData.value = items : allData.value = filteredData
 })
+
 function get_rows() {
     var start = (currentPage.value - 1) * elementsPerPage.value;
     var end = start + elementsPerPage.value;
@@ -104,7 +114,19 @@ function prev() {
         currentPage.value--;
     }
 }
-function removeProduct(index: any) {
-    items.splice(index, 1)
+function formatDate(dateString: string) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+function getStatus(row: any) {
+    if (!row.expires_at) return 'Unknown';
+    return new Date(row.expires_at) > new Date() ? 'Active' : 'Inactive';
 }
 </script>

@@ -91,11 +91,12 @@ class DateTimeToDateField(serializers.DateField):
 
 
 class ApiAccessKeySerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source='user.email', read_only=True)
     class Meta:
         model = ApiAccessKey
         fields = [
             'id', 'uuid', 'token_name', 'expires_at', 
-            'note', 'last_used', 'created_at', 'updated_at'
+            'note', 'last_used', 'created_at', 'updated_at', 'user', 'user_email'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
