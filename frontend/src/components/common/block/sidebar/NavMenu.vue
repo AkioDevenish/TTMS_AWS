@@ -118,17 +118,19 @@ const filteredMenu = computed<MenuItem[]>(() => {
 	console.log('NavMenu - filteredMenu computed - isAdmin:', isAdmin);
 	
 	return menu.filter(item => {
+		// Hide admin-only headtitles for non-admins
+		if (item.type === 'headtitle' && item.admin === 1) {
+			return isAdmin;
+		}
 		// Regular items with admin property
 		if (item.type !== 'headtitle' && item.admin === 1) {
 			return isAdmin;
 		}
-		
 		// System Management header
 		if (item.type === 'headtitle' && 
 			(item.headTitle1 === 'System Management' || item.headTitle2 === 'System Management')) {
 			return isAdmin;
 		}
-		
 		// Show everything else
 		return true;
 	});

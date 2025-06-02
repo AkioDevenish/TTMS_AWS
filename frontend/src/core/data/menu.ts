@@ -110,7 +110,8 @@ export const menu: MenuItem[] = [
   {
     headTitle1: "API Management",
     headTitle2: "Ready to use apps",
-    type: "headtitle"
+    type: "headtitle",
+    admin: 1
   },
   {
     path: "/pages/api",
@@ -118,8 +119,8 @@ export const menu: MenuItem[] = [
     isPinned: false,
     icon: "stroke-others",
     icon1: "fill-others",
-    type: "link"
-    
+    type: "link",
+    admin: 1
   },
 
   // miscellaneous block

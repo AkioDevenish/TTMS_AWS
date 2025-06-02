@@ -1,5 +1,5 @@
 <template>
-    <div class="table-responsive theme-scrollbar">
+    <div v-if="isAdmin" class="table-responsive theme-scrollbar">
         <form>
             <div class="mb-3 row justify-content-end">
                 <label for="table-complete-search" class="col-xs-3 col-sm-auto col-form-label">Search:</label>
@@ -51,18 +51,24 @@
             </ul>
         </form>
     </div>
+    <div v-else class="alert alert-warning mt-4">You do not have permission to view API key management.</div>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, watch } from "vue"
 import axios from "axios"
+import { useAuthStore } from '@/store/auth'
 let elementsPerPage = ref<number>(10)
 let currentPage = ref<number>(1)
 let filterQuery = ref<string>("")
 let allData = ref<any[]>([])
 let isLoading = ref<boolean>(true)
+const authStore = useAuthStore()
+const { isAdmin } = authStore
 
 onMounted(async () => {
-    await fetchApiAccessKeys();
+    if (isAdmin) {
+        await fetchApiAccessKeys();
+    }
 })
 
 async function fetchApiAccessKeys() {

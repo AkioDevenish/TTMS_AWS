@@ -6,13 +6,30 @@
         <ul class="nav nav-tabs border-tab nav-primary mb-3" role="tablist">
             <li class="nav-item" v-for="brand in uniqueBrands" :key="brand">
                 <a class="nav-link" :class="{ active: selectedBrand === brand }" 
-                   @click="selectedBrand = brand">
+                   @click="selectBrand(brand)">
                     {{ brand }}
                 </a>
             </li>
         </ul>
 
-        <div class="table-responsive theme-scrollbar">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- No Data State -->
+        <div v-else-if="!hasData" class="text-center py-5">
+            <div class="empty-state">
+                <VueFeather type="alert-circle" size="48" class="text-muted mb-3" />
+                <h5>No Data Available</h5>
+                <p class="text-muted">No highest records found for the selected brand.</p>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div v-else class="table-responsive theme-scrollbar">
             <div id="recent-order_wrapper" class="dataTables_wrapper no-footer">
                 <div id="recent-order_filter" class="dataTables_filter">
                     <label>Search:<input type="search" placeholder="" v-model="filterQuery"></label>
@@ -48,15 +65,15 @@
                 </table>
             </div>
         </div>
-        <ul class="pagination mx-2 mt-2 justify-content-end">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+        <ul class="pagination mx-2 mt-2 justify-content-end" v-if="totalPages > 1">
+            <li class="page-item" :class="{ disabled: currentPage === 1 || isLoading }">
                 <a class="page-link cursor-pointer" @click="prev()">Previous</a>
             </li>
             <li class="page-item" v-for="i in totalPages" :key="i" 
                 :class="{ active: i === currentPage }">
-                <a class="page-link cursor-pointer" @click="currentPage = i">{{ i }}</a>
+                <a class="page-link cursor-pointer" @click="setPage(i)">{{ i }}</a>
             </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <li class="page-item" :class="{ disabled: currentPage === totalPages || isLoading }">
                 <a class="page-link cursor-pointer" @click="next()">Next</a>
             </li>
         </ul>
@@ -79,56 +96,38 @@
 </style>
 
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted, watch, computed } from 'vue'
-import axios from 'axios'
-import { useAWSStationsStore } from '@/store/awsStations'
+import { defineAsyncComponent, computed, ref, onMounted } from 'vue';
+import { useHighestRecordsStore, type HighestRecord } from '@/store/highestRecords';
+import VueFeather from 'vue-feather';
 
-    
-interface HighestRecord {
-    station_name: string;
-    brand_name: string;
-    date: string;
-    time: string;
-    value: number;
-    sensor_type: string;
-    sensor_unit: string;
-}
+const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
+const store = useHighestRecordsStore();
 
-const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"))
+const isLoading = computed(() => store.isLoading);
+const allData = computed(() => store.records);
+const currentPage = computed(() => store.currentPage);
+const totalPages = computed(() => store.totalPages);
+const selectedBrand = computed(() => store.selectedBrand);
+const uniqueBrands = computed(() => store.availableBrands);
+const filterQuery = ref('');
 
-const elementsPerPage = ref(10)
-const currentPage = ref(1)
-const filterQuery = ref<string>("")
-const allData = ref<HighestRecord[]>([])
-const selectedBrand = ref<string>("")
-
-// Add a separate reactive reference for storing all available brands 
-const uniqueBrandsData = ref<string[]>([])
-
-// Update the uniqueBrands computed property to use the new data source
-const uniqueBrands = computed(() => {
-    return uniqueBrandsData.value;
-})
+const hasData = computed(() => allData.value && allData.value.length > 0);
 
 const filteredRows = computed(() => {
-    return allData.value
-        .filter(row => 
-            filterQuery.value ? 
-                row.station_name.toLowerCase().includes(filterQuery.value.toLowerCase()) ||
-                row.sensor_type.toLowerCase().includes(filterQuery.value.toLowerCase())
+    return allData.value.filter((row: HighestRecord) =>
+        filterQuery.value ?
+            row.station_name.toLowerCase().includes(filterQuery.value.toLowerCase()) ||
+            row.sensor_type.toLowerCase().includes(filterQuery.value.toLowerCase())
             : true
-        )
-})
+    );
+});
 
-const totalPages = computed(() => 
-    Math.ceil(filteredRows.value.length / elementsPerPage.value)
-)
-
+const elementsPerPage = 10;
 const paginatedRows = computed(() => {
-    const start = (currentPage.value - 1) * elementsPerPage.value
-    const end = start + elementsPerPage.value
-    return filteredRows.value.slice(start, end)
-})
+    const start = (currentPage.value - 1) * elementsPerPage;
+    const end = start + elementsPerPage;
+    return filteredRows.value.slice(start, end) as HighestRecord[];
+});
 
 const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -138,64 +137,29 @@ const formatDate = (date: string) => {
     });
 };
 
-const formatTime = (time: string) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
+const setPage = (page: number) => {
+    store.setPage(page);
 };
-
-const awsStationsStore = useAWSStationsStore()
-
-const fetchHighestRecords = async () => {
-    try {
-        // Extract unique brands from store data, filtering out undefined
-        const brands = [...new Set(awsStationsStore.stations.map((station) => station.brand).filter((b): b is string => !!b))];
-        uniqueBrandsData.value = brands;
-        if (!selectedBrand.value && brands.length > 0) {
-            selectedBrand.value = brands[0];
-        }
-        // Only fetch if selectedBrand is set
-        if (!selectedBrand.value) {
-            allData.value = [];
-            return;
-        }
-        // Fetch measurements for the selected brand
-        const measurementsResponse = await axios.get('/measurements/highest_by_brand/', {
-            params: {
-                brand: selectedBrand.value
-            }
-        });
-        allData.value = measurementsResponse.data;
-        currentPage.value = 1;
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        allData.value = [];
-    }
-};
-
-// Add a watch for selectedBrand to reload data when it changes
-watch(selectedBrand, () => {
-    fetchHighestRecords();
-    currentPage.value = 1;
-});
 
 const next = () => {
     if (currentPage.value < totalPages.value) {
-        currentPage.value++;
-        console.log(`Page ${currentPage.value} of ${totalPages.value}`);
+        setPage(currentPage.value + 1);
     }
 };
 
 const prev = () => {
     if (currentPage.value > 1) {
-        currentPage.value--;
-        console.log(`Page ${currentPage.value} of ${totalPages.value}`);
+        setPage(currentPage.value - 1);
     }
 };
 
+const selectBrand = (brand: string) => {
+    console.log('Component: selectBrand called with', brand);
+    store.setBrand(brand);
+};
+
 onMounted(() => {
-    fetchHighestRecords();
+    console.log('Component: onMounted, fetching highest records');
+    store.fetchHighestRecords();
 });
 </script>
