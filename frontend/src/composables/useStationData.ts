@@ -9,7 +9,7 @@ interface StationInfo {
   [key: string]: any;
 }
 
-interface Measurement {
+export interface Measurement {
   date: string;
   time: string;
   value: number;
@@ -27,7 +27,7 @@ export function useStationData() {
   /**
    * Fetch measurements for one or more stations using the /measurements/history/ endpoint.
    * @param stationIds - A single station ID or an array of station IDs
-   * @param sensorType - The sensor type to fetch (e.g., 'bt1')
+   * @param sensorType - The sensor type(s) to fetch (comma-separated string)
    * @param hours - How many hours back to fetch (default 12)
    */
   const fetchStationData = async (stationIds: number | number[], sensorType: string = '', hours: number = 12) => {
@@ -36,52 +36,67 @@ export function useStationData() {
       return;
     }
     if (!sensorType) {
-      console.warn('No sensor type provided to fetchStationData');
-      return;
+        console.warn('sensorType is required to fetch historical data, but was empty.');
+        isLoading.value = false;
+        measurements.value = [];
+        return;
     }
     console.log('Fetching station data with params:', { stationIds, sensorType, hours });
     isLoading.value = true;
     error.value = null;
     try {
       let idsParam = Array.isArray(stationIds) ? stationIds.join(',') : stationIds.toString();
-      let allMeasurements: any[] = [];
-      // If sensorType is a comma-separated list, fetch each and merge
-      const sensorTypes = sensorType.split(',').map(s => s.trim()).filter(Boolean);
-      console.log('Processing sensor types:', sensorTypes);
-      
-      for (const sType of sensorTypes) {
-        const params: any = {
-          station_ids: idsParam,
-          hours,
-          sensor_type: sType
-        };
-        console.log('Fetching measurements for sensor type:', sType, 'with params:', params);
-        const response = await axios.get('/measurements/history/', { params });
-        console.log('Raw API response for sensor type', sType, ':', response.data);
-        
-        if (response.data && Array.isArray(response.data.measurements)) {
-          const processedMeasurements = response.data.measurements.map((m: any) => ({
-            ...m,
-            value: parseFloat(m.value),
-            date: m.date,
-            time: m.time,
-            sensor_type: m.sensor_type,
-            station_id: m.station_id
-          }));
-          console.log('Processed measurements for sensor type', sType, ':', processedMeasurements);
-          allMeasurements.push(...processedMeasurements);
-        }
+
+      // The backend /history/ endpoint can accept a comma-separated list of sensor types
+      // The sensor_type parameter is required.
+      const params: any = {
+        station_ids: idsParam,
+        hours,
+        sensor_type: sensorType // Always include sensor_type, even if empty
+      };
+
+      console.log('Fetching measurements with combined params:', params);
+      const response = await axios.get('/measurements/history/', { params });
+      console.log('Raw API response for combined sensor types:', response.data);
+
+      let allMeasurements: Measurement[] = [];
+      if (response.data && Array.isArray(response.data.measurements)) {
+        // Ensure the data conforms to the Measurement type
+        allMeasurements = response.data.measurements.map((m: any) => ({
+          ...m,
+          value: parseFloat(m.value),
+          date: m.date,
+          time: m.time,
+          sensor_type: m.sensor_type,
+          station_id: m.station_id,
+          status: m.status || '' // Assuming status might be missing sometimes
+        }));
+      } else if (response.data && Array.isArray(response.data)) {
+         // Handle non-paginated response just in case, assuming it's an array of measurements
+         allMeasurements = response.data.map((m: any) => ({
+          ...m,
+          value: parseFloat(m.value),
+          date: m.date,
+          time: m.time,
+          sensor_type: m.sensor_type,
+          station_id: m.station_id,
+          status: m.status || ''
+         }));
       }
-      console.log('All merged measurements:', allMeasurements);
+
+      console.log('All combined and processed measurements:', allMeasurements);
       measurements.value = allMeasurements;
       
       // Optionally, fetch station info for the first station (if single)
       if (!Array.isArray(stationIds) || stationIds.length === 1) {
         const id = Array.isArray(stationIds) ? stationIds[0] : stationIds;
         console.log('Fetching station info for ID:', id);
-        const stationResponse = await axios.get(`/stations/${id}/`);
-        console.log('Station info response:', stationResponse.data);
-        stationInfo.value = stationResponse.data;
+        // Check if stationInfo is already populated from a previous fetch
+        if (!stationInfo.value || stationInfo.value.id !== id) {
+          const stationResponse = await axios.get(`/stations/${id}/`);
+          console.log('Station info response:', stationResponse.data);
+          stationInfo.value = stationResponse.data;
+        }
       } else {
         stationInfo.value = null;
       }

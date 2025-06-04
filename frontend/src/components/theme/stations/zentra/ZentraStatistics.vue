@@ -20,9 +20,9 @@
         </button>
 
         <div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
-          <a v-for="sensor in sensorTypes" :key="sensor" class="dropdown-item" href="#" 
-             @click.prevent="selectMeasurement(sensor)">
-            {{ sensorConfig[sensor]?.name || sensor }}
+          <a v-for="sensor in availableSensors" :key="sensor.type" class="dropdown-item" href="#" 
+             @click.prevent="selectMeasurement(sensor.type)">
+            {{ sensor.name }}
           </a>
         </div>
       </div>
@@ -30,25 +30,33 @@
 
     <!-- Chart Section -->
     <div class="chart-container">
+      <div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 330px;">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
       <apexchart
-        v-if="chartData.length > 0"
+        v-else-if="chartData.length > 0"
         type="area"
         height="330"
         ref="chart"
         :options="chartOptions"
         :series="chartData"
       ></apexchart>
-      <div v-else>
-        <p>No data available to display.</p>
+      <div v-else class="d-flex justify-content-center align-items-center" style="height: 330px;">
+        <p class="text-muted">No data available to display.</p>
       </div>
     </div>
   </Card1>
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, watch, computed, defineProps } from 'vue';
+import { defineAsyncComponent, ref, watch, computed, defineProps, onMounted, onUnmounted } from 'vue';
 import { zentraOptions1 } from '@/core/data/chart';
+import axios from 'axios';
+import { useStationData, type Measurement } from '@/composables/useStationData';
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
+
 const props = defineProps({
 	selectedStation: {
 		type: Number,
@@ -63,23 +71,76 @@ const props = defineProps({
 		default: () => ({})
 	}
 });
-const selectedSensorType = ref<string>('Air Temperature');
+
+const selectedSensorType = ref<string>(''); // Initialize as empty, will be set after fetching sensors
 const chartData = ref<any[]>([]);
-const isLoading = ref(false);
-const sensorConfig: Record<string, { name: string; unit: string }> = {
-	'Air Temperature': { name: 'Air Temperature', unit: '°C' },
-	'Wind Speed': { name: 'Wind Speed', unit: 'm/s' },
-	'Solar Radiation': { name: 'Solar Radiation', unit: 'W/m²' },
-	'Precipitation': { name: 'Precipitation', unit: 'mm' },
-	'Relative Humidity': { name: 'Relative Humidity', unit: '%' },
-	'Atmospheric Pressure': { name: 'Atmospheric Pressure', unit: 'hPa' }
+// Removed local isLoading as it's provided by the composable
+const availableSensors = ref<Array<{type: string, name: string, unit: string}>>([]);
+
+// Use the useStationData composable
+const zentraData = useStationData();
+
+// Fetch available sensors for the station
+const fetchAvailableSensors = async () => {
+    if (!props.selectedStation) return;
+    
+    try {
+        const response = await axios.get(`/station-sensors/`, {
+            params: {
+                station_id: props.selectedStation,
+                brand: 'Zentra'  // Filter for Zentra brand
+            }
+        });
+        
+        if (response.data && Array.isArray(response.data)) {
+             // Create a Map to store unique sensors by type
+            const uniqueSensors = new Map();
+            
+            // Define known Zentra sensor types
+            const zentraSensorTypes = [
+                'Air Temperature', 'Wind Speed', 'Solar Radiation', 
+                'Precipitation', 'Relative Humidity', 'Atmospheric Pressure'
+            ];
+
+            // Filter and deduplicate sensors
+            response.data.forEach(sensor => {
+                 if (zentraSensorTypes.includes(sensor.sensor_type)) { // Filter by known types
+                    if (!uniqueSensors.has(sensor.sensor_type)) {
+                        uniqueSensors.set(sensor.sensor_type, {
+                            type: sensor.sensor_type,
+                            name: sensor.name || sensor.sensor_type,
+                            unit: sensor.unit || ''
+                        });
+                    }
+                }
+            });
+
+            // Convert Map values to array
+            availableSensors.value = Array.from(uniqueSensors.values());
+            
+            // Set initial selected sensor if available
+            if (availableSensors.value.length > 0 && !selectedSensorType.value) {
+                selectedSensorType.value = availableSensors.value[0].type;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching available sensors:', error);
+        availableSensors.value = []; // Clear sensors on error
+         selectedSensorType.value = ''; // Clear selected sensor
+    }
 };
+
+// Computed property for current sensor name and unit, using availableSensors
 const currentSensorName = computed(() => {
-	return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
+    const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+    return sensor?.name || selectedSensorType.value;
 });
+
 const currentSensorUnit = computed(() => {
-	return sensorConfig[selectedSensorType.value]?.unit || '';
+    const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+    return sensor?.unit || '';
 });
+
 const chartOptions = computed(() => ({
 	...zentraOptions1,
 	yaxis: {
@@ -129,21 +190,24 @@ const chartOptions = computed(() => ({
 		}
 	}
 }));
-watch([() => props.measurements, () => selectedSensorType.value], 
+
+// Watch for changes in zentraData.measurements and selectedSensorType to update chartData
+watch([() => zentraData.measurements.value, () => selectedSensorType.value], 
 	([newMeasurements, newSensorType]) => {
 		if (!newMeasurements?.length) {
 			chartData.value = [];
 			return;
 		}
 		const filteredData = newMeasurements.filter(
-			measurement => measurement.sensor_type === newSensorType
+			(measurement: Measurement) => measurement.sensor_type === newSensorType
 		);
 		if (!filteredData.length) {
 			chartData.value = [];
 			return;
 		}
 		chartData.value = [{
-			name: sensorConfig[newSensorType]?.name || newSensorType,
+			// Find the sensor name from availableSensors for the current type
+			name: availableSensors.value.find(s => s.type === newSensorType)?.name || newSensorType,
 			data: filteredData.map(item => ({
 				x: new Date(`${item.date}T${item.time}`).getTime(),
 				y: parseFloat(item.value.toString())
@@ -152,10 +216,47 @@ watch([() => props.measurements, () => selectedSensorType.value],
 	}, 
 	{ immediate: true }
 );
+
+// Add debounce to prevent multiple rapid calls
+let fetchTimeout: number | null = null;
+
+// Watch for selectedStation and availableSensors changes to fetch measurement data
+watch([() => props.selectedStation, () => availableSensors.value], ([newStationId, newAvailableSensors]) => {
+    // Only fetch data if a station is selected AND we have fetched the available sensors
+    if (newStationId && newAvailableSensors.length > 0) {
+        if (fetchTimeout) {
+            clearTimeout(fetchTimeout);
+        }
+        fetchTimeout = setTimeout(() => {
+            // Fetch data for all available sensors for the selected station
+            zentraData.fetchStationData(newStationId, newAvailableSensors.map(sensor => sensor.type).join(','), 12);
+        }, 300); // 300ms debounce
+    } else {
+         zentraData.measurements.value = []; // Clear data if no station or no sensors
+    }
+}, { immediate: true }); // Fetch data initially if station and sensors are available
+
+// Fetch available sensors when the component is mounted or station changes
+onMounted(() => {
+    fetchAvailableSensors();
+});
+
+// Clean up timeout on component unmount
+onUnmounted(() => {
+    if (fetchTimeout) {
+        clearTimeout(fetchTimeout);
+    }
+});
+
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
+    // When a measurement is selected, we don't need to refetch all data,
+    // the watch on zentraData.measurements and selectedSensorType will handle updating the chart.
 };
-const sensorTypes = computed(() => Object.keys(sensorConfig));
+
+// Expose the loading state from the composable
+const isLoading = computed(() => zentraData.isLoading.value);
+
 </script>
 
 <style scoped>
@@ -173,6 +274,16 @@ const sensorTypes = computed(() => Object.keys(sensorConfig));
   border: 1px solid #dee2e6;
   color: #495057;
   padding: 0.5rem 1rem;
+}
+
+/* Add styles for dropdown icon if needed */
+.dropdown-toggle-icon {
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-top: 4px solid currentColor;
+	display: inline-block;
+	margin-left: 0.255em;
+	vertical-align: middle;
 }
 </style>
 

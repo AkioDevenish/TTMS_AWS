@@ -20,9 +20,9 @@
         </button>
 
         <div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
-          <a v-for="sensor in sensorTypes" :key="sensor" class="dropdown-item" href="#" 
-             @click.prevent="selectedSensorType = sensor">
-            {{ sensorConfig[sensor]?.name || sensor }}
+          <a v-for="sensor in availableSensors" :key="sensor.type" class="dropdown-item" href="#" 
+             @click.prevent="selectMeasurement(sensor.type)">
+            {{ sensor.name }}
           </a>
         </div>
       </div>
@@ -30,25 +30,33 @@
 
     <!-- Chart Section -->
     <div class="chart-container">
+      <div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 330px;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
       <apexchart
-        v-if="chartData.length > 0"
+        v-else-if="chartData.length > 0"
         type="area"
         height="330"
         ref="chart"
         :options="chartOptions"
         :series="chartData"
       ></apexchart>
-      <div v-else>
-        <p>No data available to display.</p>
+      <div v-else class="d-flex justify-content-center align-items-center" style="height: 330px;">
+        <p class="text-muted">No data available to display.</p>
       </div>
     </div>
   </Card1>
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, computed, watch, defineProps } from 'vue';
+import { defineAsyncComponent, ref, computed, watch, defineProps, onMounted, onUnmounted } from 'vue';
 import { OTTOptions1 } from '@/core/data/chart';
+import axios from 'axios';
+import { useStationData, type Measurement } from '@/composables/useStationData';
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
+
 const props = defineProps({
   selectedStation: {
     type: Number,
@@ -63,45 +71,83 @@ const props = defineProps({
     default: () => ({})
   }
 });
-type SensorType = keyof typeof sensorConfig;
-const selectedSensorType = ref<SensorType>('Air Temperature');
-const sensorConfig = {
-  '5 min rain': { name: '5 min Rain', unit: 'mm' },
-  'Air Temperature': { name: 'Air Temperature', unit: '°C' },
-  'Barometric Pressure': { name: 'Barometric Pressure', unit: 'hPa' },
-  'Baro Tendency': { name: 'Baro Tendency', unit: 'hPa' },
-  'Battery': { name: 'Battery', unit: 'V' },
-  'Daily Rain': { name: 'Daily Rain', unit: 'mm' },
-  'Dew Point': { name: 'Dew Point', unit: '°C' },
-  'Gust Direction': { name: 'Gust Direction', unit: '°' },
-  'Gust Speed': { name: 'Gust Speed', unit: 'knots' },
-  'Hours of Sunshine': { name: 'Hours of Sunshine', unit: 'hr' },
-  'Maximum Air Temperature': { name: 'Maximum Air Temperature', unit: '°C' },
-  'Minimum Air Temperature': { name: 'Minimum Air Temperature', unit: '°C' },
-  'Relative Humidity': { name: 'Relative Humidity', unit: '%' },
-  'Solar Radiation Avg': { name: 'Solar Radiation Average', unit: 'Wh/m²' },
-  'Solar Radiation Total': { name: 'Solar Radiation Total', unit: 'Wh/m²' },
-  'Wind Dir Average': { name: 'Wind Direction Average', unit: '°' },
-  'Wind Dir Inst': { name: 'Wind Direction Instantaneous', unit: '°' },
-  'Wind Speed Average': { name: 'Wind Speed Average', unit: 'knots' },
-  'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots' }
+
+const selectedSensorType = ref<string>('');
+const availableSensors = ref<Array<{type: string, name: string, unit: string}>>([]);
+
+const hydrometData = useStationData();
+
+const fetchAvailableSensors = async () => {
+  if (!props.selectedStation) return;
+  
+  try {
+    const response = await axios.get(`/station-sensors/`, {
+      params: {
+        station_id: props.selectedStation,
+        brand: 'OTT'
+      }
+    });
+    
+    if (response.data && Array.isArray(response.data)) {
+      const uniqueSensors = new Map();
+
+      const ottSensorTypes = [
+        '5 min rain', 'Air Temperature', 'Barometric Pressure', 'Baro Tendency', 
+        'Battery', 'Daily Rain', 'Dew Point', 'Gust Direction', 'Gust Speed', 
+        'Hours of Sunshine', 'Maximum Air Temperature', 'Minimum Air Temperature', 
+        'Relative Humidity', 'Solar Radiation Avg', 'Solar Radiation Total', 
+        'Wind Dir Average', 'Wind Dir Inst', 'Wind Speed Average', 'Wind Speed Inst'
+      ];
+
+      response.data.forEach(sensor => {
+        if (ottSensorTypes.includes(sensor.sensor_type)) {
+          if (!uniqueSensors.has(sensor.sensor_type)) {
+            uniqueSensors.set(sensor.sensor_type, {
+              type: sensor.sensor_type,
+              name: sensor.name || sensor.sensor_type,
+              unit: sensor.unit || ''
+            });
+          }
+        }
+      });
+
+      availableSensors.value = Array.from(uniqueSensors.values());
+      
+      if (availableSensors.value.length > 0 && !selectedSensorType.value) {
+        selectedSensorType.value = availableSensors.value[0].type;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching available sensors:', error);
+    availableSensors.value = [];
+    selectedSensorType.value = '';
+  }
 };
-const sensorTypes = computed(() => Object.keys(sensorConfig) as SensorType[]);
-const currentSensorName = computed(() => sensorConfig[selectedSensorType.value].name || selectedSensorType.value);
-const currentSensorUnit = computed(() => sensorConfig[selectedSensorType.value].unit || '');
+
+const currentSensorName = computed(() => {
+  const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+  return sensor?.name || selectedSensorType.value;
+});
+
+const currentSensorUnit = computed(() => {
+  const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+  return sensor?.unit || '';
+});
+
 const chartData = computed(() => {
-  const filteredData = props.measurements.filter(
-    (measurement: any) => measurement.sensor_type === selectedSensorType.value
+  const filteredData = hydrometData.measurements.value.filter(
+    (measurement: Measurement) => measurement.sensor_type === selectedSensorType.value
   );
   if (!filteredData.length) return [];
   return [{
-    name: currentSensorName.value,
-    data: filteredData.map((item: any) => ({
+    name: availableSensors.value.find(s => s.type === selectedSensorType.value)?.name || selectedSensorType.value,
+    data: filteredData.map(item => ({
       x: new Date(`${item.date}T${item.time}`).getTime(),
       y: parseFloat(item.value.toString())
     }))
   }];
 });
+
 const chartOptions = computed(() => ({
   ...OTTOptions1,
   yaxis: {
@@ -151,12 +197,37 @@ const chartOptions = computed(() => ({
     }
   }
 }));
-watch([() => props.selectedStation, () => selectedSensorType.value], 
-  ([newStationId, sensorType]) => {
-    // No fetching, just update chartData via computed
-  }, 
-  { immediate: true }
-);
+
+let fetchTimeout: number | null = null;
+
+watch([() => props.selectedStation, () => availableSensors.value], ([newStationId, newAvailableSensors]) => {
+  if (newStationId && newAvailableSensors.length > 0) {
+    if (fetchTimeout) {
+      clearTimeout(fetchTimeout);
+    }
+    fetchTimeout = setTimeout(() => {
+      hydrometData.fetchStationData(newStationId, newAvailableSensors.map(sensor => sensor.type).join(','), 12);
+    }, 300);
+  } else {
+    hydrometData.measurements.value = [];
+  }
+}, { immediate: true });
+
+onMounted(() => {
+  fetchAvailableSensors();
+});
+
+onUnmounted(() => {
+  if (fetchTimeout) {
+    clearTimeout(fetchTimeout);
+  }
+});
+
+const selectMeasurement = (sensorType: string) => {
+  selectedSensorType.value = sensorType;
+};
+
+const isLoading = computed(() => hydrometData.isLoading.value);
 </script>
 
 <style scoped>
@@ -174,6 +245,15 @@ watch([() => props.selectedStation, () => selectedSensorType.value],
   border: 1px solid #dee2e6;
   color: #495057;
   padding: 0.5rem 1rem;
+}
+
+.dropdown-toggle-icon {
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: middle;
 }
 </style>
 

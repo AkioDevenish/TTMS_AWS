@@ -157,6 +157,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     serializer_class = MeasurementSerializer
     pagination_class = MeasurementPagination
     renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
     def by_station(self, request):
@@ -848,6 +849,21 @@ class StationHealthLogViewSet(viewsets.ModelViewSet):
 class StationSensorViewSet(viewsets.ModelViewSet):
     queryset = StationSensor.objects.all()
     serializer_class = StationSensorSerializer
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        station_id = request.query_params.get('station_id')
+        brand = request.query_params.get('brand')
+
+        if station_id:
+            queryset = queryset.filter(station_id=station_id)
+        if brand:
+            queryset = queryset.filter(station__brand__name=brand)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class ApiAccessKeyViewSet(viewsets.ModelViewSet):

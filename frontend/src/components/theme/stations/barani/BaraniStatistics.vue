@@ -22,39 +22,39 @@
           class="dropdown-menu dropdown-menu-end position-absolute"
           aria-labelledby="measurementDropdown"
         >
-          <a v-for="sensor in sensorTypes" :key="sensor" class="dropdown-item" href="#" @click.prevent="selectMeasurement(sensor)">
-            {{ sensorConfig[sensor]?.name || sensor }}
+          <a v-for="sensor in availableSensors" :key="sensor.type" class="dropdown-item" href="#" @click.prevent="selectMeasurement(sensor.type)">
+            {{ sensor.name }}
           </a>
         </div>
       </div>
     </div>
 
     <div class="chart-container">
+      <div v-if="isLoading" class="d-flex justify-content-center align-items-center" style="height: 330px;">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Loading...</span>
+				</div>
+			</div>
       <apexchart
-        v-if="chartData.length > 0"
+        v-else-if="chartData.length > 0"
         type="area"
         height="330"
         ref="chart"
         :options="chartOptions"
         :series="chartData"
       ></apexchart>
-      <div v-else>
-        <p>No data available to display.</p>
+      <div v-else class="d-flex justify-content-center align-items-center" style="height: 330px;">
+        <p class="text-muted">No data available to display.</p>
       </div>
     </div>
   </Card1>
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, watch, computed, defineProps } from 'vue';
+import { defineAsyncComponent, ref, watch, computed, defineProps, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
+import { useStationData, type Measurement } from '@/composables/useStationData';
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
-
-interface Measurement {
-	sensor_type: string;
-	date: string;
-	time: string;
-	value: number;
-}
 
 const props = defineProps({
 	selectedStation: {
@@ -62,7 +62,7 @@ const props = defineProps({
 		required: true
 	},
 	measurements: {
-		type: Array as () => Measurement[],
+		type: Array,
 		default: () => []
 	},
 	stationInfo: {
@@ -71,36 +71,70 @@ const props = defineProps({
 	}
 });
 
-const selectedSensorType = ref<string>('wind_ave10');
+const selectedSensorType = ref<string>('');
 const chartData = ref<any[]>([]);
-const isLoading = ref(false);
+const availableSensors = ref<Array<{type: string, name: string, unit: string}>>([]);
 
-const sensorConfig: Record<string, { name: string; unit: string }> = {
-	'wind_ave10': { name: 'Wind Speed (Average)', unit: 'm/s' },
-	'wind_max10': { name: 'Wind Speed (Max)', unit: 'm/s' },
-	'wind_min10': { name: 'Wind Speed (Min)', unit: 'm/s' },
-	'dir_ave10': { name: 'Wind Direction (Average)', unit: '°' },
-	'dir_max10': { name: 'Wind Direction (Max)', unit: '°' },
-	'dir_hi10': { name: 'Wind Direction (High)', unit: '°' },
-	'dir_lo10': { name: 'Wind Direction (Low)', unit: '°' },
-	'battery': { name: 'Battery', unit: 'V' },
-	'humidity': { name: 'Humidity', unit: '%' },
-	'irradiation': { name: 'Irradiation', unit: 'W/m²' },
-	'irr_max': { name: 'Irradiation (Max)', unit: 'W/m²' },
-	'pressure': { name: 'Pressure', unit: 'Pa' },
-	'temperature': { name: 'Temperature', unit: '°C' },
-	'temperature_max': { name: 'Temperature (Max)', unit: '°C' },
-	'temperature_min': { name: 'Temperature (Min)', unit: '°C' },
-	'rain_counter': { name: 'Rain Counter', unit: 'mm' },
-	'rain_intensity_max': { name: 'Rain Intensity (Max)', unit: 'mm/h' }
+const baraniData = useStationData();
+
+const fetchAvailableSensors = async () => {
+    if (!props.selectedStation) return;
+    
+    try {
+        const response = await axios.get(`/station-sensors/`, {
+            params: {
+                station_id: props.selectedStation,
+                brand: 'barani',
+            }
+        });
+        
+        if (response.data && Array.isArray(response.data)) {
+            const uniqueSensors = new Map();
+            
+            // Define known Barani sensor types
+            const baraniSensorTypes = [
+                'wind_ave10', 'wind_max10', 'wind_min10', 'dir_ave10', 'dir_max10', 'dir_hi10', 'dir_lo10',
+                'battery', 'humidity', 'irradiation', 'irr_max', 'pressure', 'temperature',
+                'temperature_max', 'temperature_min', 'rain_counter', 'rain_intensity_max'
+            ];
+
+            // Filter and deduplicate sensors
+            response.data.forEach(sensor => {
+                 if (baraniSensorTypes.includes(sensor.sensor_type)) { // Filter by known types
+                    if (!uniqueSensors.has(sensor.sensor_type)) {
+                        uniqueSensors.set(sensor.sensor_type, {
+                            type: sensor.sensor_type,
+                            name: sensor.name || sensor.sensor_type,
+                            unit: sensor.unit || ''
+                        });
+                    }
+                }
+            });
+
+            availableSensors.value = Array.from(uniqueSensors.values());
+            
+            if (availableSensors.value.length > 0 && !selectedSensorType.value) {
+                selectedSensorType.value = availableSensors.value[0].type;
+                if (props.selectedStation && selectedSensorType.value) {
+                    baraniData.fetchStationData(props.selectedStation, selectedSensorType.value, 12);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching available sensors:', error);
+        availableSensors.value = [];
+        selectedSensorType.value = '';
+    }
 };
 
 const currentSensorName = computed(() => {
-	return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
+    const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+    return sensor?.name || selectedSensorType.value;
 });
 
 const currentSensorUnit = computed(() => {
-	return sensorConfig[selectedSensorType.value]?.unit || '';
+    const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+    return sensor?.unit || '';
 });
 
 const chartOptions = computed(() => ({
@@ -151,7 +185,7 @@ const chartOptions = computed(() => ({
 	colors: ['#7A70BA']
 }));
 
-watch([() => props.measurements, () => selectedSensorType.value], 
+watch([() => baraniData.measurements.value, () => selectedSensorType.value], 
 	([newMeasurements, newSensorType]) => {
 		if (!newMeasurements?.length) {
 			chartData.value = [];
@@ -165,8 +199,8 @@ watch([() => props.measurements, () => selectedSensorType.value],
 			return;
 		}
 		chartData.value = [{
-			name: sensorConfig[newSensorType]?.name || newSensorType,
-			data: filteredData.map((item: Measurement) => ({
+			name: availableSensors.value.find(s => s.type === newSensorType)?.name || newSensorType,
+			data: filteredData.map(item => ({
 				x: new Date(`${item.date}T${item.time}`).getTime(),
 				y: parseFloat(item.value.toString())
 			}))
@@ -175,20 +209,36 @@ watch([() => props.measurements, () => selectedSensorType.value],
 	{ immediate: true }
 );
 
+let fetchTimeout: number | null = null;
+
+watch([() => props.selectedStation, () => availableSensors.value, () => selectedSensorType.value], ([newStationId, newAvailableSensors, newSensorType]) => {
+    if (newStationId && newAvailableSensors.length > 0 && newSensorType && newSensorType !== '') {
+        if (fetchTimeout) {
+            clearTimeout(fetchTimeout);
+        }
+        fetchTimeout = setTimeout(() => {
+            baraniData.fetchStationData(newStationId, newSensorType, 12);
+        }, 300);
+    } else {
+        baraniData.measurements.value = [];
+    }
+}, { immediate: true });
+
+onMounted(() => {
+    fetchAvailableSensors();
+});
+
+onUnmounted(() => {
+    if (fetchTimeout) {
+        clearTimeout(fetchTimeout);
+    }
+});
+
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
 };
 
-const sensorTypes = computed(() => {
-	const availableTypes = new Set(props.measurements.map(m => m.sensor_type));
-	return Object.keys(sensorConfig).filter(type => availableTypes.has(type));
-});
-
-watch([sensorTypes], ([types]) => {
-	if (!types.includes(selectedSensorType.value) && types.length > 0) {
-		selectedSensorType.value = types[0];
-	}
-}, { immediate: true });
+const isLoading = computed(() => baraniData.isLoading.value);
 </script>
 
 <style scoped>
@@ -206,5 +256,14 @@ watch([sensorTypes], ([types]) => {
   border: 1px solid #dee2e6;
   color: #495057;
   padding: 0.5rem 1rem;
+}
+
+.dropdown-toggle-icon {
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-top: 4px solid currentColor;
+	display: inline-block;
+	margin-left: 0.255em;
+	vertical-align: middle;
 }
 </style>

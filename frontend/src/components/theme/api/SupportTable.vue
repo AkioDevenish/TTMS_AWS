@@ -31,7 +31,7 @@
                 </tbody>
                 <tbody v-else>
                     <tr v-for="(row, index) in get_rows()" :key="row.id">
-                        <td>{{ row.uuid }}</td>
+                        <td class="uuid-link" @click="navigateToUsageLogs(row.uuid)">{{ row.uuid }}</td>
                         <td>{{ row.token_name }}</td>
                         <td>{{ row.user_email || row.user || '-' }}</td>
                         <td>{{ formatDate(row.created_at) }}</td>
@@ -57,6 +57,8 @@
 import { ref, onMounted, watch } from "vue"
 import axios from "axios"
 import { useAuthStore } from '@/store/auth'
+import { useRouter } from 'vue-router';
+
 let elementsPerPage = ref<number>(10)
 let currentPage = ref<number>(1)
 let filterQuery = ref<string>("")
@@ -64,6 +66,7 @@ let allData = ref<any[]>([])
 let isLoading = ref<boolean>(true)
 const authStore = useAuthStore()
 const { isAdmin } = authStore
+const router = useRouter();
 
 onMounted(async () => {
     if (isAdmin) {
@@ -135,4 +138,20 @@ function getStatus(row: any) {
     if (!row.expires_at) return 'Unknown';
     return new Date(row.expires_at) > new Date() ? 'Active' : 'Inactive';
 }
+
+const navigateToUsageLogs = (uuid: string) => {
+    router.push({ name: 'apiKeyUsageLogs', params: { uuid } });
+};
 </script>
+
+<style scoped>
+.uuid-link {
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.uuid-link:hover {
+    color: #0056b3;
+}
+</style>

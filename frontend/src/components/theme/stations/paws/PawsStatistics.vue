@@ -10,17 +10,13 @@
 				</button>
 
 				<div class="dropdown-menu dropdown-menu-end position-absolute" aria-labelledby="measurementDropdown">
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bt1')">BMX280 Temperature</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('mt1')">MCP9808 Temperature</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('ws')">Wind Speed</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('wd')">Wind Direction</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('rg')">Rain Gauge</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bp1')">Pressure</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('sv1')">Downwelling Visible</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('si1')">Downwelling Infrared</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('su1')">Downwelling Ultraviolet</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('bpc')">Battery Percent</a>
-					<a class="dropdown-item" href="#" @click.prevent="selectMeasurement('css')">Cell Signal Strength</a>
+					<a v-for="sensor in availableSensors" 
+						:key="sensor.type" 
+						class="dropdown-item" 
+						href="#" 
+						@click.prevent="selectMeasurement(sensor.type)">
+						{{ sensor.name }}
+					</a>
 				</div>
 			</div>
 		</div>
@@ -48,8 +44,10 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, watch, computed, defineProps } from 'vue';
+import { defineAsyncComponent, ref, watch, computed, defineProps, onMounted, onUnmounted } from 'vue';
 import { zentraOptions1 } from '@/core/data/chart';
+import axios from 'axios';
+import { useStationData, type Measurement } from '@/composables/useStationData';
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
 const props = defineProps({
@@ -66,9 +64,78 @@ const props = defineProps({
 		default: () => ({})
 	}
 });
-const selectedSensorType = ref<string>('bt1');
+
+const selectedSensorType = ref<string>('');
 const chartData = ref<any[]>([]);
-const isLoading = ref(false);
+const availableSensors = ref<Array<{type: string, name: string, unit: string}>>([]);
+
+// Use the useStationData composable
+const pawsData = useStationData();
+
+// Fetch available sensors for the station
+const fetchAvailableSensors = async () => {
+	if (!props.selectedStation) return;
+	
+	try {
+		// Add debounce to prevent multiple rapid calls
+		// We don't need isLoading here as it's handled by pawsData composable
+		// if (isLoading.value) return;
+		// isLoading.value = true;
+
+		const response = await axios.get(`/station-sensors/`, {
+			params: {
+				station_id: props.selectedStation,
+				brand: '3D_Paws'
+			}
+		});
+		
+		if (response.data && Array.isArray(response.data)) {
+			// Create a Map to store unique sensors by type
+			const uniqueSensors = new Map();
+			
+			// Filter and deduplicate sensors
+			response.data.forEach(sensor => {
+				const pawsSensorTypes = [
+					'bt1', 'mt1', 'bp1', 'ws', 'wd', 'rg', 
+					'sv1', 'si1', 'su1', 'bpc', 'css'
+				];
+				
+				if (pawsSensorTypes.includes(sensor.sensor_type)) {
+					// Only add if we haven't seen this sensor type before
+					if (!uniqueSensors.has(sensor.sensor_type)) {
+						uniqueSensors.set(sensor.sensor_type, {
+							type: sensor.sensor_type,
+							name: sensor.name || sensor.sensor_type,
+							unit: sensor.unit || ''
+						});
+					}
+				}
+			});
+
+			// Convert Map values to array
+			availableSensors.value = Array.from(uniqueSensors.values());
+			
+			// Set initial selected sensor if available
+			if (availableSensors.value.length > 0 && !selectedSensorType.value) {
+				selectedSensorType.value = availableSensors.value[0].type;
+			}
+		}
+	} catch (error) {
+		console.error('Error fetching available sensors:', error);
+	} finally {
+		// isLoading.value = false;
+	}
+};
+
+const currentSensorName = computed(() => {
+	const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+	return sensor?.name || selectedSensorType.value;
+});
+
+const currentSensorUnit = computed(() => {
+	const sensor = availableSensors.value.find(s => s.type === selectedSensorType.value);
+	return sensor?.unit || '';
+});
 
 const sensorConfig: Record<string, { name: string; unit: string }> = {
 	'bp1': { name: 'BMX280 Pressure', unit: 'hPa' },
@@ -83,12 +150,6 @@ const sensorConfig: Record<string, { name: string; unit: string }> = {
 	'bpc': { name: 'Battery Percent', unit: '%' },
 	'css': { name: 'Cell Signal Strength', unit: '%' }
 };
-const currentSensorName = computed(() => {
-	return sensorConfig[selectedSensorType.value]?.name || selectedSensorType.value;
-});
-const currentSensorUnit = computed(() => {
-	return sensorConfig[selectedSensorType.value]?.unit || '';
-});
 const chartOptions = computed(() => ({
 	...zentraOptions1,
 	yaxis: {
@@ -138,7 +199,9 @@ const chartOptions = computed(() => ({
 		}
 	}
 }));
-watch([() => props.measurements, () => selectedSensorType.value], 
+
+// Observe changes in pawsData.measurements and selectedSensorType to update chartData
+watch([() => pawsData.measurements.value, () => selectedSensorType.value], 
 	([newMeasurements, newSensorType]) => {
 		if (!newMeasurements?.length) {
 			chartData.value = [];
@@ -152,7 +215,8 @@ watch([() => props.measurements, () => selectedSensorType.value],
 			return;
 		}
 		chartData.value = [{
-			name: sensorConfig[newSensorType]?.name || newSensorType,
+			// Find the sensor name and unit from availableSensors for the current type
+			name: availableSensors.value.find(s => s.type === newSensorType)?.name || newSensorType,
 			data: filteredData.map(item => ({
 				x: new Date(`${item.date}T${item.time}`).getTime(),
 				y: parseFloat(item.value.toString())
@@ -161,9 +225,54 @@ watch([() => props.measurements, () => selectedSensorType.value],
 	}, 
 	{ immediate: true }
 );
+
+// Add debounce to prevent multiple rapid calls
+let fetchTimeout: number | null = null;
+
+// Watch for selectedStation and availableSensors changes
+watch([() => props.selectedStation, () => availableSensors.value], ([newStationId, newAvailableSensors]) => {
+	// Only fetch data if a station is selected AND we have fetched the available sensors
+	if (newStationId && newAvailableSensors.length > 0) {
+		if (fetchTimeout) {
+			clearTimeout(fetchTimeout);
+		}
+		fetchTimeout = setTimeout(() => {
+			// Fetch data for all available sensors for the selected station
+			pawsData.fetchStationData(newStationId, newAvailableSensors.map(sensor => sensor.type).join(','), 12);
+		}, 300); // 300ms debounce
+	} else {
+		// Clear measurements if no station or no available sensors
+		pawsData.measurements.value = [];
+	}
+}, { immediate: true }); // Fetch data initially if station and sensors are available
+
+// Fetch available sensors when the component is mounted or station changes
+onMounted(() => {
+	fetchAvailableSensors();
+});
+
+// We no longer need the separate watch for selectedStation to fetch sensors
+// as it's handled by the combined watch above.
+// watch(() => props.selectedStation, () => {
+//     fetchAvailableSensors();
+// });
+
+// Clean up timeout on component unmount
+onUnmounted(() => {
+	if (fetchTimeout) {
+		clearTimeout(fetchTimeout);
+	}
+});
+
 const selectMeasurement = (sensorType: string) => {
 	selectedSensorType.value = sensorType;
+	// When a measurement is selected, we don't need to refetch all data,
+	// the watch on pawsData.measurements and selectedSensorType will handle updating the chart.
 };
+
+// Expose the loading state from the composable
+const isLoading = computed(() => pawsData.isLoading.value);
+
 </script>
 
 <style scoped>

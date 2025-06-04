@@ -157,6 +157,7 @@ import indexRibbon from "@/pages/advance/indexRibbon.vue"
 import indexPagenation from "@/pages/advance/indexPagenation.vue"
 import indexBreadcrumb from "@/pages/advance/indexBreadcrumb.vue"
 import indexRange from "@/pages/advance/indexRange.vue"
+import indexApiKeyUsageLogs from "@/pages/api_management/usage_logs/indexApiKeyUsageLogs.vue"
 
 import { useAuthStore } from '@/store/auth'
 import { useChatStore } from '@/store/chat'
@@ -1842,6 +1843,31 @@ const { checkAuth, isAdmin } = authStore
       requiresAuth: true,
       title: 'Main Dashboard'
     }
+  },
+  {
+    path: "/api",
+    component: BodyView,
+    children: [
+      {
+        path: "indexAPI",
+        name: "indexAPI",
+        component: indexAPI,
+        meta: {
+          title: 'API Management | MDPS',
+          requiresAuth: true
+        }
+      },
+      {
+        path: "usage-logs/:uuid",
+        name: "apiKeyUsageLogs",
+        component: indexApiKeyUsageLogs,
+        props: true,
+        meta: {
+          title: 'API Key Usage Logs | MDPS',
+          requiresAuth: true
+        }
+      },
+    ]
   }
 ]
 
