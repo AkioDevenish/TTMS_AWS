@@ -307,6 +307,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"  Failed to fetch sensors. Status code: {sensors_resp.status_code}"))
                 continue
             sensors = sensors_resp.json()
+            # Debug: print all sensor names for this station
+            sensor_names = [s.get('sensorName') for s in sensors]
+            logger.info(f"OTT station {station['name']} ({station['id']}): sensors found: {sensor_names}")
             for sensor in sensors:
                 sensor_name = sensor['sensorName']
                 self.stdout.write(f"  Fetching data for sensor: {sensor_name}")
@@ -698,6 +701,9 @@ class Command(BaseCommand):
             # The data is expected to have a 'sensorData' key with a list of measurements
             sensor_data = data.get('sensorData', [])
             self.stdout.write(f"    Raw sensor_data for {sensor_name}: {sensor_data}")
+            # Debug: if this is a battery sensor, log the full data
+            if 'batt' in sensor_name.lower() or 'battery' in sensor_name.lower():
+                logger.info(f"OTT station {station_id} - RAW BATTERY DATA for sensor '{sensor_name}': {sensor_data}")
             if not isinstance(sensor_data, list):
                 self.stdout.write(self.style.ERROR(f"  sensorData missing or not a list for {sensor_name}"))
                 return []
@@ -767,8 +773,20 @@ class Command(BaseCommand):
         return processed_data
 
     def ensure_station_sensor_relationship(self, station_id, sensor_id):
-        """Ensure station-sensor relationship exists"""
+        """Ensure station-sensor relationship exists and fix sensor data if needed"""
         try:
+            # Get the sensor
+            sensor = Sensor.objects.get(id=sensor_id)
+            
+            # Fix missing unit if needed
+            if not sensor.unit:
+                unit = self.get_sensor_unit(sensor.type)
+                if unit:
+                    sensor.unit = unit
+                    sensor.save()
+                    self.stdout.write(f"Updated missing unit for sensor {sensor.type} to {unit}")
+            
+            # Create or get the relationship
             StationSensor.objects.get_or_create(
                 station_id=station_id,
                 sensor_id=sensor_id
@@ -777,42 +795,142 @@ class Command(BaseCommand):
         except Exception as e:
             logger.error(f"Error creating station-sensor relationship: {e}")
 
+    def get_sensor_unit(self, sensor_type):
+        """Helper function to get the unit for a sensor type"""
+        sensor_units = {
+            # Temperature sensors
+            'bt1': '°C',
+            'mt1': '°C',
+            'temperature': '°C',
+            'Air Temperature': '°C',
+            'Maximum Air Temperature': '°C',
+            'Minimum Air Temperature': '°C',
+            'Dew Point': '°C',
+            'Soil Temp (15cm)': '°C',
+            'RH Sensor Temperature': '°C',
+            
+            # Pressure sensors
+            'bp1': 'hPa',
+            'pressure': 'hPa',
+            'Barometric Pressure': 'hPa',
+            'Baro Tendency': 'hPa',
+            'Atmospheric Pressure': 'kPa',
+            'Reference Pressure': 'kPa',
+            'Vapor Pressure Deficit': 'kPa',
+            
+            # Wind sensors
+            'ws': 'm/s',
+            'wd': '°',
+            'wind_ave10': 'm/s',
+            'wind_max10': 'm/s',
+            'wind_min10': 'm/s',
+            'dir_ave10': '°',
+            'dir_max10': '°',
+            'dir_hi10': '°',
+            'dir_lo10': '°',
+            'Wind Speed': 'm/s',
+            'Wind Direction': '°',
+            'Gust Speed': 'm/s',
+            'Gust Direction': '°',
+            'Wind Speed Average': 'm/s',
+            'Wind Speed Inst': 'm/s',
+            'Wind Dir Average': '°',
+            'Wind Dir Inst': '°',
+            
+            # Precipitation sensors
+            'rg': 'mm',
+            'Precipitation': 'mm',
+            '5 min rain': 'mm',
+            'Daily Rain': 'mm',
+            'Max Precipitation Rate': 'mm/h',
+            'rain_counter': 'mm',
+            'rain_intensity_max': 'mm/h',
+            
+            # Solar radiation sensors
+            'sv1': 'W/m²',
+            'si1': 'W/m²',
+            'su1': 'W/m²',
+            'irradiation': 'W/m²',
+            'irr_max': 'W/m²',
+            'Solar Radiation': 'W/m²',
+            'Solar Radiation Avg': 'W/m²',
+            'Solar Radiation Total': 'W/m²',
+            
+            # Humidity sensors
+            'humidity': '%',
+            'Relative Humidity': '%',
+            
+            # Battery and connectivity sensors
+            'battery': 'V',
+            'bpc': '%',
+            'css': 'dBm',
+            'Battery': 'V',
+            'Battery Percent': '%',
+            
+            # Other sensors
+            'Leaf Wetness': '%',
+            'Soil Moisture (10cm)': '%',
+            'Soil Moisture (20cm)': '%',
+            'Soil Moisture (30cm)': '%',
+            'Hours of Sunshine': 'hr',
+            'EvapoTranspiration': 'mm',
+            'Lightning Activity': 'binary',
+            'Lightning Distance': 'km',
+            'X-axis Level': '°',
+            'Y-axis Level': '°'
+        }
+        return sensor_units.get(sensor_type, '')
+
     def process_station_health(self, station_id, measurements_by_hour, rounded_hour, brand_name):
-        """Process health-related measurements for a station"""
+        """Process health-related measurements for a station, checking all possible battery fields and logging available fields for debugging."""
         try:
             # Initialize status values
             battery_status = "Unknown"
             connectivity_status = "Unknown"
-            
+
+            # Expanded list of possible battery fields
+            battery_fields_by_brand = {
+                "3D_Paws": [
+                    'bpc', 'Battery Percent', 'Battery Voltage', 'battery', 'Battery',
+                    'batt', 'batt_v', 'batt_volt', 'batt_percent', 'battery_level', 'battLevel', 'battVolt', 'battPct'
+                ],
+                "Zentra": [
+                    'Battery Percent', 'Battery Voltage', 'battery', 'Battery',
+                    'batt', 'batt_v', 'batt_volt', 'batt_percent', 'battery_level', 'battLevel', 'battVolt', 'battPct'
+                ],
+                "Allmeteo": [
+                    'battery', 'Battery', 'Battery Voltage', 'Battery Percent',
+                    'batt', 'batt_v', 'batt_volt', 'batt_percent', 'battery_level', 'battLevel', 'battVolt', 'battPct'
+                ],
+                "OTT": [
+                    'battery', 'Battery', 'Battery Voltage', 'Battery Percent',
+                    'batt', 'batt_v', 'batt_volt', 'batt_percent', 'battery_level', 'battLevel', 'battVolt', 'battPct'
+                ],
+            }
+
             if rounded_hour in measurements_by_hour:
-                # Handle different brands' sensor names
-                if brand_name == "3D_Paws":
-                    # Check CSS and BPC for 3D_Paws
-                    if 'css' in measurements_by_hour[rounded_hour]:
-                        css_reading = min(measurements_by_hour[rounded_hour]['css'], 
-                                        key=lambda x: abs(x['timestamp'] - rounded_hour))
-                        css_value = css_reading['value']
-                        connectivity_status = self.get_connectivity_status(css_value)
-                    
-                    if 'bpc' in measurements_by_hour[rounded_hour]:
-                        battery_reading = min(measurements_by_hour[rounded_hour]['bpc'], 
-                                           key=lambda x: abs(x['timestamp'] - rounded_hour))
-                        battery_status = f"{battery_reading['value']}%"
-                        
-                elif brand_name == "Zentra":
-                    # Check Battery Percent for Zentra
-                    if 'Battery Percent' in measurements_by_hour[rounded_hour]:
-                        battery_reading = min(measurements_by_hour[rounded_hour]['Battery Percent'], 
-                                           key=lambda x: abs(x['timestamp'] - rounded_hour))
-                        battery_status = f"{battery_reading['value']}%"
-                        
-                elif brand_name == "Allmeteo":
-                    # Check battery for Allmeteo
-                    if 'battery' in measurements_by_hour[rounded_hour]:
-                        battery_reading = min(measurements_by_hour[rounded_hour]['battery'], 
-                                           key=lambda x: abs(x['timestamp'] - rounded_hour))
-                        battery_status = f"{battery_reading['value']}%"
-            
+                # --- Battery status: check all possible fields ---
+                battery_fields = battery_fields_by_brand.get(brand_name, ['battery', 'Battery'])
+                battery_values = []
+                for field in battery_fields:
+                    if field in measurements_by_hour[rounded_hour]:
+                        battery_reading = min(measurements_by_hour[rounded_hour][field], 
+                                              key=lambda x: abs(x['timestamp'] - rounded_hour))
+                        battery_values.append(f"{field}: {battery_reading['value']}")
+                if battery_values:
+                    battery_status = ", ".join(battery_values)
+                else:
+                    # Debug: log available fields if battery is unknown
+                    available_fields = list(measurements_by_hour[rounded_hour].keys())
+                    logger.warning(f"No battery field found for station {station_id} at {rounded_hour} (brand: {brand_name}). Available fields: {available_fields}")
+
+                # --- Connectivity status (3D_Paws only, as before) ---
+                if brand_name == "3D_Paws" and 'css' in measurements_by_hour[rounded_hour]:
+                    css_reading = min(measurements_by_hour[rounded_hour]['css'], 
+                                      key=lambda x: abs(x['timestamp'] - rounded_hour))
+                    css_value = css_reading['value']
+                    connectivity_status = self.get_connectivity_status(css_value)
+
             # Create health log entry
             StationHealthLog.objects.create(
                 station_id=station_id,
@@ -820,7 +938,7 @@ class Command(BaseCommand):
                 connectivity_status=connectivity_status,
                 created_at=rounded_hour
             )
-                
+
         except Exception as e:
             logger.error(f"Error processing station health: {e}")
             self.stdout.write(self.style.ERROR(f"Error processing station health: {e}"))
