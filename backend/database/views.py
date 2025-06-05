@@ -672,6 +672,38 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     'date': m.date.strftime('%Y-%m-%d'),
                     'time': m.time.strftime('%H:%M:%S')
                 })
+
+            # Insert into api_key_usage logs and update Api_Access_Keys
+            print(f"Checking request.auth type: {type(request.auth)}") # Debug print
+            if request.auth and isinstance(request.auth, ApiAccessKey):
+                print("API key authenticated, attempting to log usage.") # Debug print
+                try:
+                    api_key = request.auth
+                    user = api_key.user
+
+                    # Update last_used timestamp
+                    api_key.last_used = timezone.now()
+                    api_key.save(update_fields=['last_used'])
+
+                    # Create usage log entry
+                    log_data = {
+                        'api_key': api_key,
+                        'user': user,
+                        'request_path': request.path,
+                        'query_params': dict(request.query_params),
+                        'response_format': request.accepted_renderer.format,
+                        'status_code': 200,
+                        'user_agent': request.META.get('HTTP_USER_AGENT', '')
+                    }
+                    print(f"Attempting to create ApiKeyUsageLog with data: {log_data}") # Debug print log data
+                    ApiKeyUsageLog.objects.create(**log_data)
+                    print("ApiKeyUsageLog created successfully.") # Debug print success
+
+                except Exception as e:
+                    # Log the specific error during log creation
+                    print(f"SPECIFIC Error logging API key usage: {type(e).__name__} - {str(e)}") # More specific error logging
+                    # Don't fail the request if logging fails
+
             return Response({'measurements': result_data})
         except Exception as e:
             import traceback
@@ -754,7 +786,9 @@ class HistoricalDataViewSet(viewsets.ViewSet):
                 })
             
             # Insert into api_key_usage logs and update Api_Access_Keys
+            print(f"Checking request.auth type: {type(request.auth)}") # Debug print
             if request.auth and isinstance(request.auth, ApiAccessKey):
+                print("API key authenticated, attempting to log usage.") # Debug print
                 try:
                     api_key = request.auth
                     user = api_key.user
@@ -764,17 +798,22 @@ class HistoricalDataViewSet(viewsets.ViewSet):
                     api_key.save(update_fields=['last_used'])
                     
                     # Create usage log entry
-                    ApiKeyUsageLog.objects.create(
-                        api_key=api_key,
-                        user=user,
-                        request_path=request.path,
-                        query_params=dict(request.query_params),
-                        response_format=request.accepted_renderer.format,
-                        status_code=200,
-                        user_agent=request.META.get('HTTP_USER_AGENT', '')
-                    )
+                    log_data = {
+                        'api_key': api_key,
+                        'user': user,
+                        'request_path': request.path,
+                        'query_params': dict(request.query_params),
+                        'response_format': request.accepted_renderer.format,
+                        'status_code': 200,
+                        'user_agent': request.META.get('HTTP_USER_AGENT', '')
+                    }
+                    print(f"Attempting to create ApiKeyUsageLog with data: {log_data}") # Debug print log data
+                    ApiKeyUsageLog.objects.create(**log_data)
+                    print("ApiKeyUsageLog created successfully.") # Debug print success
+
                 except Exception as e:
-                    print(f"Error logging API key usage: {str(e)}")
+                    # Log the specific error during log creation
+                    print(f"SPECIFIC Error logging API key usage: {type(e).__name__} - {str(e)}") # More specific error logging
                     # Don't fail the request if logging fails
             
             # Check if CSV format is requested
@@ -2051,10 +2090,16 @@ class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = ApiKeyUsageLog.objects.all()
         
-        # Filter by API key if provided
-        api_key = self.request.query_params.get('api_key')
-        if api_key:
-            queryset = queryset.filter(api_key_id=api_key)
+        # Filter by API key UUID if provided
+        api_key_uuid = self.request.query_params.get('api_key') # Get the UUID
+        if api_key_uuid:
+            try:
+                # Find the ApiAccessKey with the given UUID and filter by its ID
+                api_access_key = ApiAccessKey.objects.get(uuid=api_key_uuid)
+                queryset = queryset.filter(api_key=api_access_key) # Filter by the ApiAccessKey object
+            except ApiAccessKey.DoesNotExist:
+                # If UUID doesn't exist, return empty queryset
+                queryset = ApiKeyUsageLog.objects.none()
             
         # Filter by user if provided
         user = self.request.query_params.get('user')

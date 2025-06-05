@@ -64,6 +64,12 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
             return (user, access_key)
             
         except ApiAccessKey.DoesNotExist:
-            raise exceptions.AuthenticationFailed('Invalid API key')
+            # If the key doesn't exist, authentication failed for API key, return None
+            return None
+        except exceptions.AuthenticationFailed as e:
+            # If ApiKeyAuthentication explicitly raised AuthenticationFailed (e.g. expired), let it propagate
+            raise e
         except Exception as e:
-            raise exceptions.AuthenticationFailed(f'Authentication error: {str(e)}') 
+            # For any other exception during API key processing, treat as API key failure and return None
+            print(f"Error during API key authentication: {str(e)}")
+            return None 

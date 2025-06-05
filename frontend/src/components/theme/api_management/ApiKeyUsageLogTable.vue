@@ -56,7 +56,7 @@ const fetchUsageLogs = async (uuid: string) => {
     loading.value = true;
     error.value = null;
     try {
-        const response = await axios.get(`/api/api-key-usage-logs/`, {
+        const response = await axios.get(`/api-key-usage-logs/`, {
             params: {
                 api_key: uuid // Filter by API key UUID
             }

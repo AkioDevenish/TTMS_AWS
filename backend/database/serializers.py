@@ -336,7 +336,20 @@ class BillCreateSerializer(serializers.ModelSerializer):
         fields = ('total', 'package', 'receipt_upload')
 
 
+class SimpleUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email']
+
+class SimpleApiAccessKeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApiAccessKey
+        fields = ['uuid']
+
 class ApiKeyUsageLogSerializer(serializers.ModelSerializer):
+    user = SimpleUserSerializer(read_only=True)
+    api_key = SimpleApiAccessKeySerializer(read_only=True)
+    
     api_key_name = serializers.CharField(source='api_key.token_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
 
