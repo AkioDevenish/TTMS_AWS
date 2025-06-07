@@ -899,7 +899,8 @@ class StationSensorViewSet(viewsets.ModelViewSet):
         if station_id:
             queryset = queryset.filter(station_id=station_id)
         if brand:
-            queryset = queryset.filter(station__brand__name=brand)
+            # Use iexact for case-insensitive brand matching
+            queryset = queryset.filter(station__brand__name__iexact=brand)
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
