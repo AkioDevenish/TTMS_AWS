@@ -274,6 +274,7 @@ class Command(BaseCommand):
     def fetch_ott_hydromet_data(self):
         """Fetch data from OTT Hydromet instruments"""
         self.stdout.write(self.style.SUCCESS('\n=== Starting OTT Hydromet Data Fetch ==='))
+        logger.info('Starting OTT Hydromet Data Fetch')
 
         BASE_URL = "https://www.hydrometcloud.com/Data/rest/api/"
         API_KEY = "3235DzYLcYfYD1S8"
@@ -302,11 +303,15 @@ class Command(BaseCommand):
             self.stdout.write(f"Fetching sensors for OTT station: {station['name']} ({station['id']})")
             sensors_url = f"{BASE_URL}sensors?stationId={station['id']}"
             sensors_resp = requests.get(sensors_url, headers=HEADERS)
+            logger.info(f"Fetching sensors for OTT station: {station['name']} ({station['id']}) - API status: {sensors_resp.status_code}")
             self.stdout.write(f"  Sensors API status: {sensors_resp.status_code}, response: {sensors_resp.text[:300]}")
             if sensors_resp.status_code != 200:
+                logger.error(f"Failed to fetch sensors for OTT station {station['id']} - Status code: {sensors_resp.status_code}")
                 self.stdout.write(self.style.ERROR(f"  Failed to fetch sensors. Status code: {sensors_resp.status_code}"))
                 continue
             sensors = sensors_resp.json()
+            if not sensors:
+                logger.warning(f"No sensors returned for OTT station {station['id']}")
             # Debug: print all sensor names for this station
             sensor_names = [s.get('sensorName') for s in sensors]
             logger.info(f"OTT station {station['name']} ({station['id']}): sensors found: {sensor_names}")
@@ -318,16 +323,23 @@ class Command(BaseCommand):
                     f"&startTime={start_time}&endTime={end_time}"
                 )
                 data_resp = requests.get(data_url, headers=HEADERS)
+                logger.info(f"Fetching data for OTT station {station['id']} sensor {sensor_name} - API status: {data_resp.status_code}")
                 self.stdout.write(f"    Data API status: {data_resp.status_code}, response: {data_resp.text[:300]}")
                 if data_resp.status_code != 200:
+                    logger.error(f"Failed to fetch data for OTT station {station['id']} sensor {sensor_name} - Status code: {data_resp.status_code}")
                     self.stdout.write(self.style.ERROR(f"    Failed to fetch data. Status code: {data_resp.status_code}"))
                     continue
                 data = data_resp.json()
+                if not data or not data.get('sensorData'):
+                    logger.warning(f"No data returned for OTT station {station['id']} sensor {sensor_name}")
                 # Save/process the data
                 try:
                     processed = self.process_ott_hydromet_data(station['id'], sensor_name, data, sensor_map)
+                    if not processed:
+                        logger.warning(f"No measurements saved for OTT station {station['id']} sensor {sensor_name}")
                     self.stdout.write(self.style.SUCCESS(f"    Successfully processed {len(processed)} measurements for {sensor_name}"))
                 except Exception as e:
+                    logger.error(f"Error processing data for OTT station {station['id']} sensor {sensor_name}: {e}")
                     self.stdout.write(self.style.ERROR(f"    Error processing data: {e}"))
 
         self.stdout.write(self.style.SUCCESS("=== OTT Hydromet Data Fetch Complete ===\n"))

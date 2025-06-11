@@ -140,8 +140,8 @@ CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'database.auth.ApiKeyAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'database.auth.ApiKeyAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',

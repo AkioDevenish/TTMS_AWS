@@ -91,14 +91,25 @@ const fetchAvailableSensors = async () => {
         if (response.data && Array.isArray(response.data)) {
             const uniqueSensors = new Map();
             
+            // Define known Barani/AllMeteo sensor types
+            const baraniSensorTypes = [
+                'wind_ave10', 'wind_max10', 'wind_min10', 'dir_ave10', 'dir_max10', 
+                'dir_hi10', 'dir_lo10', 'battery', 'humidity', 'irradiation', 
+                'irr_max', 'pressure', 'temperature', 'temperature_max', 
+                'temperature_min', 'rain_counter', 'rain_intensity_max'
+            ];
+            
             // Filter and deduplicate sensors
             response.data.forEach(sensor => {
-                if (!uniqueSensors.has(sensor.sensor_type)) {
-                    uniqueSensors.set(sensor.sensor_type, {
-                        type: sensor.sensor_type,
-                        name: sensor.name || sensor.sensor_type,
-                        unit: sensor.unit || ''
-                    });
+                const sensorType = sensor.sensor_type.toLowerCase();
+                if (baraniSensorTypes.some(type => type.toLowerCase() === sensorType)) { // Case-insensitive comparison
+                    if (!uniqueSensors.has(sensor.sensor_type)) {
+                        uniqueSensors.set(sensor.sensor_type, {
+                            type: sensor.sensor_type,
+                            name: sensor.name || sensor.sensor_type,
+                            unit: sensor.unit || ''
+                        });
+                    }
                 }
             });
 

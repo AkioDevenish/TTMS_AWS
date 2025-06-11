@@ -199,7 +199,7 @@ export function useStationData() {
       // Check measurement time
       const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
       const timeDiff = Date.now() - measurementTime.getTime();
-      if (timeDiff > 30 * 60 * 1000) return 'Offline'; // 30 minutes
+      if (timeDiff > 60 * 60 * 1000) return 'Offline'; // 60 minutes
 
       return latestMeasurement.status === 'Successful' ? 'Online' : 'Offline';
     } catch (err) {

@@ -1,8 +1,8 @@
 <template>
   <div class="station-data-export">
     <label class="form-label">Export Station Data</label>
-    <div class="export-content" :class="{ 'expanded': isExpanded }" @click="toggleExpand">
-      <div class="toggle-header">
+    <div class="export-content" :class="{ 'expanded': isExpanded }">
+      <div class="toggle-header" @click="toggleExpand">
         <span>{{ stationName }}</span>
         <i :class="isExpanded ? 'fa fa-angle-up' : 'fa fa-angle-down'"></i>
       </div>
@@ -20,11 +20,31 @@
                 :id="sensor.type"
                 v-model="selectedSensors"
                 :value="sensor.type"
+                @click.stop
               >
               <label class="form-check-label" :for="sensor.type">
                 {{ sensor.name }} ({{ sensor.unit }})
               </label>
             </div>
+          </div>
+        </div>
+
+        <!-- Date Range Selection -->
+        <div class="date-range-selection mb-3">
+          <label class="form-label">Select Date Range (Optional)</label>
+          <div class="d-flex gap-2">
+            <input 
+              type="date" 
+              class="form-control"
+              v-model="startDate"
+              @click.stop
+            >
+            <input 
+              type="date" 
+              class="form-control"
+              v-model="endDate"
+              @click.stop
+            >
           </div>
         </div>
 
@@ -39,6 +59,7 @@
                 id="formatJson"
                 value="json"
                 v-model="selectedFormat"
+                @click.stop
               >
               <label class="form-check-label" for="formatJson">JSON</label>
             </div>
@@ -49,6 +70,7 @@
                 id="formatXml"
                 value="xml"
                 v-model="selectedFormat"
+                @click.stop
               >
               <label class="form-check-label" for="formatXml">XML</label>
             </div>
@@ -59,6 +81,7 @@
                 id="formatCsv"
                 value="csv"
                 v-model="selectedFormat"
+                @click.stop
               >
               <label class="form-check-label" for="formatCsv">CSV</label>
             </div>
@@ -69,7 +92,7 @@
         <button 
           class="btn btn-primary"
           :disabled="!canExport"
-          @click="exportData"
+          @click.stop="exportData"
         >
           Export Data
         </button>
@@ -123,6 +146,8 @@ const props = defineProps({
 // State
 const selectedSensors = ref<string[]>([]);
 const selectedFormat = ref('json');
+const startDate = ref<string>('');
+const endDate = ref<string>('');
 
 // Add toggle state
 const isExpanded = ref(false);
@@ -213,15 +238,29 @@ const canExport = computed(() => selectedSensors.value.length > 0);
 // Export function
 const exportData = async () => {
   try {
-    const response = await axios.get('/measurements/get_readings/', {
+    // Get the API key from local storage
+    const apiKey = localStorage.getItem('access_token');
+    if (!apiKey) {
+      toast.error('No API key found. Please log in again.', {
+        hideProgressBar: true,
+        autoClose: 2000,
+        theme: 'colored'
+      });
+      return;
+    }
+
+    const response = await axios.get('/historical-data/get_readings/', {
       params: {
         station_id: props.stationId,
-        sensor_type: selectedSensors.value.join(',')
+        sensor_type: selectedSensors.value.join(','),
+        ...(startDate.value && { start_date: startDate.value }),
+        ...(endDate.value && { end_date: endDate.value })
       },
       headers: {
         'Accept': selectedFormat.value === 'json' ? 'application/json' : 
                  selectedFormat.value === 'xml' ? 'application/xml' : 
-                 'text/csv'
+                 'text/csv',
+        'Authorization': `Bearer ${apiKey}`
       },
       responseType: selectedFormat.value === 'csv' ? 'blob' : 'json'
     });

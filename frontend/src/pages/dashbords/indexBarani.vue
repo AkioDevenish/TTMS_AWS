@@ -86,7 +86,9 @@ const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
 		const response = await axios.get<Station[]>('/stations/');
-		const baraniStations = response.data.filter(station => station.brand_name === "Allmeteo");
+		const baraniStations = response.data.filter(station => 
+			station.brand_name.toLowerCase() === "allmeteo".toLowerCase()
+		);
 		stationNames.value = baraniStations;
 
 		if (baraniStations.length > 0 && !selectedStation.value) {
