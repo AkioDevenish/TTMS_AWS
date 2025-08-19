@@ -21,6 +21,8 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class SensorSerializer(serializers.ModelSerializer):
+    brand_name = serializers.CharField(source='brand.name', read_only=True)
+    
     class Meta:
         model = Sensor
         fields = '__all__'
@@ -28,7 +30,15 @@ class SensorSerializer(serializers.ModelSerializer):
 
 class StationSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source='brand.name', read_only=True)
-    sensors = SensorSerializer(many=True, read_only=True)
+    # Remove expensive sensors field to prevent N+1 queries
+    # sensors = SensorSerializer(many=True, read_only=True)
+    
+    # Add lightweight sensor count instead
+    sensor_count = serializers.SerializerMethodField()
+    
+    def get_sensor_count(self, obj):
+        """Get sensor count without expensive queries"""
+        return obj.station_sensors.count() if hasattr(obj, 'station_sensors') else 0
 
     class Meta:
         model = Station

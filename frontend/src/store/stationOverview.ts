@@ -347,6 +347,20 @@ export const useStationOverviewStore = defineStore('stationOverview', {
       console.log('Setting brand:', brand);
       this.selectedBrand = brand;
       this.currentPage = 1;
+      
+      // Auto-set appropriate default sensor type for the brand
+      const defaultSensorTypes: Record<string, string> = {
+        '3D_Paws': 'bt1',
+        'Zentra': 'Air Temperature',
+        'Allmeteo': 'temperature',
+        'OTT': 'Air Temperature'
+      };
+      
+      const defaultSensorType = defaultSensorTypes[brand];
+      if (defaultSensorType && defaultSensorType !== this.selectedSensorType) {
+        console.log(`Auto-setting sensor type to: ${defaultSensorType} for brand: ${brand}`);
+        this.selectedSensorType = defaultSensorType;
+      }
     },
 
     setSensorType(sensorType: string) {
@@ -357,6 +371,12 @@ export const useStationOverviewStore = defineStore('stationOverview', {
 
     setPage(page: number) {
       this.currentPage = page;
+      this.fetchStationData();
+    },
+
+    setPageSize(pageSize: number) {
+      this.pageSize = pageSize;
+      this.currentPage = 1; // Reset to first page when changing page size
       this.fetchStationData();
     },
 

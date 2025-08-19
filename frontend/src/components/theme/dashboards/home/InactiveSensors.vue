@@ -1,7 +1,7 @@
 <template>
     <Card1 colClass="col-xl-12 col-lg-12 col-md-12 order-1" 
         headerTitle="true" 
-        title="Current Inactive Sensors"
+        title="Inactive Sensors"
         cardhaderClass="card-no-border pb-0" 
         cardbodyClass="designer-card">
         
@@ -120,7 +120,7 @@ const hasRecentData = computed(() => {
 
 // Helper functions (keep these as they work with the data structure)
 const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'No Recent Activity';
+    if (!dateString) return 'No Reading';
     try {
         return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
@@ -137,16 +137,10 @@ const formatDate = (dateString: string | null) => {
 
 const getStatusClass = (status: string) => {
     switch (status) {
-        case 'Currently Offline':
-            return 'bg-light-danger font-danger';
         case 'No Reading':
             return 'bg-light-warning font-warning';
         case 'No Data':
             return 'bg-light-secondary font-secondary';
-        case 'Error':
-            return 'bg-light-danger font-danger';
-        case 'Offline':
-            return 'bg-light-dark font-dark';
         default:
             return 'bg-light text-dark';
     }

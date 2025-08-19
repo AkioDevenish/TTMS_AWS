@@ -18,44 +18,48 @@
                     <td colspan="8" class="text-center py-4">Loading...</td>
                 </tr>
             </tbody>
-            <tbody v-else-if="stations.length === 0">
+            <tbody v-else-if="!stations || stations.length === 0">
                 <tr>
-                    <td colspan="8" class="text-center py-4">No stations found</td>
+                    <td colspan="8" class="text-center py-4">
+                        {{ loading ? 'Loading stations...' : 'No stations found' }}
+                    </td>
                 </tr>
             </tbody>
             <tbody v-else>
-                <tr v-for="station in stations" :key="station.id" class="station-row">
-                    <td class="px-4 py-3">{{ station.name || '-' }}</td>
-                    <td class="px-4 py-3">{{ station.brand?.name || station.brand_name || '-' }}</td>
-                    <td class="px-4 py-3">{{ station.serial_number || '-' }}</td>
-                    <td class="px-4 py-3">{{ station.address || '-' }}</td>
-                    <td class="px-4">{{ station.installation_date || 'Not Available' }}</td>
-                    <td class="px-4 py-3">{{ formatDecommissionedDate(station.decommissioned_at, station.status) }}</td>
+                <tr v-for="(station, index) in stations" :key="station?.id || station?.name || index" class="station-row">
+                    <td class="px-4 py-3">{{ station?.name || '-' }}</td>
+                    <td class="px-4 py-3">{{ station?.brand?.name || station?.brand_name || '-' }}</td>
+                    <td class="px-4 py-3">{{ station?.serial_number || '-' }}</td>
+                    <td class="px-4 py-3">{{ station?.address || '-' }}</td>
+                    <td class="px-4">{{ station?.installation_date || 'Not Available' }}</td>
+                    <td class="px-4 py-3">{{ formatDecommissionedDate(station?.decommissioned_at, station?.status) }}</td>
                     <td class="status-cell px-4 py-3">
                         <span 
                             :class="[
                                 'status-badge',
-                                `status-${(station.status || 'Active').toLowerCase()}`
+                                `status-${(station?.status || 'Active').toLowerCase()}`
                             ]"
                         >
-                            {{ station.status || 'Active' }}
+                            {{ station?.status || 'Active' }}
                         </span>
                     </td>
                     <td class="px-4 py-3">
                         <div class="action-buttons">
                             <button 
                                 class="decommission-btn"
-                                v-if="station.status !== 'Decommissioned'"
-                                @click.stop="handleDecommissionStation(station.id)"
+                                v-if="station?.status !== 'Decommissioned'"
+                                @click.stop="handleDecommissionStation(station?.id)"
                                 title="Decommission station"
+                                :disabled="!station?.id"
                             >
                                 <i class="fa fa-trash-o"></i>
                             </button>
                             <button 
                                 class="reactivate-btn"
-                                v-if="station.status === 'Decommissioned'"
-                                @click.stop="handleReactivateStation(station.id)"
+                                v-if="station?.status === 'Decommissioned'"
+                                @click.stop="handleReactivateStation(station?.id)"
                                 title="Reactivate station"
+                                :disabled="!station?.id"
                             >
                                 <i class="fa fa-play"></i>
                             </button>
@@ -77,6 +81,10 @@ import Swal from 'sweetalert2'
 const stationStore = useStationStore()
 const stations = computed(() => stationStore.stations)
 const loading = computed(() => stationStore.loading)
+
+// Add debugging
+console.log('StationTable - stations:', stations.value)
+console.log('StationTable - loading:', loading.value)
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)

@@ -147,7 +147,8 @@ const fetchStationCounts = async () => {
   try {
     isLoading.value = true;
     const response = await axios.get('/api/stations/?include_decommissioned=false');
-    const stations = response.data || [];
+    // Fix: Handle paginated response structure
+    const stations = response.data.results || response.data || [];
     
     // Count stations by brand
     stationCounts.value = {

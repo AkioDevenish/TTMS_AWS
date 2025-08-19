@@ -1,7 +1,7 @@
 <template>
     <Card1 colClass="col-xl-12 col-lg-12 col-md-12 order-1" 
         headerTitle="true" 
-        title="Station Health Status"
+        title="Station Health"
         cardhaderClass="card-no-border pb-0" 
         cardbodyClass="designer-card">
         
@@ -46,28 +46,91 @@
                     <thead>
                         <tr>
                             <th>Station Name</th>
-                            <th>Status</th>
-                            <th>Battery</th>
                             <th>Last Update</th>
+                            <th>Battery</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="station in filteredStations" :key="station.id">
                             <td>{{ station.name }}</td>
+                            <td>{{ formatDate(station.created_at) }}</td>
                             <td>
-                                <span class="status-badge badge rounded-pill" :class="getStatusClass(station.status)">
-                                    {{ station.status }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge badge rounded-pill" :class="getBatteryClass(station.battery_status)">
+                                <span class="status-badge" :class="getBatteryClass(station.battery_status)">
                                     {{ station.battery_status || 'Unknown' }}
                                 </span>
                             </td>
-                            <td>{{ formatDate(station.created_at) }}</td>
+                            <td>
+                                <span class="status-badge" :class="getStatusClass(station.status)">
+                                    {{ station.status }}
+                                </span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div v-if="paginationInfo.totalPages > 1" class="pagination-container">
+                <!-- Page Size Selector -->
+                <div class="page-size-selector">
+                    <label class="page-size-label">Show:</label>
+                    <select 
+                        v-model="selectedPageSize" 
+                        @change="changePageSize"
+                        class="page-size-select"
+                    >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <span class="page-size-text">of {{ paginationInfo.totalStations }} stations</span>
+                </div>
+
+                <!-- Pagination Navigation -->
+                <nav class="pagination-nav" aria-label="Station pagination">
+                    <ul class="pagination-list">
+                        <!-- Previous Page -->
+                        <li class="pagination-item">
+                            <button 
+                                class="pagination-button prev-button" 
+                                @click="previousPage"
+                                :disabled="!paginationInfo.hasPrevious"
+                                :class="{ disabled: !paginationInfo.hasPrevious }"
+                            >
+                                ←
+                            </button>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        <li 
+                            v-for="page in pageRange" 
+                            :key="page" 
+                            class="pagination-item"
+                        >
+                            <button 
+                                class="pagination-button page-button"
+                                :class="{ active: page === paginationInfo.currentPage }"
+                                @click="goToPage(page)"
+                            >
+                                {{ page }}
+                            </button>
+                        </li>
+
+                        <!-- Next Page -->
+                        <li class="pagination-item">
+                            <button 
+                                class="pagination-button next-button" 
+                                @click="nextPage"
+                                :disabled="!paginationInfo.hasNext"
+                                :class="{ disabled: !paginationInfo.hasNext }"
+                            >
+                                →
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
             </div>
 
             <!-- Debug Panel (Development Only) -->
@@ -75,16 +138,30 @@
                 <h6>Debug Information</h6>
                 <div class="row">
                     <div class="col-md-3">
-                        <strong>Total Stations:</strong> {{ store.stationHealth.length }}
+                        <strong>Total Stations:</strong> {{ paginationInfo.totalStations }}
                     </div>
                     <div class="col-md-3">
-                        <strong>Health Records:</strong> {{ store.stationHealth.length }}
+                        <strong>Current Page:</strong> {{ paginationInfo.currentPage }} of {{ paginationInfo.totalPages }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Page Size:</strong> {{ paginationInfo.pageSize }}
                     </div>
                     <div class="col-md-3">
                         <strong>Loading:</strong> {{ store.isLoading }}
                     </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-3">
+                        <strong>Has Next:</strong> {{ paginationInfo.hasNext }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Has Previous:</strong> {{ paginationInfo.hasPrevious }}
+                    </div>
                     <div class="col-md-3">
                         <strong>Error:</strong> {{ store.error || 'None' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Health Records:</strong> {{ store.stationHealth.length }}
                     </div>
                 </div>
                 <div class="mt-2">
@@ -97,7 +174,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, onUnmounted, computed, ref } from 'vue';
+import { defineAsyncComponent, onMounted, onUnmounted, computed, ref, watch } from 'vue';
 import { useAWSStationsStore, type StationHealth } from '@/store/awsStations';
 import VueFeather from 'vue-feather';
 
@@ -108,6 +185,7 @@ const store = useAWSStationsStore();
 
 // Component state
 const showDebug = ref(false); // Set to true for development
+const selectedPageSize = ref(10); // Default page size
 
 // Computed properties
 const isLoading = computed(() => store.isLoading);
@@ -116,6 +194,8 @@ const hasRecentData = computed(() => store.hasRecentData);
 const status = computed(() => store.getStationStatus);
 const availableBrands = computed(() => store.availableBrands);
 const selectedBrand = computed(() => store.selectedBrand);
+const paginationInfo = computed(() => store.getPaginationInfo);
+const pageRange = computed(() => store.getPageRange);
 
 const filteredStations = computed(() => {
     if (selectedBrand.value) {
@@ -129,22 +209,22 @@ const filteredStations = computed(() => {
 const getStatusClass = (status: string) => {
     switch (status?.toLowerCase()) {
         case 'online':
-            return 'badge bg-light-success';
+        case 'connected':
+            return 'status-active';
         case 'critical battery':
-            return 'badge bg-light-danger';
+            return 'status-inactive';
         case 'low battery':
-            return 'badge bg-light-warning';
+            return 'status-pending';
         case 'battery warning':
-            return 'badge bg-light-warning';
+            return 'status-pending';
         case 'warning':
-            return 'badge bg-light-warning';
+            return 'status-pending';
         case 'offline':
-            return 'badge bg-light-danger';
+            return 'status-inactive';
         case 'online erroneous data':
-            // For battery sensors, this might be incorrect - check if it's a battery sensor
-            return 'badge bg-light-warning';
+            return 'status-pending';
         default:
-            return 'badge bg-light-warning';
+            return 'status-default';
     }
 };
 
@@ -152,14 +232,14 @@ const getBatteryClass = (batteryStatus: string) => {
     switch (batteryStatus?.toLowerCase()) {
         case 'excellent':
         case 'good':
-            return 'status-active badge-success';
+            return 'status-active';
         case 'fair':
-            return 'status-unknown badge-warning';
+            return 'status-pending';
         case 'poor':
         case 'critical':
-            return 'status-inactive badge-danger';
+            return 'status-inactive';
         default:
-            return 'status-unknown badge-secondary';
+            return 'status-default';
     }
 };
 
@@ -182,7 +262,7 @@ const formatDate = (dateString: string | null) => {
 // Actions
 const refreshData = async () => {
     const brandToUse = selectedBrand.value || store.availableBrands[0];
-    await store.fetchStationHealth(brandToUse);
+    await store.fetchStationHealth(brandToUse, paginationInfo.value.currentPage, paginationInfo.value.pageSize);
 };
 
 const selectBrand = (brand: string | null) => {
@@ -191,6 +271,23 @@ const selectBrand = (brand: string | null) => {
 
 const testAPI = async () => {
     await store.testAPI();
+};
+
+// Pagination methods
+const goToPage = async (page: number) => {
+    await store.goToPage(page);
+};
+
+const nextPage = async () => {
+    await store.nextPage();
+};
+
+const previousPage = async () => {
+    await store.previousPage();
+};
+
+const changePageSize = async () => {
+    await store.changePageSize(selectedPageSize.value);
 };
 
 // Lifecycle
@@ -205,6 +302,9 @@ onMounted(async () => {
         if (store.availableBrands.length > 0 && !selectedBrand.value) {
             store.setBrand(store.availableBrands[0]);
         }
+        
+        // Sync selected page size with store
+        selectedPageSize.value = store.pageSize;
     } catch (err) {
         console.error('Error initializing:', err);
     }
@@ -212,6 +312,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
     store.cleanup();
+});
+
+// Watch for changes in store page size and sync with local state
+watch(() => store.pageSize, (newPageSize) => {
+    selectedPageSize.value = newPageSize;
 });
 </script>
 
@@ -282,5 +387,405 @@ onUnmounted(() => {
 
 .error-state p {
     color: #6c757d;
+}
+
+/* Status Badge Styles - matching Recent Users component */
+.status-badge {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    min-width: 80px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffeaa7;
+}
+
+.status-default {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border-color: #d6d8db;
+}
+
+/* Dark Mode Styles for Status Badges */
+body.dark-only .status-badge {
+    border-color: #3a3b46 !important;
+}
+
+body.dark-only .status-active {
+    background-color: #1e4d2b !important;
+    color: #d4edda !important;
+    border-color: #2d5a3a !important;
+}
+
+body.dark-only .status-inactive {
+    background-color: #4d1e1e !important;
+    color: #f8d7da !important;
+    border-color: #5a2d2d !important;
+}
+
+body.dark-only .status-pending {
+    background-color: #4d3e1e !important;
+    color: #fff3cd !important;
+    border-color: #5a4d2d !important;
+}
+
+body.dark-only .status-default {
+    background-color: #3a3b46 !important;
+    color: #e2e3e5 !important;
+    border-color: #4a4b56 !important;
+}
+
+/* Additional dark mode class support for status badges */
+:deep(.dark-mode) .status-badge {
+    border-color: #3a3b46 !important;
+}
+
+:deep(.dark-mode) .status-active {
+    background-color: #1e4d2b !important;
+    color: #d4edda !important;
+    border-color: #2d5a3a !important;
+}
+
+:deep(.dark-mode) .status-inactive {
+    background-color: #4d1e1e !important;
+    color: #f8d7da !important;
+    border-color: #5a2d2d !important;
+}
+
+:deep(.dark-mode) .status-pending {
+    background-color: #4d3e1e !important;
+    color: #fff3cd !important;
+    border-color: #5a4d2d !important;
+}
+
+:deep(.dark-mode) .status-default {
+    background-color: #3a3b46 !important;
+    color: #e2e3e5 !important;
+    border-color: #4a4b56 !important;
+}
+
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.page-size-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.page-size-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    color: #495057;
+    font-size: 0.875rem;
+    min-width: 80px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-size-select:focus {
+    outline: none;
+    border-color: #7A70BA;
+    box-shadow: 0 0 0 3px rgba(122, 112, 186, 0.1);
+}
+
+.page-size-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-list {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-item {
+    margin: 0;
+}
+
+.pagination-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.pagination-button:hover:not(.disabled) {
+    background: #f8f9fa;
+    border-color: #7A70BA;
+    color: #7A70BA;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(122, 112, 186, 0.15);
+}
+
+.pagination-button:active:not(.disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(122, 112, 186, 0.15);
+}
+
+.pagination-button.active {
+    background: #7A70BA;
+    border-color: #7A70BA;
+    color: white;
+    box-shadow: 0 2px 8px rgba(122, 112, 186, 0.25);
+}
+
+.pagination-button.active:hover {
+    background: #6a5faa;
+    border-color: #6a5faa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(122, 112, 186, 0.3);
+}
+
+.pagination-button.disabled,
+.pagination-button:disabled {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #adb5bd;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.pagination-button.disabled:hover,
+.pagination-button:disabled:hover {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    color: #adb5bd;
+    transform: none;
+    box-shadow: none;
+}
+
+.prev-button,
+.next-button {
+    min-width: 40px;
+}
+
+.page-button {
+    min-width: 40px;
+}
+
+/* Dark Mode Styles */
+body.dark-only .pagination-container {
+    background: #2a2b36 !important;
+    border-color: #3a3b46 !important;
+}
+
+body.dark-only .page-size-label {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-only .page-size-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-only .page-size-select {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-only .page-size-select:focus {
+    border-color: #7A70BA !important;
+    box-shadow: 0 0 0 3px rgba(122, 112, 186, 0.2) !important;
+}
+
+body.dark-only .pagination-button {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-only .pagination-button:hover:not(.disabled) {
+    background: #374462 !important;
+    border-color: #7A70BA !important;
+    color: #7A70BA !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(122, 112, 186, 0.25) !important;
+}
+
+body.dark-only .pagination-button.active {
+    background: #7A70BA !important;
+    border-color: #7A70BA !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(122, 112, 186, 0.25) !important;
+}
+
+body.dark-only .pagination-button.active:hover {
+    background: #6a5faa !important;
+    border-color: #6a5faa !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(122, 112, 186, 0.3) !important;
+}
+
+body.dark-only .pagination-button.disabled,
+body.dark-only .pagination-button:disabled {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+body.dark-only .pagination-button.disabled:hover,
+body.dark-only .pagination-button:disabled:hover {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Additional dark mode class support */
+:deep(.dark-mode) .pagination-container {
+    background: #2a2b36 !important;
+    border-color: #3a3b46 !important;
+}
+
+:deep(.dark-mode) .page-size-label {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.dark-mode) .page-size-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.dark-mode) .page-size-select {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:deep(.dark-mode) .pagination-button {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:deep(.dark-mode) .pagination-button:hover:not(.disabled) {
+    background: #374462 !important;
+    border-color: #7A70BA !important;
+    color: #7A70BA !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(122, 112, 186, 0.25) !important;
+}
+
+:deep(.dark-mode) .pagination-button.active {
+    background: #7A70BA !important;
+    border-color: #7A70BA !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(122, 112, 186, 0.25) !important;
+}
+
+:deep(.dark-mode) .pagination-button.active:hover {
+    background: #6a5faa !important;
+    border-color: #6a5faa !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(122, 112, 186, 0.3) !important;
+}
+
+:deep(.dark-mode) .pagination-button.disabled,
+:deep(.dark-mode) .pagination-button:disabled {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+:deep(.dark-mode) .pagination-button.disabled:hover,
+:deep(.dark-mode) .pagination-button:disabled:hover {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .page-size-selector {
+        justify-content: center;
+    }
+    
+    .pagination-nav {
+        justify-content: center;
+    }
+    
+    .pagination-list {
+        gap: 0.25rem;
+    }
+    
+    .pagination-button {
+        min-width: 36px;
+        height: 36px;
+        font-size: 0.8rem;
+    }
 }
 </style>

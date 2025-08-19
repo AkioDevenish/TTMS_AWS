@@ -195,8 +195,10 @@ const availableSensors = computed(() => [
 const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
-		const response = await axios.get<Station[]>('/api/stations/');
-		const baraniStations = response.data.filter(station => 
+		const response = await axios.get<any>('/api/stations/');
+		// Fix: Handle paginated response structure
+		const stationsData = response.data.results || response.data;
+		const baraniStations = stationsData.filter((station: any) => 
 			station.brand_name.toLowerCase() === "allmeteo".toLowerCase()
 		);
 		stationNames.value = baraniStations;
@@ -207,7 +209,7 @@ const fetchStationNames = async () => {
 		// Always fetch with both station_ids and sensor_type
 		const firstSensor = availableSensors.value[0];
 		if (baraniStations.length > 0 && firstSensor) {
-			await baraniData.fetchStationData(baraniStations.map(s => s.id), firstSensor, 12);
+			await baraniData.fetchStationData(baraniStations.map((s: any) => s.id), firstSensor, 12);
 		} else if (baraniStations.length > 0) {
 			console.warn('No sensors available for Barani stations');
 		}

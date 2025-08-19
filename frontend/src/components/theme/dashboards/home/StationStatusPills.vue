@@ -467,6 +467,88 @@ onUnmounted(() => {
     margin-bottom: 0.5rem;
 }
 
+/* Dark Mode Styles for Status Badges */
+body.dark-only .status-badge {
+    border-color: #3a3b46 !important;
+}
+
+body.dark-only .status-online {
+    background-color: #1e4d2b !important;
+    color: #d4edda !important;
+    border-color: #2d5a3a !important;
+}
+
+body.dark-only .status-offline {
+    background-color: #4d1e1e !important;
+    color: #f8d7da !important;
+    border-color: #5a2d2d !important;
+}
+
+body.dark-only .status-online-erroneous {
+    background-color: #4d3e1e !important;
+    color: #fff3cd !important;
+    border-color: #5a4d2d !important;
+}
+
+body.dark-only .status-default {
+    background-color: #3a3b46 !important;
+    color: #e2e3e5 !important;
+    border-color: #4a4b56 !important;
+}
+
+body.dark-only .serial-number {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-only .last-update {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-only .quality-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Additional dark mode class support */
+:deep(.dark-mode) .status-badge {
+    border-color: #3a3b46 !important;
+}
+
+:deep(.dark-mode) .status-online {
+    background-color: #1e4d2b !important;
+    color: #d4edda !important;
+    border-color: #2d5a3a !important;
+}
+
+:deep(.dark-mode) .status-offline {
+    background-color: #4d1e1e !important;
+    color: #f8d7da !important;
+    border-color: #5a2d2d !important;
+}
+
+:deep(.dark-mode) .status-online-erroneous {
+    background-color: #4d3e1e !important;
+    color: #fff3cd !important;
+    border-color: #5a4d2d !important;
+}
+
+:deep(.dark-mode) .status-default {
+    background-color: #3a3b46 !important;
+    color: #e2e3e5 !important;
+    border-color: #4a4b56 !important;
+}
+
+:deep(.dark-mode) .serial-number {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.dark-mode) .last-update {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.dark-mode) .quality-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .status-pill {

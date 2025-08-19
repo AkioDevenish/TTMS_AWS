@@ -20,6 +20,13 @@ interface AWSStationsState {
     selectedBrand: string | null;
     availableBrands: string[];
     refreshInterval: number | null;
+    // Pagination state
+    currentPage: number;
+    pageSize: number;
+    totalStations: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
 }
 
 export const useAWSStationsStore = defineStore('awsStations', {
@@ -31,6 +38,13 @@ export const useAWSStationsStore = defineStore('awsStations', {
         selectedBrand: null,
         availableBrands: ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'],
         refreshInterval: null,
+        // Pagination state
+        currentPage: 1,
+        pageSize: 10,
+        totalStations: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false,
     }),
 
     getters: {
@@ -73,18 +87,45 @@ export const useAWSStationsStore = defineStore('awsStations', {
                 warning,
                 uptime: total > 0 ? Math.round((online / total) * 100) : 0
             };
+        },
+
+        // Pagination getters
+        getPaginationInfo: (state) => {
+            return {
+                currentPage: state.currentPage,
+                pageSize: state.pageSize,
+                totalStations: state.totalStations,
+                totalPages: state.totalPages,
+                hasNext: state.hasNext,
+                hasPrevious: state.hasPrevious
+            };
+        },
+
+        getPageRange: (state) => {
+            const range = [];
+            const start = Math.max(1, state.currentPage - 2);
+            const end = Math.min(state.totalPages, state.currentPage + 2);
+            
+            for (let i = start; i <= end; i++) {
+                range.push(i);
+            }
+            
+            return range;
         }
     },
 
     actions: {
-        async fetchStationHealth(brand?: string) {
+        async fetchStationHealth(brand?: string, page: number = 1, pageSize: number = 10) {
             this.isLoading = true;
             this.error = null;
             
             try {
-                console.log('Fetching station health for brand:', brand || 'all');
+                console.log('Fetching station health for brand:', brand || 'all', 'page:', page, 'pageSize:', pageSize);
                 
-                const params: any = {};
+                const params: any = {
+                    page: page,
+                    page_size: pageSize
+                };
                 if (brand) {
                     params.brand = brand;
                 }
@@ -95,9 +136,25 @@ export const useAWSStationsStore = defineStore('awsStations', {
                 if (response.data && response.data.data) {
                     this.stationHealth = response.data.data;
                     console.log('Station health data updated:', this.stationHealth.length, 'stations');
+                    
+                    // Update pagination state
+                    if (response.data.pagination) {
+                        this.currentPage = response.data.pagination.page;
+                        this.pageSize = response.data.pagination.page_size;
+                        this.totalStations = response.data.pagination.total;
+                        this.totalPages = response.data.pagination.total_pages;
+                        this.hasNext = response.data.pagination.has_next;
+                        this.hasPrevious = response.data.pagination.has_previous;
+                    }
                 } else {
                     console.log('No station health data received');
                     this.stationHealth = [];
+                    // Reset pagination state
+                    this.currentPage = 1;
+                    this.totalStations = 0;
+                    this.totalPages = 0;
+                    this.hasNext = false;
+                    this.hasPrevious = false;
                 }
                 
                 // Update available brands if not already set
@@ -109,6 +166,12 @@ export const useAWSStationsStore = defineStore('awsStations', {
                 console.error('Error fetching station health:', err);
                 this.error = err.response?.data?.error || err.message || 'Failed to fetch station health';
                 this.stationHealth = [];
+                // Reset pagination state on error
+                this.currentPage = 1;
+                this.totalStations = 0;
+                this.totalPages = 0;
+                this.hasNext = false;
+                this.hasPrevious = false;
             } finally {
                 this.isLoading = false;
             }
@@ -117,19 +180,45 @@ export const useAWSStationsStore = defineStore('awsStations', {
         setBrand(brand: string | null) {
             this.selectedBrand = brand;
             if (brand) {
-                this.fetchStationHealth(brand);
+                this.fetchStationHealth(brand, 1, this.pageSize);
             } else {
-                this.fetchStationHealth();
+                this.fetchStationHealth(undefined, 1, this.pageSize);
+            }
+        },
+
+        // Pagination methods
+        async goToPage(page: number) {
+            if (page >= 1 && page <= this.totalPages) {
+                await this.fetchStationHealth(this.selectedBrand || undefined, page, this.pageSize);
+            }
+        },
+
+        async nextPage() {
+            if (this.hasNext) {
+                await this.goToPage(this.currentPage + 1);
+            }
+        },
+
+        async previousPage() {
+            if (this.hasPrevious) {
+                await this.goToPage(this.currentPage - 1);
+            }
+        },
+
+        async changePageSize(newPageSize: number) {
+            if (newPageSize >= 1 && newPageSize <= 100) {
+                this.pageSize = newPageSize;
+                await this.fetchStationHealth(this.selectedBrand || undefined, 1, newPageSize);
             }
         },
 
         async init() {
             console.log('Initializing AWS Stations store');
-            await this.fetchStationHealth();
+            await this.fetchStationHealth(undefined, 1, this.pageSize);
             
             // Set up auto-refresh every 5 minutes
             this.refreshInterval = window.setInterval(() => {
-                this.fetchStationHealth(this.selectedBrand || undefined);
+                this.fetchStationHealth(this.selectedBrand || undefined, this.currentPage, this.pageSize);
             }, 5 * 60 * 1000);
         },
 

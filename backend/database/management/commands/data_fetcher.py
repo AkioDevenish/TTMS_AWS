@@ -295,64 +295,85 @@ class Command(BaseCommand):
         start_time = START_DATE.strftime("%Y-%m-%d %H:%M:%S")
         end_time = END_DATE.strftime("%Y-%m-%d %H:%M:%S")
 
-        # List of station IDs and names
+        # List of stations with API IDs and database IDs
         stations = [
-            {"id": 2303, "name": "POS_SAT"},
-            {"id": 2304, "name": "SYNOP_SAT"},
-            {"id": 2305, "name": "TOCO_SAT"},
+            {"api_id": 2303, "db_id": 28, "name": "POS_SAT"},
+            {"api_id": 2304, "db_id": 29, "name": "SYNOP_SAT"},
+            {"api_id": 2305, "db_id": 30, "name": "TOCO_SAT"},
         ]
 
         sensor_map = self.get_sensor_map()
 
         for station in stations:
-            self.stdout.write(f"Fetching sensors for OTT station: {station['name']} ({station['id']})")
-            sensors_url = f"{BASE_URL}sensors?stationId={station['id']}"
+            self.stdout.write(f"Fetching sensors for OTT station: {station['name']} (API ID: {station['api_id']}, DB ID: {station['db_id']})")
+            sensors_url = f"{BASE_URL}sensors?stationId={station['api_id']}"
             sensors_resp = requests.get(sensors_url, headers=HEADERS)
-            logger.info(f"Fetching sensors for OTT station: {station['name']} ({station['id']}) - API status: {sensors_resp.status_code}")
+            logger.info(f"Fetching sensors for OTT station: {station['name']} (API ID: {station['api_id']}) - API status: {sensors_resp.status_code}")
             self.stdout.write(f"  Sensors API status: {sensors_resp.status_code}, response: {sensors_resp.text[:300]}")
             if sensors_resp.status_code != 200:
-                logger.error(f"Failed to fetch sensors for OTT station {station['id']} - Status code: {sensors_resp.status_code}")
+                logger.error(f"Failed to fetch sensors for OTT station {station['api_id']} - Status code: {sensors_resp.status_code}")
                 self.stdout.write(self.style.ERROR(f"  Failed to fetch sensors. Status code: {sensors_resp.status_code}"))
                 continue
             sensors = sensors_resp.json()
             if not sensors:
-                logger.warning(f"No sensors returned for OTT station {station['id']}")
+                logger.warning(f"No sensors returned for OTT station {station['api_id']}")
                 continue
                 
             # Debug: print all sensor names for this station
             sensor_names = [s.get('sensorName') for s in sensors]
-            logger.info(f"OTT station {station['name']} ({station['id']}): sensors found: {sensor_names}")
+            logger.info(f"OTT station {station['name']} (API ID: {station['api_id']}): sensors found: {sensor_names}")
             
             # Pre-create all station-sensor relationships at once (more efficient)
-            station_obj = Station.objects.filter(serial_number=str(station['id'])).first()
+            station_obj = Station.objects.filter(id=station['db_id']).first()
             if station_obj:
                 self.pre_create_station_sensor_relationships(station_obj.id, sensor_names)
+            else:
+                logger.warning(f"Station with DB ID {station['db_id']} not found in database, skipping")
+                continue
+            
+            # Collect all sensor data first, then process health data
+            all_measurements_by_hour = {}
+            
             for sensor in sensors:
                 sensor_name = sensor['sensorName']
                 self.stdout.write(f"  Fetching data for sensor: {sensor_name}")
                 data_url = (
-                    f"{BASE_URL}sensordata?stationId={station['id']}&sensorName={sensor_name}"
+                    f"{BASE_URL}sensordata?stationId={station['api_id']}&sensorName={sensor_name}"
                     f"&startTime={start_time}&endTime={end_time}"
                 )
                 data_resp = requests.get(data_url, headers=HEADERS)
-                logger.info(f"Fetching data for OTT station {station['id']} sensor {sensor_name} - API status: {data_resp.status_code}")
+                logger.info(f"Fetching data for OTT station {station['api_id']} sensor {sensor_name} - API status: {data_resp.status_code}")
                 self.stdout.write(f"    Data API status: {data_resp.status_code}, response: {data_resp.text[:300]}")
                 if data_resp.status_code != 200:
-                    logger.error(f"Failed to fetch data for OTT station {station['id']} sensor {sensor_name} - Status code: {data_resp.status_code}")
+                    logger.error(f"Failed to fetch data for OTT station {station['api_id']} sensor {sensor_name} - Status code: {data_resp.status_code}")
                     self.stdout.write(self.style.ERROR(f"    Failed to fetch data. Status code: {data_resp.status_code}"))
                     continue
                 data = data_resp.json()
                 if not data or not data.get('sensorData'):
-                    logger.warning(f"No data returned for OTT station {station['id']} sensor {sensor_name}")
-                # Save/process the data
+                    logger.warning(f"No data returned for OTT station {station['api_id']} sensor {sensor_name}")
+                    continue
+                
+                # Save/process the data and collect for health processing
                 try:
-                    processed = self.process_ott_hydromet_data(station['id'], sensor_name, data, sensor_map)
+                    processed, measurements_by_hour = self.process_ott_hydromet_data(station_obj.id, sensor_name, data, sensor_map)
                     if not processed:
-                        logger.warning(f"No measurements saved for OTT station {station['id']} sensor {sensor_name}")
+                        logger.warning(f"No measurements saved for OTT station {station['api_id']} sensor {sensor_name}")
+                    else:
+                        # Merge measurements into the main collection
+                        for hour, sensors_data in measurements_by_hour.items():
+                            if hour not in all_measurements_by_hour:
+                                all_measurements_by_hour[hour] = {}
+                            all_measurements_by_hour[hour].update(sensors_data)
+                    
                     self.stdout.write(self.style.SUCCESS(f"    Successfully processed {len(processed)} measurements for {sensor_name}"))
                 except Exception as e:
-                    logger.error(f"Error processing data for OTT station {station['id']} sensor {sensor_name}: {e}")
+                    logger.error(f"Error processing data for OTT station {station['api_id']} sensor {sensor_name}: {e}")
                     self.stdout.write(self.style.ERROR(f"    Error processing data: {e}"))
+            
+            # Process health data with all collected sensor data
+            if all_measurements_by_hour:
+                for rounded_hour in all_measurements_by_hour.keys():
+                    self.process_station_health(station_obj.id, all_measurements_by_hour, rounded_hour, "OTT")
 
         self.stdout.write(self.style.SUCCESS("=== OTT Hydromet Data Fetch Complete ===\n"))
 
@@ -764,29 +785,14 @@ class Command(BaseCommand):
         return processed_data
 
     def process_ott_hydromet_data(self, station_id, sensor_name, data, sensor_map):
-        """Process and save OTT Hydromet data, auto-creating Station and Sensor if missing"""
+        """Process and save OTT Hydromet data"""
         processed_data = []
         measurements_by_hour = {}
 
-        # --- Auto-create or update Station if missing (brand_id=3 for OTT) ---
-        from database.models import Station, Sensor
+        # The station_id passed here is already the database station ID
+        # No need to create or lookup the station again
+        from database.models import Sensor
         from django.utils import timezone
-        ott_brand_id = 3
-        # Try to get by serial_number first
-        station_obj = Station.objects.filter(serial_number=str(station_id)).first()
-        if not station_obj:
-            station_obj = Station.objects.create(
-                id=station_id,
-                serial_number=str(station_id),
-                name=str(station_id),
-                brand_id=ott_brand_id,
-                last_updated_at=timezone.now(),
-                address='',
-                installation_date=timezone.now().date(),
-                created_at=timezone.now()
-            )
-        # Use the actual station id for all downstream logic
-        station_id = station_obj.id
 
         try:
             # The data is expected to have a 'sensorData' key with a list of measurements
@@ -797,7 +803,7 @@ class Command(BaseCommand):
                 logger.info(f"OTT station {station_id} - RAW BATTERY DATA for sensor '{sensor_name}': {sensor_data}")
             if not isinstance(sensor_data, list):
                 self.stdout.write(self.style.ERROR(f"  sensorData missing or not a list for {sensor_name}"))
-                return []
+                return [], {}
 
             for entry in sensor_data:
                 timestamp_str = entry.get('sampleTime')
@@ -869,15 +875,13 @@ class Command(BaseCommand):
                         logger.error(f"Error saving measurement: {e}")
                         self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
 
-            # After processing measurements, process health data
-            for rounded_hour in measurements_by_hour.keys():
-                self.process_station_health(station_id, measurements_by_hour, rounded_hour, "OTT")
+            # Health data processing is now handled at the station level after all sensors are processed
 
         except Exception as e:
             logger.error(f"Error processing OTT Hydromet data: {e}")
             self.stdout.write(self.style.ERROR(f"Error processing OTT Hydromet data: {e}"))
 
-        return processed_data
+        return processed_data, measurements_by_hour
 
     def pre_create_station_sensor_relationships(self, station_id, sensor_types):
         """Pre-create all necessary station-sensor relationships for a station at once"""
@@ -1089,6 +1093,13 @@ class Command(BaseCommand):
                     connectivity_status = self.get_connectivity_status(css_value)
                 elif brand_name == "OTT":
                     # For OTT stations, determine connectivity based on data freshness
+                    # If we have recent battery data, consider it connected
+                    if battery_status != "Unknown":
+                        connectivity_status = "Connected"
+                    else:
+                        connectivity_status = "No Data"
+                elif brand_name in ["Allmeteo", "Zentra"]:
+                    # For Allmeteo and Zentra stations, determine connectivity based on data freshness
                     # If we have recent battery data, consider it connected
                     if battery_status != "Unknown":
                         connectivity_status = "Connected"

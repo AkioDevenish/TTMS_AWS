@@ -115,7 +115,7 @@ const fetchApiKeys = async () => {
         const token = localStorage.getItem('access_token')
         
         // Make the API request with explicit user_id parameter
-        const response = await axios.get(`/api-keys/`, {
+        const response = await axios.get(`/api/api-keys/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },

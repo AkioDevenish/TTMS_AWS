@@ -16,21 +16,39 @@ logger.info("Registering Celery tasks...")
 # Configure beat schedule
 app.conf.beat_schedule = {
     'data-fetcher': {
-        'task': 'database.tasks.data_fetcher',  # Make sure this matches exactly
+        'task': 'database.tasks.data_fetcher',
         'schedule': crontab(minute=0),  # Run at the start of every hour
         'options': {
             'expires': 3300,
             'max_retries': 2,
-            'retry_backoff': True
+            'retry_backoff': True,
+            'time_limit': 3600,
+            'soft_time_limit': 3300
         }
     },
     'check-station-health': {
         'task': 'database.tasks.check_station_health',
-        'schedule': 60.0,
+        'schedule': 60.0,  # Run every minute
         'options': {
             'expires': 300,
             'max_retries': 2,
             'retry_backoff': True
+        }
+    },
+    'deactivate-expired-accounts': {
+        'task': 'database.tasks.deactivate_expired_accounts',
+        'schedule': 60.0,  # Run every minute
+        'options': {
+            'expires': 55,  # Task expires after 55 seconds
+            'max_retries': 0
+        }
+    },
+    'deactivate-expired-api-keys': {
+        'task': 'database.tasks.deactivate_expired_api_keys',
+        'schedule': 300.0,  # Run every 5 minutes
+        'options': {
+            'expires': 240,  # Task expires after 4 minutes
+            'max_retries': 0
         }
     }
 }
@@ -42,40 +60,6 @@ logger.info("Tasks registered: %s", app.tasks.keys())
 @app.task(bind=True)
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
-
-# Configure for 20-second interval with task locking
-app.conf.beat_schedule = {
-    'data-fetcher': {
-        'task': 'database.tasks.data_fetcher',
-        'schedule': crontab(minute=0),  # Run at the start of every hour
-        'options': {
-            'expires': 3300,
-            'max_retries': 2,
-            'retry_backoff': True,
-            'time_limit': 3600,
-            'soft_time_limit': 3300
-        }
-    },
-
-    'deactivate-expired-accounts': {
-        'task': 'database.tasks.deactivate_expired_accounts',
-        'schedule': 60.0,  # Run every minute instead of every second
-        'options': {
-            'expires': 55,  # Task expires after 55 seconds
-            'max_retries': 0
-        }
-    },
-
-    'check-station-health': {
-        'task': 'database.tasks.check_station_health',
-        'schedule': 60.0,
-        'options': {
-            'expires': 300,
-            'max_retries': 2,
-            'retry_backoff': True
-        }
-    }
-}
 
 # Task execution settings
 app.conf.task_acks_late = True

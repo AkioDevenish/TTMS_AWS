@@ -27,7 +27,7 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-0 task-name">{{ task.name }}</h6>
-                                    <span class="text-muted task-description">{{ task.description || 'No description' }}</span>
+                                    <span class="text-muted task-description">{{ getTaskDescription(task.name) }}</span>
                                 </div>
                             </div>
                         </td>
@@ -89,6 +89,8 @@ const getTaskIcon = (taskName: string) => {
     const iconMap: { [key: string]: string } = {
         'check_station_health': 'icon-health',
         'data_fetcher': 'icon-data',
+        'deactivate_expired_accounts': 'icon-account',
+        'deactivate_expired_api_keys': 'icon-key',
         'default': 'icon-task'
     }
     return iconMap[taskName] || iconMap['default']
@@ -103,6 +105,17 @@ const getStatusClass = (status: string) => {
         'default': 'status-default'
     }
     return statusMap[status] || statusMap['default']
+}
+
+const getTaskDescription = (taskName: string) => {
+    const descriptionMap: { [key: string]: string } = {
+        'check_station_health': 'Monitors station health and connectivity status',
+        'data_fetcher': 'Fetches weather data from all station APIs',
+        'deactivate_expired_accounts': 'Deactivates expired user accounts and removes API keys',
+        'deactivate_expired_api_keys': 'Removes expired API keys from the system',
+        'default': 'No description'
+    }
+    return descriptionMap[taskName] || descriptionMap['default']
 }
 
 onMounted(async () => {
@@ -151,6 +164,16 @@ onUnmounted(() => {
 
 .icon-data {
     background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>') no-repeat center;
+    background-size: contain;
+}
+
+.icon-account {
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>') no-repeat center;
+    background-size: contain;
+}
+
+.icon-key {
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>') no-repeat center;
     background-size: contain;
 }
 

@@ -13,10 +13,23 @@ export const useStationStore = defineStore('station', () => {
     error.value = null
     try {
       const response = await axios.get('/api/stations/?include_decommissioned=true')
-      stations.value = response.data || []
+      // Handle both paginated and non-paginated responses
+      if (response.data && response.data.results) {
+        // Paginated response
+        stations.value = response.data.results || []
+      } else {
+        // Non-paginated response (fallback)
+        stations.value = response.data || []
+      }
+      
+      // Validate that we have valid station objects
+      stations.value = stations.value.filter(station => station && typeof station === 'object')
+      
+      console.log(`Fetched ${stations.value.length} stations`)
     } catch (err: any) {
       console.error('Error fetching stations:', err)
       error.value = err
+      stations.value = [] // Reset to empty array on error
     } finally {
       loading.value = false
     }

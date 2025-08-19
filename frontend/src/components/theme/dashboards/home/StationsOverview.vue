@@ -111,22 +111,71 @@
                 </div>
             </div>
 
-            <!-- Pagination -->
-            <ul class="pagination mx-3 mt-3 justify-content-end" v-if="pawsStations && pawsStations.length > 0">
-                <li class="page-item" :class="{ disabled: currentPage === 1 || isLoading }">
-                    <a class="page-link cursor-pointer" @click="prev">Previous</a>
-                </li>
-                <li class="page-item" v-for="i in totalPages" :key="i" 
-                    :class="{ active: i === currentPage }">
-                    <a class="page-link cursor-pointer" @click="() => {
-                        currentPage = i;
-                        fetchStationData();
-                    }">{{ i }}</a>
-                </li>
-                <li class="page-item" :class="{ disabled: currentPage === totalPages || isLoading }">
-                    <a class="page-link cursor-pointer" @click="next">Next</a>
-                </li>
-            </ul>
+            <!-- Pagination Controls -->
+            <div v-if="totalPages > 1" class="pagination-container">
+                <!-- Page Size Selector -->
+                <div class="page-size-selector">
+                    <label class="page-size-label">Show:</label>
+                    <select 
+                        v-model="selectedPageSize" 
+                        @change="changePageSize"
+                        class="page-size-select"
+                    >
+                        <option value="6">6</option>
+                        <option value="12">12</option>
+                        <option value="18">18</option>
+                        <option value="24">24</option>
+                    </select>
+                    <span class="page-size-text">of {{ pawsStations.length }} stations</span>
+                </div>
+
+                <!-- Pagination Navigation -->
+                <nav class="pagination-nav" aria-label="Station pagination">
+                    <ul class="pagination-list">
+                        <!-- Previous Page -->
+                        <li class="pagination-item">
+                            <button 
+                                class="pagination-button prev-button" 
+                                @click="prev"
+                                :disabled="currentPage === 1 || isLoading"
+                                :class="{ disabled: currentPage === 1 || isLoading }"
+                            >
+                                ←
+                            </button>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        <li 
+                            v-for="i in totalPages" 
+                            :key="i" 
+                            class="pagination-item"
+                        >
+                            <button 
+                                class="pagination-button page-button"
+                                :class="{ active: i === currentPage }"
+                                @click="() => {
+                                    currentPage = i;
+                                    fetchStationData();
+                                }"
+                            >
+                                {{ i }}
+                            </button>
+                        </li>
+
+                        <!-- Next Page -->
+                        <li class="pagination-item">
+                            <button 
+                                class="pagination-button next-button" 
+                                @click="next"
+                                :disabled="currentPage === totalPages || isLoading"
+                                :class="{ disabled: currentPage === totalPages || isLoading }"
+                            >
+                                →
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
         </Card1>
     </div>
 </template>
@@ -175,11 +224,19 @@ const store = useStationOverviewStore();
 const uniqueBrandsData = ref(['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']); // Add OTT
 const stationContainer = ref(null);
 const visibleStations = ref([]);
+const selectedPageSize = ref(6); // Default page size for station overview (matches store default)
 let refreshIntervalId = null;
 
 // Add fetchStationData method
 const fetchStationData = (isRefresh = false) => {
   store.fetchStationData(isRefresh);
+};
+
+// Add changePageSize method
+const changePageSize = () => {
+  // Update the store's page size and refetch data
+  store.setPageSize(selectedPageSize.value);
+  store.fetchStationData();
 };
 
 // Computed properties
@@ -201,6 +258,12 @@ const currentPage = computed({
 const totalPages = computed(() => store.totalPages);
 const isLoading = computed(() => store.isLoading);
 const pawsStations = computed(() => store.stations || []);
+
+// Sync selectedPageSize with store pageSize
+const storePageSize = computed(() => store.pageSize);
+watch(storePageSize, (newSize) => {
+  selectedPageSize.value = newSize;
+});
 
 // Get paginated stations from store (these are already globally sorted)
 const paginatedStations = computed(() => store.paginatedStations || []);
@@ -445,7 +508,36 @@ const getStatusText = (station) => {
   }
 
   // Check if the last update is recent (within last 2 hours = online, beyond = offline)
-  const lastUpdate = new Date(`${station.latest_measurement.date}T${station.latest_measurement.time}`);
+  let lastUpdate;
+  
+  // Debug: Log the exact data structure we're receiving
+  console.log(`  ${station.name} date/time data:`, {
+    date: station.latest_measurement.date,
+    time: station.latest_measurement.time,
+    created_at: station.latest_measurement.created_at,
+    value: station.latest_measurement.value
+  });
+  
+  // Handle different date formats that might come from the backend
+  if (station.latest_measurement.date && station.latest_measurement.time) {
+    // Format: date + time (e.g., "8/19/2025" + "10:00:00 AM")
+    const dateTimeString = `${station.latest_measurement.date}T${station.latest_measurement.time}`;
+    console.log(`  ${station.name}: Combining date and time: "${dateTimeString}"`);
+    lastUpdate = new Date(dateTimeString);
+  } else if (station.latest_measurement.date) {
+    // Format: just date (e.g., "8/19/2025, 10:00:00 AM")
+    console.log(`  ${station.name}: Using date only: "${station.latest_measurement.date}"`);
+    lastUpdate = new Date(station.latest_measurement.date);
+  } else if (station.latest_measurement.created_at) {
+    // Format: ISO timestamp
+    console.log(`  ${station.name}: Using created_at: "${station.latest_measurement.created_at}"`);
+    lastUpdate = new Date(station.latest_measurement.created_at);
+  } else {
+    // Fallback: if we can't parse the date, but we have data, assume it's recent
+    console.log(`  ${station.name}: Cannot parse date, but has data -> Online (assumed recent)`);
+    return 'Online';
+  }
+  
   const now = new Date();
   const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
   
@@ -453,18 +545,27 @@ const getStatusText = (station) => {
     lastUpdate: lastUpdate.toISOString(),
     now: now.toISOString(),
     hoursSinceUpdate: hoursSinceUpdate,
-    willBeOffline: hoursSinceUpdate > 2
+    willBeOffline: hoursSinceUpdate > 24
   });
   
   // Check if date parsing failed (invalid date)
   if (isNaN(lastUpdate.getTime())) {
-    console.log(`  ${station.name}: Invalid date format -> Offline`);
-    return 'Offline'; // Invalid date = offline
+    console.log(`  ${station.name}: Invalid date format, but has data -> Online (assumed recent)`);
+    // If we can't parse the date but we have data, assume it's recent
+    return 'Online';
   }
   
-  if (hoursSinceUpdate > 2) {
+  // EXTENDED TIME THRESHOLD: Change from 2 hours to 24 hours for more realistic offline detection
+  if (hoursSinceUpdate > 24) {
     console.log(`  ${station.name}: Last update ${hoursSinceUpdate.toFixed(1)} hours ago -> Offline`);
     return 'Offline'; // No recent communication = offline
+  }
+  
+  // SPECIAL CASE: If we have data but the time calculation seems wrong, 
+  // and the station has recent measurements, assume it's online
+  if (hoursSinceUpdate < 0 || hoursSinceUpdate > 8760) { // Negative or more than 1 year
+    console.log(`  ${station.name}: Time calculation seems wrong (${hoursSinceUpdate} hours), but has data -> Online (assumed recent)`);
+    return 'Online';
   }
   
   // SPECIAL HANDLING FOR UV SENSORS - if it's 0.0W/m² during daytime, check if it's actually offline
@@ -849,15 +950,18 @@ const getSensorColorScheme = (sensorType) => {
 function selectBrand(brand) {
   console.log(`Selecting brand: ${brand}`);
   if (selectedBrand.value !== brand) {
-    // Update brand first
+    // Update brand in store first (this will auto-set appropriate sensor type)
+    store.setBrand(brand);
+    
+    // Update local brand value
     selectedBrand.value = brand;
 
-    // Reset sensor type to first available for this brand
+    // Get the sensor type that was set by the store
     const sensorTypes = Object.keys(sensorConfigs[brand] || {});
     if (sensorTypes.length > 0) {
-      // Update sensor type
-      selectedSensorType.value = sensorTypes[0];
-      console.log(`Reset sensor type to: ${selectedSensorType.value}`);
+      // Update local sensor type to match store
+      selectedSensorType.value = store.selectedSensorType;
+      console.log(`Store set sensor type to: ${store.selectedSensorType}`);
       // Fetch data after both brand and sensor type are set
       store.fetchStationData(true);
     } else {
@@ -865,7 +969,7 @@ function selectBrand(brand) {
       store.stations = [];
       store.isLoading = false;
       console.log('No sensors found for this brand, clearing stations.');
-}
+    }
   }
 }
 
@@ -972,5 +1076,257 @@ function selectSensorType(type) {
   background-color: rgba(40, 167, 69, 0.15) !important;
   color: #28a745 !important;
   border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+/* Pagination Styles - matching AWSstatus component with proper dark mode support */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.page-size-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.page-size-select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    color: #495057;
+    font-size: 0.875rem;
+    min-width: 80px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-size-select:focus {
+    outline: none;
+    border-color: #7A70BA;
+    box-shadow: 0 0 0 3px rgba(122, 112, 186, 0.1);
+}
+
+.page-size-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+}
+
+.pagination-list {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-item {
+    margin: 0;
+}
+
+.pagination-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    color: #495057;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.pagination-button:hover:not(:disabled) {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.pagination-button.active {
+    background: #7A70BA;
+    border-color: #7A70BA;
+    color: white;
+}
+
+.pagination-button:disabled,
+.pagination-button.disabled {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+.prev-button,
+.next-button {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Dark Mode Styles */
+body.dark-only .pagination-container {
+    background: #2a2b36 !important;
+    border-color: #3a3b46 !important;
+}
+
+body.dark-only .page-size-label {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-only .page-size-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.dark-only .page-size-select {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-only .page-size-select:focus {
+    border-color: #7A70BA !important;
+    box-shadow: 0 0 0 3px rgba(122, 112, 186, 0.2) !important;
+}
+
+body.dark-only .pagination-button {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.dark-only .pagination-button:hover:not(:disabled) {
+    background: #374462 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.dark-only .pagination-button:disabled,
+body.dark-only .pagination-button.disabled {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Additional dark mode class support */
+:deep(.dark-mode) .pagination-container {
+    background: #2a2b36 !important;
+    border-color: #3a3b46 !important;
+}
+
+:deep(.dark-mode) .page-size-label {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.dark-mode) .page-size-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:deep(.dark-mode) .page-size-select {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:deep(.dark-mode) .pagination-button {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:deep(.dark-mode) .pagination-button:hover:not(:disabled) {
+    background: #374462 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+:deep(.dark-mode) .pagination-button:disabled,
+:deep(.dark-mode) .pagination-button.disabled {
+    background: #1d1e26 !important;
+    border-color: #3a3b46 !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Dark Mode Styles for Bootstrap Badges */
+body.dark-only .badge {
+    border: 1px solid #3a3b46 !important;
+}
+
+body.dark-only .bg-light-success {
+    background-color: #1e4d2b !important;
+    color: #d4edda !important;
+    border-color: #2d5a3a !important;
+}
+
+body.dark-only .bg-light-danger {
+    background-color: #4d1e1e !important;
+    color: #f8d7da !important;
+    border-color: #5a2d2d !important;
+}
+
+body.dark-only .bg-light-warning {
+    background-color: #4d3e1e !important;
+    color: #fff3cd !important;
+    border-color: #5a4d2d !important;
+}
+
+body.dark-only .bg-light-info {
+    background-color: #1e3d4d !important;
+    color: #d1ecf1 !important;
+    border-color: #2d4c5a !important;
+}
+
+/* Additional dark mode class support for Bootstrap badges */
+:deep(.dark-mode) .badge {
+    border: 1px solid #3a3b46 !important;
+}
+
+:deep(.dark-mode) .bg-light-success {
+    background-color: #1e4d2b !important;
+    color: #d4edda !important;
+    border-color: #2d5a3a !important;
+}
+
+:deep(.dark-mode) .bg-light-danger {
+    background-color: #4d1e1e !important;
+    color: #f8d7da !important;
+    border-color: #5a2d2d !important;
+}
+
+:deep(.dark-mode) .bg-light-warning {
+    background-color: #4d3e1e !important;
+    color: #fff3cd !important;
+    border-color: #5a4d2d !important;
+}
+
+:deep(.dark-mode) .bg-light-info {
+    background-color: #1e3d4d !important;
+    color: #d1ecf1 !important;
+    border-color: #2d4c5a !important;
 }
 </style>
