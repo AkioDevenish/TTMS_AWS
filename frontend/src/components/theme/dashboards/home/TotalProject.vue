@@ -28,22 +28,19 @@ const awsStationsStore = useAWSStationsStore()
 
 const stationStats = computed(() => {
     const total = awsStationsStore.stations.length
-    const offline = awsStationsStore.stations.filter(s => s.status === 'Offline').length
-    const maintenance = awsStationsStore.stations.filter(s => s.status === 'Maintenance').length
-    const online = total - offline - maintenance
     
     return {
         total,
-        online,
-        offline,
-        maintenance
+        online: 0,
+        offline: 0,
+        maintenance: 0
     }
 })
 
 const statusItems = computed(() => [
-    { title: 'Online Stations', count: stationStats.value.online, bgclass: 'bg-primary' },
-    { title: 'Offline Stations', count: stationStats.value.offline, bgclass: 'bg-danger' },
-    { title: 'Maintenance', count: stationStats.value.maintenance, bgclass: 'bg-warning' }
+    { title: 'Online Stations', count: 0, bgclass: 'bg-primary' },
+    { title: 'Offline Stations', count: 0, bgclass: 'bg-danger' },
+    { title: 'Maintenance', count: 0, bgclass: 'bg-warning' }
 ])
 
 const chartOptions = {

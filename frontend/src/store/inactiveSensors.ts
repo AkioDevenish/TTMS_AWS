@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axios from '../plugins/axios';
 
 export interface InactiveSensor {
     station_name: string;
@@ -27,8 +27,8 @@ export const useInactiveSensorsStore = defineStore('inactiveSensors', {
         error: null,
         currentPage: 1,
         totalPages: 1,
-        selectedBrand: '', // Initial brand will be set by the component
-        pageSize: 5, // Matching the component's current page size
+        selectedBrand: '3D_Paws', // Set default brand to avoid showing all brands initially
+        pageSize: 20, // Increased page size to reduce pagination issues
         availableBrands: [],
     }),
 
@@ -38,7 +38,7 @@ export const useInactiveSensorsStore = defineStore('inactiveSensors', {
             this.error = null;
             console.log('Store: fetchInactiveSensors called with brand:', this.selectedBrand, 'page:', this.currentPage);
             try {
-                const response = await axios.get('/measurements/inactive_sensors/', {
+                const response = await axios.get('/api/measurements/inactive_sensors/', {
                     params: {
                         page: this.currentPage,
                         page_size: this.pageSize,
@@ -50,14 +50,20 @@ export const useInactiveSensorsStore = defineStore('inactiveSensors', {
                 console.log('Store: Inactive sensors API response:', response.data);
 
                 if (response.data && response.data.results) {
-                    this.sensors = response.data.results.map((sensor: any) => ({
-                        station_name: sensor.station_name,
-                        brand_name: sensor.brand_name,
-                        sensor_type: sensor.sensor_type,
-                        lastReading: sensor.last_reading,
-                        status: sensor.status
-                    }));
+                    console.log('Store: Raw sensor data from backend:', response.data.results[0]);
+                    this.sensors = response.data.results.map((sensor: any) => {
+                        const mappedSensor = {
+                            station_name: sensor.station_name,
+                            brand_name: sensor.brand_name,
+                            sensor_type: sensor.sensor_type,
+                            lastReading: sensor.last_reading,
+                            status: sensor.status
+                        };
+                        console.log('Store: Mapped sensor:', mappedSensor);
+                        return mappedSensor;
+                    });
                     this.totalPages = response.data.total_pages || 1;
+                     // Only set selectedBrand if it's empty and we have available brands
                      if (!this.selectedBrand && response.data.available_brands && response.data.available_brands.length > 0) {
                         this.selectedBrand = response.data.available_brands[0];
                     }

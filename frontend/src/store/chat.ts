@@ -122,7 +122,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function updateUserPresence(userId: number, isOnline: boolean) {
     try {
-      await axios.post(`/users/${userId}/presence/`, {
+      await axios.post(`/api/users/${userId}/presence/`, {
         is_online: isOnline
       }, {
         headers: getHeaders()
@@ -549,7 +549,7 @@ export const useChatStore = defineStore('chat', () => {
             user_id: user.id
         }
 
-        const chatResponse = await axios.post('/chats/', chatData, {
+        const chatResponse = await axios.post('/api/chats/', chatData, {
             headers: getHeaders()
         })
 
@@ -567,7 +567,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function fetchSupportUser() {
     try {
-      const response = await axios.get<User[]>('/users/', {
+      const response = await axios.get<User[]>('/api/users/', {
         params: {
           email: 'mdpssupport@metoffice.gov.tt'
         },
@@ -589,7 +589,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function fetchAllUsers() {
     try {
-        const response = await axios.get<User[]>('/users/', {
+        const response = await axios.get<User[]>('/api/users/', {
             headers: getHeaders()
         });
 
@@ -613,7 +613,7 @@ export const useChatStore = defineStore('chat', () => {
 
   async function fetchAllChats() {
     try {
-      const response = await axios.get<Chat[]>('/chats/', {
+      const response = await axios.get<Chat[]>('/api/chats/', {
         headers: getHeaders()
       });
 
@@ -647,7 +647,7 @@ export const useChatStore = defineStore('chat', () => {
   // Update fetchChats to process messages
   async function fetchChats() {
     try {
-      const response = await axios.get<Chat[]>('/chats/', {
+      const response = await axios.get<Chat[]>('/api/chats/', {
         headers: getHeaders()
       });
 
@@ -742,7 +742,7 @@ export const useChatStore = defineStore('chat', () => {
     if (!activeChat.value?.id) return
     
     try {
-        const response = await axios.get(`/chats/${activeChat.value.id}/messages/`, {
+        const response = await axios.get(`/api/chats/${activeChat.value.id}/messages/`, {
             headers: getHeaders()
         })
         
@@ -774,7 +774,7 @@ export const useChatStore = defineStore('chat', () => {
         messagePollingInterval.value = window.setInterval(async () => {
             try {
                 console.log('Polling active chat:', activeChat.value?.id);
-                const response = await axios.get<Chat>(`/chats/${activeChat.value?.id}/`, {
+                const response = await axios.get<Chat>(`/api/chats/${activeChat.value?.id}/`, {
                     headers: getHeaders()
                 });
                 

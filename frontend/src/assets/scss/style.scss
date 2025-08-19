@@ -119,6 +119,7 @@
 
 :root {
     --theme-deafult: #7A70BA;
+    --theme-deafult-rgb: 122, 112, 186;
     --theme-secondary: #48A3D7;
     --light-background: rgba(242, 243, 247, 0.7);
     --body-font-color: #2F2F3B;
@@ -311,6 +312,7 @@
 	*** themes ***
 -----------------------*/
 @import "themes/dark";
+@import "themes/dark_fixes";
 @import "themes/theme-customizer";
 @import "themes/update";
 @import "themes/responsive";

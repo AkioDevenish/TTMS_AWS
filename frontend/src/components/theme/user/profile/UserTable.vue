@@ -4,7 +4,18 @@
             <div class="card-header">
                 <h4 class="card-title mb-0">Billing</h4>
             </div>
-            <div class="table-responsive">
+            <div v-if="isLoading" class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div v-else-if="errorMessage" class="p-4 text-center">
+                <p class="text-warning" style="color: #ffc107;">{{ errorMessage }}</p>
+            </div>
+            <div v-else-if="userBills.length === 0" class="p-4 text-center">
+                <p>No billing history available for this user.</p>
+            </div>
+            <div v-else class="table-responsive">
                 <table class="table">
                     <thead>
                         <tr>
@@ -37,7 +48,7 @@
                             <td>
                                 <button 
                                     v-if="!bill.receipt_upload"
-                                    @click="navigateToUploadReceipt(bill)"
+                                    @click="openUploadModal(bill)"
                                     class="btn btn-sm btn-primary"
                                 >
                                     Upload Receipt
@@ -119,6 +130,8 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '@/store/auth'
 import { useRoute, useRouter } from 'vue-router'
+import { toast } from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)
@@ -135,9 +148,11 @@ interface Bill {
 }
 
 const userBills = ref<Bill[]>([])
+const isLoading = ref(false)
+const errorMessage = ref<string>('')
 const uploadModal = ref<HTMLElement | null>(null)
 const selectedFile = ref<File | null>(null)
-const currentBillId = ref(null)
+const currentBillId = ref<number | null>(null)
 const viewModal = ref<HTMLElement | null>(null)
 const receiptUrl = ref<string | undefined>(undefined)
 const isImage = ref(false)
@@ -155,13 +170,15 @@ onMounted(async () => {
 
 const fetchUserBills = async () => {
     try {
-        const route = useRoute();
+        isLoading.value = true
+        errorMessage.value = ''
+        
         const profileId = route.query.id;
         
         console.log('Profile ID from route:', profileId);
         
         const token = localStorage.getItem('access_token')
-        const response = await axios.get('/bills/', {
+        const response = await axios.get('/api/bills/', {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -176,6 +193,18 @@ const fetchUserBills = async () => {
             status: error.response?.status,
             url: error.config?.url
         })
+        
+        if (error.response?.status === 403) {
+            errorMessage.value = 'You do not have permission to view billing data for this user.'
+        } else if (error.response?.status === 404) {
+            errorMessage.value = 'Billing data not found for this user.'
+        } else {
+            errorMessage.value = 'Failed to load billing data. Please try again.'
+        }
+        
+        userBills.value = []
+    } finally {
+        isLoading.value = false
     }
 }
 
@@ -187,6 +216,17 @@ const getStatusClass = (bill: Bill) => {
         return 'status-active'
     }
     return 'status-pending'
+}
+
+const openUploadModal = (bill: Bill) => {
+    currentBillId.value = bill.id
+    console.log('Opening upload modal for bill:', bill.id)
+    if (uploadModal.value) {
+        uploadModal.value.style.display = 'block'
+        console.log('Modal display set to block')
+    } else {
+        console.error('Upload modal ref not found')
+    }
 }
 
 const navigateToUploadReceipt = (bill: Bill) => {
@@ -203,7 +243,7 @@ const navigateToUploadReceipt = (bill: Bill) => {
 const viewReceipt = async (billId: number) => {
     try {
         const token = localStorage.getItem('access_token')
-        const response = await axios.get(`/bills/${billId}/receipt_upload/`, {
+        const response = await axios.get(`/api/bills/${billId}/receipt_upload/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -243,14 +283,29 @@ const submitReceipt = async () => {
         })
         await fetchUserBills()
         closeUploadModal()
-    } catch (error) {
+        // Show success message
+        toast.success('Receipt uploaded successfully!', {
+            hideProgressBar: true,
+            autoClose: 2000,
+            theme: 'colored'
+        })
+    } catch (error: any) {
         console.error('Error uploading receipt:', error)
+        // Show error message
+        const errorMsg = error.response?.data?.error || 'Failed to upload receipt'
+        toast.error(errorMsg, {
+            hideProgressBar: true,
+            autoClose: 3000,
+            theme: 'colored'
+        })
     }
 }
 
 const closeUploadModal = () => {
+    console.log('Closing upload modal')
     if (uploadModal.value) {
         uploadModal.value.style.display = 'none'
+        console.log('Modal display set to none')
     }
     selectedFile.value = null
     currentBillId.value = null

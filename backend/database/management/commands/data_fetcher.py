@@ -1,6 +1,7 @@
 import requests
 from django.core.management.base import BaseCommand
 from database.models import Measurement, Station, Sensor, Brand, StationSensor, StationHealthLog
+from database.validation import DataValidator
 from datetime import datetime, timedelta
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -237,6 +238,10 @@ class Command(BaseCommand):
             return
 
         sensor_map = self.get_sensor_map()
+        
+        # Debug: Log what sensor types we have in the database
+        self.stdout.write(f"Available sensor types in database: {list(sensor_map.keys())}")
+        self.stdout.write(f"Available validation thresholds: {list(DataValidator.get_all_thresholds().keys())}")
 
         for station in barani_stations:
             if not station.serial_number:
@@ -312,9 +317,16 @@ class Command(BaseCommand):
             sensors = sensors_resp.json()
             if not sensors:
                 logger.warning(f"No sensors returned for OTT station {station['id']}")
+                continue
+                
             # Debug: print all sensor names for this station
             sensor_names = [s.get('sensorName') for s in sensors]
             logger.info(f"OTT station {station['name']} ({station['id']}): sensors found: {sensor_names}")
+            
+            # Pre-create all station-sensor relationships at once (more efficient)
+            station_obj = Station.objects.filter(serial_number=str(station['id'])).first()
+            if station_obj:
+                self.pre_create_station_sensor_relationships(station_obj.id, sensor_names)
             for sensor in sensors:
                 sensor_name = sensor['sensorName']
                 self.stdout.write(f"  Fetching data for sensor: {sensor_name}")
@@ -494,19 +506,35 @@ class Command(BaseCommand):
                                 'value': value
                             })
                 
+                # Pre-create all necessary station-sensor relationships for this station
+                all_sensor_types = set()
+                for rounded_hour in measurements_by_hour:
+                    all_sensor_types.update(measurements_by_hour[rounded_hour].keys())
+                
+                # Pre-create relationships for all sensors found in this data
+                self.pre_create_station_sensor_relationships(station_id, list(all_sensor_types))
+                
                 # Now process and save measurements for each hour
                 for rounded_hour in measurements_by_hour:
                     for sensor_type, readings in measurements_by_hour[rounded_hour].items():
                         sensor_id = sensor_map.get(sensor_type)
                         if sensor_id:
-                            # Ensure station-sensor relationship exists
-                            self.ensure_station_sensor_relationship(station_id, sensor_id)
+                            # Relationship already created above, no need to check again
                             
                             # Get the reading closest to the rounded hour
                             closest_reading = min(readings, 
                                 key=lambda x: abs(x['timestamp'] - rounded_hour))
                             
                             try:
+                                # Validate the measurement value using the sensor_type from the database
+                                is_valid, validation_message = DataValidator.validate_measurement(sensor_type, closest_reading['value'])
+                                
+                                # Set the flag based on validation result
+                                flag = is_valid
+                                
+                                # Create note with validation information
+                                note = f"Data Acquired - Validation: {validation_message}"
+                                
                                 Measurement.objects.create(
                                     station_id=station_id,
                                     sensor_id=sensor_id,
@@ -514,17 +542,30 @@ class Command(BaseCommand):
                                     time=rounded_hour.time(),
                                     value=closest_reading['value'],
                                     status="Successful",
-                                    note="Data Acquired",
+                                    note=note,
+                                    flag=flag,
                                     created_at=timezone.now()
                                 )
-                                processed_data.append(
-                                    f"Saved PAWS measurement for station {station_id} "
-                                    f"sensor {sensor_type} at {rounded_hour}"
-                                )
-                                self.stdout.write(
-                                    f"Saved measurement: {sensor_type} = {closest_reading['value']} "
-                                    f"at {rounded_hour}"
-                                )
+                                
+                                # Log validation result
+                                if is_valid:
+                                    processed_data.append(
+                                        f"Saved valid PAWS measurement for station {station_id} "
+                                        f"sensor {sensor_type} at {rounded_hour}"
+                                    )
+                                    self.stdout.write(
+                                        f"Saved valid measurement: {sensor_type} = {closest_reading['value']} "
+                                        f"at {rounded_hour}"
+                                    )
+                                else:
+                                    processed_data.append(
+                                        f"Saved invalid PAWS measurement for station {station_id} "
+                                        f"sensor {sensor_type} at {rounded_hour} (flagged)"
+                                    )
+                                    self.stdout.write(
+                                        self.style.WARNING(f"Saved invalid measurement: {sensor_type} = {closest_reading['value']} "
+                                        f"at {rounded_hour} - {validation_message}")
+                                    )
                             except Exception as e:
                                 logger.error(f"Error saving measurement: {e}")
                                 self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
@@ -572,6 +613,15 @@ class Command(BaseCommand):
                     sensor_id = sensor_map.get(measurement_name)
                     if sensor_id:
                         try:
+                            # Validate the measurement value using the measurement_name (which should match sensor types)
+                            is_valid, validation_message = DataValidator.validate_measurement(measurement_name, closest_reading['value'])
+                            
+                            # Set the flag based on validation result
+                            flag = is_valid
+                            
+                            # Create note with validation information
+                            note = f"Data Acquired - Validation: {validation_message}"
+                            
                             self.ensure_station_sensor_relationship(station_id, sensor_id)
                             Measurement.objects.create(
                                 station_id=station_id,
@@ -580,10 +630,18 @@ class Command(BaseCommand):
                                 time=rounded_hour.time(),
                                 value=closest_reading['value'],
                                 status="Successful",
-                                note="Data Acquired",
+                                note=note,
+                                flag=flag,
                                 created_at=timezone.now()
                             )
-                            processed_data.append(f"Saved measurement for station {station_id}")
+                            
+                            # Log validation result
+                            if is_valid:
+                                processed_data.append(f"Saved valid measurement for station {station_id}")
+                                self.stdout.write(f"Saved valid measurement: {measurement_name} = {closest_reading['value']}")
+                            else:
+                                processed_data.append(f"Saved invalid measurement for station {station_id} (flagged)")
+                                self.stdout.write(self.style.WARNING(f"Saved invalid measurement: {measurement_name} = {closest_reading['value']} - {validation_message}"))
                         except Exception as e:
                             logger.error(f"Error saving measurement: {e}")
 
@@ -657,6 +715,18 @@ class Command(BaseCommand):
                     for sensor_type, sensor_id in sensor_map.items():
                         if field.lower() in sensor_type.lower():
                             try:
+                                # Debug: Log what we're validating
+                                self.stdout.write(f"  Validating field '{field}' with sensor_type '{sensor_type}' and value {closest_reading['value']}")
+                                
+                                # Validate the measurement value using the field name from the instrument, not the database sensor type
+                                is_valid, validation_message = DataValidator.validate_measurement(field, closest_reading['value'])
+                                
+                                # Set the flag based on validation result
+                                flag = is_valid
+                                
+                                # Create note with validation information
+                                note = f"Data Acquired - Validation: {validation_message}"
+                                
                                 self.ensure_station_sensor_relationship(station_id, sensor_id)
                                 Measurement.objects.create(
                                     station_id=station_id,
@@ -665,10 +735,19 @@ class Command(BaseCommand):
                                     time=rounded_hour.time(),
                                     value=closest_reading['value'],
                                     status="Successful",
-                                    note="Data Aquired",
+                                    note=note,
+                                    flag=flag,
                                     created_at=datetime.now()
                                 )
-                                processed_data.append(f"Saved Barani measurement for station {station_id} at {rounded_hour}")
+                                
+                                # Log validation result
+                                if is_valid:
+                                    self.stdout.write(self.style.SUCCESS(f"  Valid measurement: {field} = {closest_reading['value']}"))
+                                    processed_data.append(f"Saved valid Barani measurement for station {station_id} at {rounded_hour}")
+                                else:
+                                    self.stdout.write(self.style.WARNING(f"  Invalid measurement: {field} = {closest_reading['value']} - {validation_message}"))
+                                    processed_data.append(f"Saved invalid Barani measurement for station {station_id} at {rounded_hour} (flagged)")
+                                
                                 break  # Found a matching sensor, stop looking
                             except Exception as e:
                                 logger.error(f"Error saving measurement: {e}")
@@ -757,7 +836,16 @@ class Command(BaseCommand):
                     # Get closest reading to rounded hour
                     closest_reading = min(readings, key=lambda x: abs(x['timestamp'] - rounded_hour))
                     try:
-                        self.ensure_station_sensor_relationship(station_id, sensor_id)
+                        # Validate the measurement value using the field name (which should match sensor types)
+                        is_valid, validation_message = DataValidator.validate_measurement(field, closest_reading['value'])
+                        
+                        # Set the flag based on validation result
+                        flag = is_valid
+                        
+                        # Create note with validation information
+                        note = f"Data Acquired - Validation: {validation_message}"
+                        
+                        # Relationship already created above, no need to check again
                         Measurement.objects.create(
                             station_id=station_id,
                             sensor_id=sensor_id,
@@ -765,11 +853,18 @@ class Command(BaseCommand):
                             time=rounded_hour.time(),
                             value=closest_reading['value'],
                             status="Successful",
-                            note="Data Acquired",
+                            note=note,
+                            flag=flag,
                             created_at=timezone.now()
                         )
-                        self.stdout.write(f"      Saved measurement: station_id={station_id}, sensor={field}, value={closest_reading['value']}, time={rounded_hour}")
-                        processed_data.append(f"Saved OTT Hydromet measurement for station {station_id} at {rounded_hour}")
+                        
+                        # Log validation result
+                        if is_valid:
+                            self.stdout.write(f"      Saved valid measurement: station_id={station_id}, sensor={field}, value={closest_reading['value']}, time={rounded_hour}")
+                            processed_data.append(f"Saved valid OTT Hydromet measurement for station {station_id} at {rounded_hour}")
+                        else:
+                            self.stdout.write(self.style.WARNING(f"      Saved invalid measurement: station_id={station_id}, sensor={field}, value={closest_reading['value']}, time={rounded_hour} - {validation_message}"))
+                            processed_data.append(f"Saved invalid OTT Hydromet measurement for station {station_id} at {rounded_hour} (flagged)")
                     except Exception as e:
                         logger.error(f"Error saving measurement: {e}")
                         self.stdout.write(self.style.ERROR(f"Error saving measurement: {e}"))
@@ -784,8 +879,53 @@ class Command(BaseCommand):
 
         return processed_data
 
+    def pre_create_station_sensor_relationships(self, station_id, sensor_types):
+        """Pre-create all necessary station-sensor relationships for a station at once"""
+        try:
+            from database.models import Station, Sensor, StationSensor
+            
+            # Get or create sensors for all types
+            sensors_to_create = []
+            for sensor_type in sensor_types:
+                sensor, created = Sensor.objects.get_or_create(
+                    type=sensor_type,
+                    defaults={'unit': self.get_sensor_unit(sensor_type)}
+                )
+                if created:
+                    self.stdout.write(f"Created new sensor: {sensor_type}")
+                sensors_to_create.append(sensor)
+            
+            # Get all existing relationships for this station
+            existing_relationships = set(
+                StationSensor.objects.filter(station_id=station_id)
+                .values_list('sensor_id', flat=True)
+            )
+            
+            # Create missing relationships in bulk
+            new_relationships = []
+            for sensor in sensors_to_create:
+                if sensor.id not in existing_relationships:
+                    new_relationships.append(StationSensor(
+                        station_id=station_id,
+                        sensor_id=sensor.id
+                    ))
+            
+            if new_relationships:
+                StationSensor.objects.bulk_create(new_relationships, ignore_conflicts=True)
+                self.stdout.write(f"Created {len(new_relationships)} new StationSensor relationships for station {station_id}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error pre-creating station-sensor relationships: {e}")
+            return False
+
     def ensure_station_sensor_relationship(self, station_id, sensor_id):
-        """Ensure station-sensor relationship exists and fix sensor data if needed"""
+        """Ensure station-sensor relationship exists and fix sensor data if needed
+        
+        NOTE: This method should only be used for individual sensor setup, not during bulk data processing.
+        For bulk processing, use pre_create_station_sensor_relationships() instead.
+        """
         try:
             # Get the sensor
             sensor = Sensor.objects.get(id=sensor_id)
@@ -798,12 +938,17 @@ class Command(BaseCommand):
                     sensor.save()
                     self.stdout.write(f"Updated missing unit for sensor {sensor.type} to {unit}")
             
-            # Create or get the relationship
-            StationSensor.objects.get_or_create(
+            # Create or get the relationship (this is safe to call multiple times)
+            # but we should minimize calls during bulk processing
+            relationship, created = StationSensor.objects.get_or_create(
                 station_id=station_id,
                 sensor_id=sensor_id
             )
-            self.stdout.write(f"Station-Sensor relationship verified for station {station_id} and sensor {sensor_id}")
+            
+            if created:
+                self.stdout.write(f"Created new StationSensor relationship for station {station_id} and sensor {sensor_id}")
+            # Don't log every time - only log when actually creating new relationships
+            
         except Exception as e:
             logger.error(f"Error creating station-sensor relationship: {e}")
 
@@ -942,6 +1087,13 @@ class Command(BaseCommand):
                                       key=lambda x: abs(x['timestamp'] - rounded_hour))
                     css_value = css_reading['value']
                     connectivity_status = self.get_connectivity_status(css_value)
+                elif brand_name == "OTT":
+                    # For OTT stations, determine connectivity based on data freshness
+                    # If we have recent battery data, consider it connected
+                    if battery_status != "Unknown":
+                        connectivity_status = "Connected"
+                    else:
+                        connectivity_status = "No Data"
 
             # Create health log entry
             StationHealthLog.objects.create(

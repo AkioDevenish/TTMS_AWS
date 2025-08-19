@@ -138,16 +138,27 @@ class Command(BaseCommand):
         """Verify and fix station-sensor relationships"""
         self.stdout.write('Verifying station-sensor relationships...')
         
-        # Get all stations and sensors
-        stations = Station.objects.all()
-        sensors = Sensor.objects.all()
+        # WARNING: This method was creating ALL possible station-sensor combinations
+        # which caused performance issues. Only create relationships for sensors
+        # that actually have measurements or are explicitly configured.
         
-        # Create missing relationships
-        for station in stations:
-            for sensor in sensors:
-                StationSensor.objects.get_or_create(
-                    station=station,
-                    sensor=sensor
-                )
+        # Get all stations and sensors that actually have measurements
+        stations_with_measurements = Station.objects.filter(
+            measurements__isnull=False
+        ).distinct()
         
-        self.stdout.write('Verified all station-sensor relationships') 
+        sensors_with_measurements = Sensor.objects.filter(
+            measurements__isnull=False
+        ).distinct()
+        
+        # Only create relationships for sensors that have actual data
+        for station in stations_with_measurements:
+            for sensor in sensors_with_measurements:
+                # Check if this combination actually has measurements
+                if Measurement.objects.filter(station=station, sensor=sensor).exists():
+                    StationSensor.objects.get_or_create(
+                        station=station,
+                        sensor=sensor
+                    )
+        
+        self.stdout.write(f'Verified station-sensor relationships for {stations_with_measurements.count()} stations and {sensors_with_measurements.count()} sensors with actual data') 

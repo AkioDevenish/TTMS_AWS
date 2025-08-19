@@ -48,7 +48,7 @@
                             </td>
                             <td>{{ key.token_name }}</td>
                             <td>{{ formatDate(key.created_at) }}</td>
-                            <td>{{ key.last_used ? formatDate(key.last_used) : 'Never' }}</td>
+                            <td>{{ key.last_used ? formatDate(key.last_used) : 'No Recent Usage' }}</td>
                             <td>{{ formatDate(key.expires_at) }}</td>
                             <td>{{ key.last_user_agent || 'Unknown' }}</td>
                             <td>
@@ -125,7 +125,7 @@ const fetchApiKeys = async () => {
         console.log('API Keys response:', response.data)
         
         // Get the specific user's email for filtering
-        const userResponse = await axios.get('/users/', {
+        		const userResponse = await axios.get('/api/users/', {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         
@@ -136,7 +136,7 @@ const fetchApiKeys = async () => {
         console.log('User data for filtering:', user)
         
         // Get API usage logs to fetch user agent information
-        const logsResponse = await axios.get('/api-key-usage-logs/', {
+        const logsResponse = await axios.get('/api/api-key-usage-logs/', {
             headers: { 'Authorization': `Bearer ${token}` },
             params: { user: userId }
         })
@@ -194,7 +194,7 @@ const fetchApiKeys = async () => {
 
 // Format date for display
 const formatDate = (dateString: any) => {
-    if (!dateString) return 'N/A'
+    if (!dateString) return 'Not Available'
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -212,7 +212,7 @@ const isExpired = (expiryDate: any) => {
 
 // Mask API key for display (show only last 12 characters)
 const maskApiKey = (apiKey: any) => {
-    if (!apiKey) return 'N/A'
+    if (!apiKey) return 'Not Available'
     const str = apiKey.toString()
     return '••••••••-••••-••••-••••-' + str.substring(str.length - 12)
 }

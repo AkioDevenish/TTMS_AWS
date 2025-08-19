@@ -249,7 +249,7 @@ const exportData = async () => {
       return;
     }
 
-    const response = await axios.get('/historical-data/get_readings/', {
+    const response = await axios.get('/api/historical-data/get_readings/', {
       params: {
         station_id: props.stationId,
         sensor_type: selectedSensors.value.join(','),

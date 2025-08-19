@@ -94,7 +94,7 @@ const setUserData = (user: any) => {
 
 watch(() => route.query.id, async (newId) => {
     if (newId) {
-        if (!userStore.initialized) await userStore.fetchUsers()
+        await userStore.fetchUsers()
         const user = userStore.users.find(u => u.id === parseInt(newId as string))
         if (user) {
             setUserData(user)
@@ -121,7 +121,7 @@ const statusClass = computed(() => {
 })
 
 const formatDate = (date: string) => {
-    if (!date) return 'N/A'
+    if (!date) return 'Not Available'
     return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',

@@ -1,12 +1,18 @@
 <template>
 	<div v-if="isAdmin" class="container-fluid">
 		<div class="row">
-			<div class="d-flex justify-content-end mb-3">
+			<Card3 colClass="col-sm-12" title="Users Management Overview" headerTitle="true" cardhaderClass="title-header" text="true" :desc="desc" :btnclass="'btn-primary'">
+				<template #header>
+					<div class="d-flex justify-content-between align-items-center">
+						<div>
+							<h4>Users Management Overview</h4>
+							<span v-html="desc"></span>
+						</div>
 				<router-link class="btn btn-primary" to="/pages/users_management/createuser">
 					<i data-feather="plus-square"></i> Create New User
 				</router-link>
 			</div>
-			<Card3 colClass="col-sm-12" title="Users Management Overview" headerTitle="true" cardhaderClass="title-header" text="true" :desc="desc" :btnclass="'btn-primary'">
+				</template>
 				<SupportTable />
 			</Card3>
 		</div>

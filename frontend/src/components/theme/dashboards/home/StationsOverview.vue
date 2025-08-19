@@ -1,6 +1,6 @@
 <template>
     <!-- Move Card1 to be the second component -->
-    <div class="order-2">
+    <div class="order-3">
         <Card1
         colClass="col-xl-12 col-md-12 proorder-xl-2 proorder-md-2 mb-30"
             headerTitle="true" 
@@ -86,14 +86,24 @@
                                     </div>
                             <div class="chart-container">
                                 <apexchart
-                                    v-if="station.chartData && station.chartData[0].data.length > 0"
+                                    v-if="station.chartData && station.chartData[0].data.length > 1"
                                     type="area"
                                     height="160"
                                     :options="getChartOptions(station.sensor_unit, selectedSensorType)"
                                     :series="station.chartData"
                                 ></apexchart>
+                                <div v-else-if="station.chartData && station.chartData[0].data.length === 1" class="single-data-point">
+                                    <div class="text-center">
+                                        <p class="mb-1"><strong>Current Value:</strong></p>
+                                        <p class="h4 mb-0">{{ formatValue(station.chartData[0].data[0].y) }}</p>
+                                        <small class="text-muted">{{ formatDateTime(station.latest_measurement) }}</small>
+                                    </div>
+                                </div>
                                 <div v-else class="no-data-placeholder">
                                     <p>No historical data available</p>
+                                    <small v-if="station.chartData" class="text-muted">
+                                        Debug: Chart data length: {{ station.chartData[0]?.data?.length || 0 }}
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -192,6 +202,50 @@ const totalPages = computed(() => store.totalPages);
 const isLoading = computed(() => store.isLoading);
 const pawsStations = computed(() => store.stations || []);
 
+// Get paginated stations from store (these are already globally sorted)
+const paginatedStations = computed(() => store.paginatedStations || []);
+
+// Define status priority function (lower number = higher priority)
+const getStatusPriority = (status) => {
+  if (status === 'Offline') return 1;
+  if (status === 'Online Erroneous Data') return 2;
+  if (status === 'Online') return 3;
+  return 4; // Default for unknown statuses
+};
+
+// Sort stations by status priority: Offline first, then Online Erroneous Data, then Online
+const sortedStations = computed(() => {
+  if (!pawsStations.value || pawsStations.value.length === 0) {
+    return [];
+  }
+  
+  const sorted = [...pawsStations.value].sort((a, b) => {
+    const statusA = getStatusText(a);
+    const statusB = getStatusText(b);
+    
+    const priorityA = getStatusPriority(statusA);
+    const priorityB = getStatusPriority(statusB);
+    
+    return priorityA - priorityB;
+  });
+  
+  // Debug logging
+  console.log('Station sorting applied:', sorted.map(s => ({
+    name: s.name,
+    status: getStatusText(s),
+    priority: getStatusPriority(getStatusText(s))
+  })));
+  
+  return sorted;
+});
+
+// Get globally sorted stations for all pages
+const allSortedStations = computed(() => {
+  // This would need to fetch all stations from the store, not just the current page
+  // For now, we'll work with what we have and improve the backend sorting
+  return sortedStations.value;
+});
+
 // Sensor configuration for each brand
 const sensorConfigs = {
   '3D_Paws': {
@@ -223,7 +277,7 @@ const sensorConfigs = {
     'dir_max10': { name: 'Wind Direction (Max)', unit: '°' },
     'dir_hi10': { name: 'Wind Direction (High)', unit: '°' },
     'dir_lo10': { name: 'Wind Direction (Low)', unit: '°' },
-    'battery': { name: 'Battery', unit: 'V' },
+    'Battery Percent': { name: 'Battery Percent', unit: '%' },
     'humidity': { name: 'Humidity', unit: '%' },
     'irradiation': { name: 'Irradiation', unit: 'W/m²' },
     'irr_max': { name: 'Irradiation (Max)', unit: 'W/m²' },
@@ -231,8 +285,7 @@ const sensorConfigs = {
     'temperature': { name: 'Temperature', unit: '°C' },
     'temperature_max': { name: 'Temperature (Max)', unit: '°C' },
     'temperature_min': { name: 'Temperature (Min)', unit: '°C' },
-    'rain_counter': { name: 'Rain Counter', unit: 'mm' },
-    'rain_intensity_max': { name: 'Rain Intensity (Max)', unit: 'mm/h' }
+    'rain_counter': { name: 'Rain Counter', unit: 'mm' }
   },
   'OTT': {
     '5 min rain': { name: '5 min Rain', unit: 'mm' },
@@ -299,7 +352,7 @@ const prev = () => {
 // Virtual scrolling implementation
 const updateVisibleStations = () => {
   console.log('Updating visible stations. Current page:', currentPage.value, 'Total pawsStations:', pawsStations.value.length);
-  visibleStations.value = pawsStations.value;
+  visibleStations.value = paginatedStations.value;
   console.log('Visible stations after update:', visibleStations.value.length, visibleStations.value);
 };
 
@@ -333,32 +386,246 @@ onUnmounted(() => {
 });
 
 // Watch for changes in pawsStations to update visibleStations
-watch(pawsStations, (newStations) => {
-  console.log('pawsStations changed:', newStations);
-  if (newStations && newStations.length > 0) {
+watch([pawsStations, paginatedStations], (newStations) => {
+  console.log('pawsStations or paginatedStations changed:', newStations);
+  if (newStations[0] && newStations[0].length > 0) {
     updateVisibleStations();
   } else {
     visibleStations.value = [];
   }
 }, { immediate: true });
 
-// Get status class and text
+// Get status class and text with three-tier system
 const getStatusClass = (station) => {
-  if (!station.latest_measurement) return 'badge bg-light-danger';
-  return station.latest_measurement.status === 'Successful' 
-    ? 'badge bg-light-success' 
-    : 'badge bg-light-danger';
+  const status = getStatusText(station);
+  
+  switch (status?.toLowerCase()) {
+    case 'online':
+      return 'badge bg-light-success';
+    case 'critical battery':
+      return 'badge bg-light-danger';
+    case 'low battery':
+      return 'badge bg-light-warning';
+    case 'battery warning':
+      return 'badge bg-light-warning';
+    case 'excellent signal':
+      return 'badge bg-light-success';
+    case 'good signal':
+      return 'badge bg-light-success';
+    case 'fair signal':
+      return 'badge bg-light-warning';
+    case 'poor signal':
+      return 'badge bg-light-warning';
+    case 'weak signal':
+      return 'badge bg-light-danger';
+    case 'online erroneous data':
+      return 'badge bg-light-warning';
+    case 'offline':
+      return 'badge bg-light-danger';
+    default:
+      return 'badge bg-light-warning';
+  }
 };
 
 const getStatusText = (station) => {
-  if (!station.latest_measurement) return 'No Data';
-  return station.latest_measurement.status === 'Successful' ? 'Online' : 'Offline';
+  // Debug logging
+  console.log(`Status detection for ${station.name}:`, {
+    hasChartData: !!(station.chartData && station.chartData[0] && station.chartData[0].data),
+    chartDataLength: station.chartData?.[0]?.data?.length || 0,
+    hasLatestMeasurement: !!station.latest_measurement,
+    latestValue: station.latest_measurement?.value,
+    latestStatus: station.latest_measurement?.status,
+    lastUpdateTime: station.latest_measurement?.date
+  });
+
+  // FIRST: Check if sensor is actually communicating (not offline)
+  if (!station.latest_measurement) {
+    console.log(`  ${station.name}: No latest measurement -> Offline`);
+    return 'Offline'; // No recent data = offline
+  }
+
+  // Check if the last update is recent (within last 2 hours = online, beyond = offline)
+  const lastUpdate = new Date(`${station.latest_measurement.date}T${station.latest_measurement.time}`);
+  const now = new Date();
+  const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
+  
+  console.log(`  ${station.name} time check:`, {
+    lastUpdate: lastUpdate.toISOString(),
+    now: now.toISOString(),
+    hoursSinceUpdate: hoursSinceUpdate,
+    willBeOffline: hoursSinceUpdate > 2
+  });
+  
+  // Check if date parsing failed (invalid date)
+  if (isNaN(lastUpdate.getTime())) {
+    console.log(`  ${station.name}: Invalid date format -> Offline`);
+    return 'Offline'; // Invalid date = offline
+  }
+  
+  if (hoursSinceUpdate > 2) {
+    console.log(`  ${station.name}: Last update ${hoursSinceUpdate.toFixed(1)} hours ago -> Offline`);
+    return 'Offline'; // No recent communication = offline
+  }
+  
+  // SPECIAL HANDLING FOR UV SENSORS - if it's 0.0W/m² during daytime, check if it's actually offline
+  const sensorType = selectedSensorType.value;
+  const uvSensors = ['su1', 'Downwelling Ultraviolet', 'uv', 'ultraviolet'];
+  
+  if (uvSensors.includes(sensorType)) {
+    const value = parseFloat(station.latest_measurement?.value);
+    if (value === 0) {
+      // Check if it's daytime (UV should be > 0 during day)
+      const hour = now.getHours();
+      const isDaytime = hour >= 6 && hour <= 18; // 6 AM to 6 PM
+      
+      if (isDaytime) {
+        console.log(`  ${station.name}: UV sensor reading 0.0W/m² during daytime - checking if offline`);
+        // If UV is 0 during day and hasn't updated recently, it's likely offline
+        if (hoursSinceUpdate > 0.1) { // More strict for UV sensors - 6 minutes
+          console.log(`  ${station.name}: UV sensor offline during daytime -> Offline`);
+          return 'Offline';
+        }
+      }
+    }
+  }
+
+  // SECOND: If sensor is communicating, check data quality
+  if (station.chartData && station.chartData[0] && station.chartData[0].data && station.chartData[0].data.length > 0) {
+    // Station has data and is communicating - now determine if data is valid
+    const value = parseFloat(station.latest_measurement?.value);
+    const isInvalidValue = isNaN(value) || 
+      value === -999 || value === -999.0 || value === 999 || value === 999.0 ||
+      value === -9999 || value === -9999.0 || value === 9999 || value === 9999.0 ||
+      value === -32768 || value === -32768.0;
+    
+    // SPECIAL HANDLING FOR BATTERY SENSORS
+    const sensorType = selectedSensorType.value;
+    const batterySensors = ['bpc', 'Battery Percent', 'battery_percent', 'battery'];
+    const cellSignalSensors = ['css', 'Cell Signal Strength', 'cell_signal', 'signal_strength'];
+    
+    if (batterySensors.includes(sensorType)) {
+      if (value === 0) {
+        return 'Critical Battery'; // 0% battery is critical, not erroneous
+      } else if (value <= 10) {
+        return 'Low Battery'; // 1-10% battery is low
+      } else if (value <= 25) {
+        return 'Battery Warning'; // 11-25% battery needs attention
+      } else {
+        return 'Online'; // 26%+ battery is healthy
+      }
+    }
+    
+    if (cellSignalSensors.includes(sensorType)) {
+      if (value >= 80) {
+        return 'Excellent Signal'; // 80%+ signal strength is excellent
+      } else if (value >= 60) {
+        return 'Good Signal'; // 60-79% signal strength is good
+      } else if (value >= 40) {
+        return 'Fair Signal'; // 40-59% signal strength is fair
+      } else if (value >= 20) {
+        return 'Poor Signal'; // 20-39% signal strength is poor
+      } else {
+        return 'Weak Signal'; // Below 20% signal strength is weak
+      }
+    }
+    
+    // Check if sensor is stuck (always reading same value) - but NOT for battery/cell signal sensors
+    const isStuckSensor = checkStuckSensor(station);
+    
+    console.log(`  ${station.name} data validation:`, {
+      value,
+      isInvalidValue,
+      isStuckSensor,
+      sensorType,
+      hoursSinceUpdate,
+      finalStatus: (isInvalidValue || isStuckSensor) ? 'Online Erroneous Data' : 'Online'
+    });
+    
+    if (isInvalidValue || isStuckSensor) {
+      return 'Online Erroneous Data'; // Station transmitting but data fails validation
+    } else {
+      return 'Online'; // Station reporting valid data
+    }
+  }
+  
+  // Fallback: if we have some measurement but no chart data, still consider online
+  console.log(`  ${station.name}: Has measurement but no chart data -> Online (fallback)`);
+  return 'Online';
+};
+
+// Function to check if a sensor is stuck (always reading the same value)
+const checkStuckSensor = (station) => {
+  if (!station.chartData || !station.chartData[0] || !station.chartData[0].data || station.chartData[0].data.length < 5) {
+    return false; // Need at least 5 data points to determine if stuck
+  }
+  
+  const dataPoints = station.chartData[0].data;
+  const values = dataPoints.map(point => point.y);
+  
+  // Check if all values are within 0.1 tolerance of the first value
+  const firstValue = values[0];
+  const tolerance = 0.1;
+  
+  for (let i = 1; i < values.length; i++) {
+    if (Math.abs(values[i] - firstValue) > tolerance) {
+      return false; // Found a different value, sensor is not stuck
+    }
+  }
+  
+  // CRITICAL FIX: Battery sensors should NOT be flagged as stuck
+  const sensorType = selectedSensorType.value;
+  const batterySensors = ['bpc', 'Battery Percent', 'battery_percent', 'battery'];
+  const cellSignalSensors = ['css', 'Cell Signal Strength', 'cell_signal', 'signal_strength'];
+  
+  if (batterySensors.includes(sensorType)) {
+    console.log(`${station.name}: Battery sensor detected - steady readings are GOOD, not stuck`);
+    return false; // Battery sensors with steady readings are healthy
+  }
+  
+  if (cellSignalSensors.includes(sensorType)) {
+    console.log(`${station.name}: Cell signal sensor detected - steady readings are GOOD, not stuck`);
+    return false; // Cell signal sensors with steady readings are healthy
+  }
+  
+  // For solar radiation sensors, check if it's during daylight hours
+  if (sensorType === 'sv1' || sensorType === 'si1' || sensorType === 'Solar Radiation') {
+    const now = new Date();
+    const hour = now.getHours();
+    const isDaytime = hour >= 6 && hour <= 18; // 6 AM to 6 PM
+    
+    console.log(`Solar sensor debug for ${station.name}:`, {
+      sensorType,
+      currentHour: hour,
+      isDaytime,
+      firstValue,
+      willBeStuck: isDaytime && Math.abs(firstValue) < 0.1
+    });
+    
+    // If it's daytime and all values are 0.0, that's suspicious
+    if (isDaytime && Math.abs(firstValue) < 0.1) {
+      return true; // Sensor stuck at 0.0 during daytime = suspicious
+    }
+    
+    // If it's nighttime and all values are 0.0, that's normal
+    if (!isDaytime && Math.abs(firstValue) < 0.1) {
+      return false; // Normal for solar sensors at night
+    }
+  }
+  
+  // Additional check: Don't flag sensors where zero values are normal
+  const zeroValueSensors = ['rg', 'Precipitation', 'rain_counter', 'rain_intensity_max'];
+  
+  if (zeroValueSensors.includes(sensorType) && Math.abs(firstValue) < 0.1) {
+    return false; // Precipitation sensors reading 0.0mm is normal (no rain)
+  }
+  
+  return true; // All values are the same, sensor is stuck
 };
 
 // Format value with unit
 function formatValue(value) {
   if (value === null || value === undefined) {
-    return 'N/A';
+    return 'No Data';
   }
   
   const config = currentSensorConfig.value[selectedSensorType.value];
@@ -369,7 +636,7 @@ function formatValue(value) {
 
 // Format date and time
 function formatDateTime(measurement) {
-  if (!measurement) return 'N/A';
+  if (!measurement) return 'No Recent Data';
   const date = new Date(`${measurement.date}T${measurement.time}`);
   return date.toLocaleString();
 }
@@ -396,7 +663,7 @@ const getSensorIcon = (sensorType) => {
     'Atmospheric Pressure': 'bar-chart-2',
     'wind_ave10': 'wind',
     'dir_ave10': 'compass',
-    'battery': 'battery'
+    'Battery Percent': 'battery'
   };
   return iconMap[sensorType] || 'activity';
 };
@@ -570,8 +837,9 @@ const getSensorColorScheme = (sensorType) => {
     'mt1': { main: '#48A3D7', gradient: { from: '#48A3D7', to: '#48A3D7' } },
     'rh': { main: '#7A70BA', gradient: { from: '#7A70BA', to: '#7A70BA' } },
     'ws': { main: '#D77748', gradient: { from: '#D77748', to: '#D77748' } },
-    'rg': { main: '#C95E9E', gradient: { from: '#C95E9E', to: '#C95E9E' } },
-    'bp': { main: '#51bb25', gradient: { from: '#51bb25', to: '#51bb25' } }
+    'rg': { main: '#C95E9E', gradient: { from: '#C95E9E', to: '#7A70BA' } },
+    'bp': { main: '#51bb25', gradient: { from: '#51bb25', to: '#51bb25' } },
+    'Battery Percent': { main: '#51bb25', gradient: { from: '#51bb25', to: '#51bb25' } }
     };
 
     return colorSchemes[sensorType] || { main: '#7A70BA', gradient: { from: '#7A70BA', to: '#7A70BA' } };
@@ -647,6 +915,16 @@ function selectSensorType(type) {
   color: #666;
 }
 
+.single-data-point {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 100%;
+  padding: 1rem;
+}
+
 .empty-state {
   padding: 2rem;
   text-align: center;
@@ -675,5 +953,24 @@ function selectSensorType(type) {
   font-size: 14px;
   font-weight: 500;
   color: #333;
+}
+
+/* Custom status badge colors */
+.badge.bg-light-danger {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+  color: #dc3545 !important;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.badge.bg-light-warning {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+  color: #ffc107 !important;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.badge.bg-light-success {
+  background-color: rgba(40, 167, 69, 0.15) !important;
+  color: #28a745 !important;
+  border: 1px solid rgba(40, 167, 69, 0.3);
 }
 </style>

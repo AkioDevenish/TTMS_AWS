@@ -6,7 +6,7 @@
                     <use href="@/assets/svg/icon-sprite.svg#search"></use>
                 </svg>
                 <input class="demo-input py-0 Typeahead-input form-control-plaintext w-100" type="text"
-                    placeholder="Search Mofi .." :class="filtered ? 'open' : ''" @keyup="searchTerm" v-model="termss">
+                    placeholder="Search MDPS" :class="filtered ? 'open' : ''" @keyup="searchTerm" v-model="termss">
             </div>
             <div class="custom-scrollbar" :class="searchResult ? 'Typeahead-menu is-open ' : 'Typeahead-menu '" v-if="menuItems.length">
                 <div class="ProfileCard u-cf" v-for="(menuItem, index) in menuItems.slice(0, 8)" :key="index">

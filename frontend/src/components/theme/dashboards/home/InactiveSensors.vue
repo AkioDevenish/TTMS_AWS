@@ -1,7 +1,7 @@
 <template>
-    <Card1 colClass="col-xl-12 col-lg-12 col-md-12 order-3" 
+    <Card1 colClass="col-xl-12 col-lg-12 col-md-12 order-1" 
         headerTitle="true" 
-        title="Inactive Sensors"
+        title="Current Inactive Sensors"
         cardhaderClass="card-no-border pb-0" 
         cardbodyClass="designer-card">
         
@@ -52,9 +52,9 @@
                         <td>{{ sensor.sensor_type }}</td>
                         <td>{{ formatDate(sensor.lastReading) }}</td>
                         <td>
-                            <button class="btn btn-sm" :class="getStationClass(sensor)">
-                                {{ sensor.status }}
-                            </button>
+                            <span class="badge rounded-pill" :class="getStatusClass(sensor.status)">
+                                {{ sensor.status || 'No Status' }}
+                            </span>
                         </td>
                     </tr>
                 </tbody>
@@ -120,7 +120,7 @@ const hasRecentData = computed(() => {
 
 // Helper functions (keep these as they work with the data structure)
 const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return 'No Recent Activity';
     try {
         return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
@@ -135,12 +135,21 @@ const formatDate = (dateString: string | null) => {
     }
 };
 
-const getStationClass = (sensor: InactiveSensor) => {
-    return {
-        'bg-light-danger font-danger': sensor.status === 'No Data',
-        'bg-light-warning font-warning': sensor.status === 'No Reading',
-        'bg-light-error font-error': sensor.status === 'Inactive'
-    };
+const getStatusClass = (status: string) => {
+    switch (status) {
+        case 'Currently Offline':
+            return 'bg-light-danger font-danger';
+        case 'No Reading':
+            return 'bg-light-warning font-warning';
+        case 'No Data':
+            return 'bg-light-secondary font-secondary';
+        case 'Error':
+            return 'bg-light-danger font-danger';
+        case 'Offline':
+            return 'bg-light-dark font-dark';
+        default:
+            return 'bg-light text-dark';
+    }
 };
 
 // Pagination methods dispatching to store actions
@@ -262,5 +271,15 @@ const visiblePages = computed(() => {
 .pagination {
     min-width: 400px;
     white-space: nowrap;
+}
+
+/* Status Badge Styles */
+.badge.rounded-pill {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 50px;
 }
 </style>

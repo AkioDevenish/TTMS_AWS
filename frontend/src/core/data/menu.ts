@@ -105,6 +105,15 @@ export const menu: MenuItem[] = [
     type: "link",
     admin: 1
   },
+  {
+    path: "/pages/station_management",
+    title: "Station Management",
+    isPinned: false,
+    icon: "stroke-charts",
+    icon1: "fill-charts",
+    type: "link",
+    admin: 1
+  },
 
   // api key navigation block
   {
@@ -137,14 +146,7 @@ export const menu: MenuItem[] = [
     icon1: "fill-chat",
     type: "link"
   },
-  {
-    path: "/pages/knowledgebase",
-    title: "Documentation",
-    isPinned: false,
-    icon: "stroke-to-do",
-    icon1: "fill-to-do",
-    type: "link"
-  },
+
 
   // system management block
   {

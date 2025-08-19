@@ -83,7 +83,7 @@ const availableSensors = computed(() => Object.keys(sensorCodeMap));
 
 const fetchStationNames = async () => {
 	try {
-		const response = await axios.get<Station[]>('/stations/');
+		const response = await axios.get<Station[]>('/api/stations/');
 		const zentraStations = response.data.filter(station => station.brand_name === "Zentra");
 		stationNames.value = zentraStations;
 

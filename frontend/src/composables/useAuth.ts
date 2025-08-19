@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import axios from '../plugins/axios'
 import { useRouter } from 'vue-router'
 
 interface LoginCredentials {
@@ -50,7 +50,7 @@ export function useAuth() {
   const login = async (credentials: LoginCredentials) => {
     try {
       loading.value = true
-      const response = await axios.post('/token/', credentials)
+      const response = await axios.post('/api/token/', credentials)
 
       if (response.data.access) {
         setAuthToken(response.data.access)
@@ -81,7 +81,7 @@ export function useAuth() {
 
   const refreshUserData = async () => {
     try {
-      const response = await axios.get('/user/me/')
+      const response = await axios.get('/api/user/me/')
    
       currentUser.value = {
         id: response.data.id,

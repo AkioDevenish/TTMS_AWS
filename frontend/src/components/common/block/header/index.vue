@@ -15,9 +15,7 @@
                     <li>
                         <HeaderSearch />
                     </li>
-                    <li class="onhover-dropdown">
-                        <NotificationBox />  
-                    </li>
+
                     <li>
                         <ModeView />
                     </li>
@@ -50,7 +48,7 @@ const SearchBar = defineAsyncComponent(() => import("@/components/common/block/h
 const HeaderLogo = defineAsyncComponent(() => import("@/components/common/block/header/HeaderLogo.vue"))
 const SearchInput = defineAsyncComponent(() => import("@/components/common/block/header/SearchInput.vue"))
 const HeaderSearch = defineAsyncComponent(() => import("@/components/common/block/header/HeaderSearch.vue"))
-const NotificationBox = defineAsyncComponent(() => import("@/components/common/block/header/NotificationBox.vue"))
+
 const BookmarkSearch = defineAsyncComponent(() => import("@/components/common/block/header/BookmarkSearch.vue"))
 const ModeView = defineAsyncComponent(() => import("@/components/common/block/header/ModeView.vue"))
 const MessageBox = defineAsyncComponent(() => import("@/components/common/block/header/MessageBox.vue"))

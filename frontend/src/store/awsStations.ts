@@ -1,132 +1,165 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import axios from 'axios'
-import { useStationData } from '@/composables/useStationData'
-import type { AWSStation } from '@/core/data/aws'
+import { defineStore } from 'pinia';
+import axios from '../plugins/axios';
 
-export const useAWSStationsStore = defineStore('awsStations', () => {
-  const stations = ref<AWSStation[]>([])
-  const loading = ref(true)
-  const error = ref<string | null>(null)
-  const connectionStatus = ref<string>('Unsuccessful')
-  let refreshInterval: number | undefined
+export interface StationHealth {
+    id: number;
+    name: string;
+    battery_status: string;
+    connectivity_status: string;
+    created_at: string | null;
+    station: number;
+    brand: string;
+    status: string;
+}
 
-  // Optionally use stationData composable for extra methods
-  const { getStationStatus } = useStationData()
+interface AWSStationsState {
+    stations: any[];
+    stationHealth: StationHealth[];
+    isLoading: boolean;
+    error: string | null;
+    selectedBrand: string | null;
+    availableBrands: string[];
+    refreshInterval: number | null;
+}
 
-  const stationStatus = computed(() => {
-    const total = stations.value.length
-    const offline = stations.value.filter(s => s.status === 'Offline').length
-    const maintenance = stations.value.filter(s => s.status === 'Maintenance').length
-    const online = total - offline - maintenance
-    return {
-      total,
-      online,
-      offline,
-      maintenance,
-      uptime: total ? ((online / total) * 100).toFixed(1) : '0'
-    }
-  })
+export const useAWSStationsStore = defineStore('awsStations', {
+    state: (): AWSStationsState => ({
+        stations: [],
+        stationHealth: [],
+        isLoading: false,
+        error: null,
+        selectedBrand: null,
+        availableBrands: ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'],
+        refreshInterval: null,
+    }),
 
-  const checkStationStatus = async (station: AWSStation) => {
-    try {
-      const status = await getStationStatus(Number(station.id))
-      connectionStatus.value = 'Successful'
-      return status
-    } catch (err) {
-      connectionStatus.value = 'Error processing data'
-      return 'Offline'
-    }
-  }
+    getters: {
+        getStationStatus: (state) => {
+            const total = state.stationHealth.length;
+            const online = state.stationHealth.filter(s => s.status === 'Online').length;
+            const offline = state.stationHealth.filter(s => s.status === 'Offline').length;
+            const warning = state.stationHealth.filter(s => s.status === 'Warning').length;
+            
+            const uptime = total > 0 ? Math.round((online / total) * 100) : 0;
+            
+            return {
+                total,
+                online,
+                offline,
+                warning,
+                uptime
+            };
+        },
 
-  const fetchStations = async () => {
-    try {
-      loading.value = true
-      const [healthLogsResponse, stationsResponse] = await Promise.all([
-        axios.get('/station-health-logs/', {
-          params: {
-            limit: 100,
-            ordering: '-created_at'
-          }
-        }),
-        axios.get('/stations/')
-      ])
-      const healthLogsMap = new Map<number, any>()
-      if (healthLogsResponse.data && Array.isArray(healthLogsResponse.data.results)) {
-        healthLogsResponse.data.results.forEach((log: any) => {
-          if (!healthLogsMap.has(log.station) ||
-            new Date(log.created_at) > new Date(healthLogsMap.get(log.station).created_at)) {
-            healthLogsMap.set(log.station, log)
-          }
-        })
-      }
-      const stationsData = stationsResponse.data || []
-      stations.value = stationsData.map((station: any) => {
-        const healthLog = healthLogsMap.get(station.id)
-        let status = 'Offline'
-        let batteryStatus = 'Unknown'
-        let connectivityStatus = 'No Data'
-        if (healthLog) {
-          batteryStatus = healthLog.battery_status || 'Unknown'
-          connectivityStatus = healthLog.connectivity_status || 'No Data'
-          if (connectivityStatus === 'Excellent') {
-            status = 'Online'
-          }
+        hasRecentData: (state) => {
+            return state.stationHealth.length > 0;
+        },
+
+        getStationsByBrand: (state) => (brand: string) => {
+            return state.stationHealth.filter(s => s.brand === brand);
+        },
+
+        getBrandStatus: (state) => (brand: string) => {
+            const brandStations = state.stationHealth.filter(s => s.brand === brand);
+            const total = brandStations.length;
+            const online = brandStations.filter(s => s.status === 'Online').length;
+            const offline = brandStations.filter(s => s.status === 'Offline').length;
+            const warning = brandStations.filter(s => s.status === 'Warning').length;
+            
+            return {
+                total,
+                online,
+                offline,
+                warning,
+                uptime: total > 0 ? Math.round((online / total) * 100) : 0
+            };
         }
-        return {
-          id: station.id.toString(),
-          name: station.name,
-          location: station.location || 'Trinidad and Tobago',
-          lastUpdate: healthLog?.created_at || null,
-          status: status,
-          latestHealth: {
-            connectivity_status: connectivityStatus,
-            battery_status: batteryStatus,
-            created_at: healthLog?.created_at || null,
-            station: station.id
-          },
-          parameters: {},
-          brand: station.brand || station.brand_name || ''
+    },
+
+    actions: {
+        async fetchStationHealth(brand?: string) {
+            this.isLoading = true;
+            this.error = null;
+            
+            try {
+                console.log('Fetching station health for brand:', brand || 'all');
+                
+                const params: any = {};
+                if (brand) {
+                    params.brand = brand;
+                }
+                
+                const response = await axios.get('/api/stations/aws-health/', { params });
+                console.log('Station health response:', response.data);
+                
+                if (response.data && response.data.data) {
+                    this.stationHealth = response.data.data;
+                    console.log('Station health data updated:', this.stationHealth.length, 'stations');
+                } else {
+                    console.log('No station health data received');
+                    this.stationHealth = [];
+                }
+                
+                // Update available brands if not already set
+                if (this.availableBrands.length === 0) {
+                    this.availableBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'];
+                }
+                
+            } catch (err: any) {
+                console.error('Error fetching station health:', err);
+                this.error = err.response?.data?.error || err.message || 'Failed to fetch station health';
+                this.stationHealth = [];
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        setBrand(brand: string | null) {
+            this.selectedBrand = brand;
+            if (brand) {
+                this.fetchStationHealth(brand);
+            } else {
+                this.fetchStationHealth();
+            }
+        },
+
+        async init() {
+            console.log('Initializing AWS Stations store');
+            await this.fetchStationHealth();
+            
+            // Set up auto-refresh every 5 minutes
+            this.refreshInterval = window.setInterval(() => {
+                this.fetchStationHealth(this.selectedBrand || undefined);
+            }, 5 * 60 * 1000);
+        },
+
+        cleanup() {
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+                this.refreshInterval = null;
+            }
+        },
+
+        async testAPI() {
+            try {
+                console.log('Testing API endpoints...');
+                
+                // Test the main stations endpoint
+                const stationsResponse = await axios.get('/api/stations/');
+                console.log('Stations endpoint response:', stationsResponse.data);
+                
+                // Test the health endpoint
+                const healthResponse = await axios.get('/api/stations/aws-health/');
+                console.log('Health endpoint response:', healthResponse.data);
+                
+                return {
+                    stations: stationsResponse.data,
+                    health: healthResponse.data
+                };
+            } catch (err: any) {
+                console.error('API test failed:', err);
+                throw err;
+            }
         }
-      })
-    } catch (err) {
-      error.value = 'Failed to fetch stations. Please try again later.'
-    } finally {
-      loading.value = false
     }
-  }
-
-  // Only fetch once per app lifecycle
-  let initialized = false
-  let initPromise: Promise<void> | null = null
-  const init = async () => {
-    if (initialized) return
-    if (initPromise) return initPromise
-    // Set the promise immediately
-    initPromise = (async () => {
-      await fetchStations()
-      refreshInterval = window.setInterval(fetchStations, 300000)
-      initialized = true
-      initPromise = null
-    })()
-    return initPromise
-  }
-
-  // Optionally, clear interval on unmount (if needed in SSR or hot reload)
-  const cleanup = () => {
-    if (refreshInterval) clearInterval(refreshInterval)
-    initialized = false
-  }
-
-  return {
-    stations,
-    loading,
-    error,
-    fetchStations,
-    stationStatus,
-    connectionStatus,
-    checkStationStatus,
-    init,
-    cleanup
-  }
-}) 
+}); 

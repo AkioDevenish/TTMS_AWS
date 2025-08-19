@@ -18,14 +18,16 @@
                                     <label class="col-form-label">Email Address</label>
                                     <input class="form-control"
                                         v-bind:class="formSubmitted ? emailError ? 'is-invalid' : 'is-valid' : ''"
-                                        id="email" v-model="email" type="email" required placeholder="Test@gmail.com">
+                                        id="email" v-model="email" type="email" required placeholder="Test@gmail.com"
+                                        autocomplete="username">
                                 </div>
                                 <div class="form-group">
                                     <label class="col-form-label">Password</label>
                                     <div class="form-input position-relative">
                                         <input class="form-control" :type="type" name="login[password]"
                                             v-bind:class="formSubmitted ? passwordError ? 'is-invalid' : 'is-valid' : ''"
-                                            required placeholder="*********" v-model="password">
+                                            required placeholder="*********" v-model="password"
+                                            autocomplete="current-password">
                                         <div class="show-hide"><span class="show" @click="showPassword"> </span></div>
                                     </div>
                                 </div>

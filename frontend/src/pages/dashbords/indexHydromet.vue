@@ -101,7 +101,7 @@ const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
 		console.log('Fetching station names...');
-		const response = await axios.get<Station[]>('/stations/');
+		const response = await axios.get<Station[]>('/api/stations/');
 		console.log('All stations response:', response.data);
 		const ottStations = response.data.filter(station => station.brand_name === "OTT");
 		console.log('Filtered OTT stations:', ottStations);

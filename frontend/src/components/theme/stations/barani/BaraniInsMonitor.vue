@@ -24,7 +24,19 @@
                               <div class="d-flex align-items-center">
                                   <div class="d-flex align-items-center">
                                       <h6>{{ item.name }}</h6>
-                                      <i class="status-dot" :class="{ 'online': item.status === 'Online', 'offline': item.status !== 'Online' }"></i>
+                                      <div class="status-indicator-container">
+                                          <div 
+                                              class="status-indicator" 
+                                              :class="getStatusClass(item.status)"
+                                              :title="getStatusTooltip(item.status)"
+                                          ></div>
+                                      </div>
+                                  </div>
+                                  <div v-if="item.dataQuality" class="data-quality-info ms-2">
+                                      <small class="text-muted">
+                                          {{ item.dataQuality.validCount }}/{{ item.dataQuality.totalCount }} valid
+                                          ({{ item.dataQuality.validPercentage }}%)
+                                      </small>
                                   </div>
                               </div>
                           </td>
@@ -60,6 +72,11 @@ interface MonitorRow {
   status: string;
   lastUpdated: string;
   lastUpdatedAgo: string;
+  dataQuality?: {
+    validCount: number;
+    totalCount: number;
+    validPercentage: number;
+  };
 }
 
 const props = defineProps({
@@ -79,6 +96,21 @@ const props = defineProps({
 const latestData = ref<MonitorRow[]>([])
 const connectionStatus = ref<string>('Unsuccessful')
 const monitorTitle = ref<string>('Barani Monitor')
+
+// Helper methods for status display
+const getStatusClass = (status: string) => {
+    if (status === 'Online') return 'status-online'
+    if (status === 'Online Erroneous Data') return 'status-online-erroneous-data'
+    if (status === 'Offline') return 'status-offline'
+    return 'status-unknown'
+}
+
+const getStatusTooltip = (status: string) => {
+    if (status === 'Online') return 'Station is online and reporting valid data within expected parameters'
+    if (status === 'Online Erroneous Data') return 'Station is transmitting but data fails validation'
+    if (status === 'Offline') return 'Station is offline or not reporting data (no recent transmissions)'
+    return 'Station status unknown'
+}
 // Local date/time formatter
 const formatDateTime = {
     date: (timestamp: string) => {
@@ -132,6 +164,33 @@ const sensorConfig: Record<string, { name: string }> = {
     'rain_intensity_max': { name: 'Rain Intensity (Max)' }
 };
 
+// Function to check for stuck sensor (always reading the same value)
+const checkStuckSensor = (measurements: any[], sensorType: string) => {
+    if (measurements.length < 5) return false; // Need at least 5 measurements to determine if stuck
+    
+    const firstValue = parseFloat(measurements[0].value);
+    if (isNaN(firstValue)) return false; // Cannot determine if stuck if value is NaN
+    
+    const tolerance = 0.1; // Tolerance for considering values "the same"
+    
+    // Check if all subsequent values are within tolerance of the first value
+    const isStuck = measurements.every(m => {
+        const value = parseFloat(m.value);
+        return !isNaN(value) && Math.abs(value - firstValue) <= tolerance;
+    });
+    
+    if (!isStuck) return false;
+    
+    // Additional check: Don't flag sensors where zero values are normal
+    const zeroValueSensors = ['rg', 'Precipitation', 'rain_counter', 'rain_intensity_max'];
+    
+    if (zeroValueSensors.includes(sensorType) && Math.abs(firstValue) < 0.1) {
+        return false; // Precipitation sensors reading 0.0mm is normal (no rain)
+    }
+    
+    return true;
+};
+
 watch([
     () => props.measurements,
     () => props.stationInfo
@@ -156,12 +215,60 @@ watch([
             const diffMinutes = (now - measurementTime) / (1000 * 60);
             return diffMinutes <= onlineThresholdMinutes;
         });
+        
+        // Check data quality for recent measurements (last 100)
+        let dataQualityStatus = 'unknown';
+        let invalidDataCount = 0;
+        let totalDataCount = 0;
+        
+        if (sorted.length > 0) {
+            const recentMeasurements = sorted.slice(0, 100); // Last 100 measurements
+            totalDataCount = recentMeasurements.length;
+            
+            // Count measurements with validation flags and known invalid values
+            invalidDataCount = recentMeasurements.filter((m: any) => {
+                // Check the flag field first
+                if (m.flag === false) return true;
+                
+                // Also check for known invalid values that indicate sensor errors
+                const value = parseFloat(m.value);
+                if (isNaN(value)) return true;
+                
+                // Common invalid values that indicate sensor issues
+                if (value === -999 || value === -999.0 || value === 999 || value === 999.0) return true;
+                if (value === -9999 || value === -9999.0 || value === 9999 || value === 9999.0) return true;
+                if (value === -32768 || value === -32768.0) return true; // Common sensor error code
+                
+                return false;
+            }).length;
+            
+            // Check for stuck sensor (always reading same value)
+            const isStuckSensor = checkStuckSensor(recentMeasurements, 'temperature'); // Assuming temperature for Barani
+            
+            if (totalDataCount > 0) {
+                const invalidPercentage = (invalidDataCount / totalDataCount) * 100;
+                if (invalidPercentage > 50 || isStuckSensor) {
+                    dataQualityStatus = 'erroneous';
+                } else if (invalidPercentage > 10) {
+                    dataQualityStatus = 'warning';
+                } else {
+                    dataQualityStatus = 'good';
+                }
+            }
+        }
+        
+        // Determine status based on three-tier system
         let status = 'Offline';
-        let lastUpdated = 'N/A';
+        let lastUpdated = 'No Data Available';
         let lastUpdatedAgo = '';
         let latest = sorted[0];
+        
         if (recentMeasurement) {
-            status = 'Online';
+            if (dataQualityStatus === 'erroneous') {
+                status = 'Online Erroneous Data'; // Station transmitting but data fails validation
+            } else {
+                status = 'Online'; // Station reporting valid data
+            }
             latest = recentMeasurement;
         }
         if (latest) {
@@ -170,15 +277,20 @@ watch([
             const diffMinutes = Math.round((now - measurementTime) / (1000 * 60));
             lastUpdatedAgo = diffMinutes === 0 ? 'just now' : `${diffMinutes} min ago`;
         } else {
-            lastUpdated = 'N/A';
-            lastUpdatedAgo = '';
+            lastUpdated = 'No Recent Data';
+            lastUpdatedAgo = 'No updates';
         }
         latestData.value = [{
-            id: newStationInfo.serial_number ?? newStationInfo.serialNumber ?? newStationInfo.id ?? 'N/A',
-            name: newStationInfo.name ?? newStationInfo.station_name ?? 'N/A',
+            id: newStationInfo.serial_number ?? newStationInfo.serialNumber ?? newStationInfo.id ?? 'Unknown',
+            name: newStationInfo.name ?? newStationInfo.station_name ?? 'Unknown Station',
             status,
             lastUpdated,
-            lastUpdatedAgo
+            lastUpdatedAgo,
+            dataQuality: totalDataCount > 0 ? {
+                validCount: totalDataCount - invalidDataCount,
+                totalCount: totalDataCount,
+                validPercentage: Math.round(((totalDataCount - invalidDataCount) / totalDataCount) * 100)
+            } : undefined
         }];
         connectionStatus.value = 'Successful';
     } catch (error) {
@@ -199,22 +311,35 @@ watch(
 
 
 <style scoped>
-.status-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    min-width: 8px;
-    min-height: 8px;
-    border-radius: 50%;
+.status-indicator-container {
     margin-left: 8px;
     flex: none;
 }
 
-.online {
-    background-color: #51bb25;
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.offline {
-    background-color: #dc3545;
+.status-online {
+    background-color: #28a745;
+}
+
+.status-online-erroneous-data {
+    background-color: #ffc107;
+}
+
+.status-offline {
+    background-color: #dc2626;
+}
+
+.status-unknown {
+    background-color: #6c757d;
 }
 </style>

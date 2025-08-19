@@ -111,7 +111,7 @@ const fetchAllSensorsData = async (stationId: number) => {
 const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
-		const response = await axios.get<Station[]>('/stations/');
+		const response = await axios.get<Station[]>('/api/stations/');
 		const pawsStations = response.data.filter(station => station.brand_name === "3D_Paws");
 		stationNames.value = pawsStations;
 

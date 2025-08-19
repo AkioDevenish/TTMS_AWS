@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import axios from 'axios'
+import axios from '../plugins/axios'
 
 export const useUserStore = defineStore('user', () => {
   const users = ref<any[]>([])
@@ -17,14 +17,14 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
     initPromise = (async () => {
       try {
-        const userRes = await axios.get('/users/')
+        const userRes = await axios.get('/api/users/')
         if (Array.isArray(userRes.data)) {
           // Fetch bills for each user in parallel
-          const billsRes = await Promise.all(
-            userRes.data.map((user: any) =>
-              axios.get('/bills/', { params: { user_id: user.id } })
+                      const billsRes = await Promise.all(
+              userRes.data.map((user: any) =>
+                axios.get('/api/bills/', { params: { user_id: user.id } })
+              )
             )
-          )
           users.value = userRes.data.map((user: any, idx: number) => ({
             ...user,
             bills: billsRes[idx].data || []
@@ -49,8 +49,8 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     error.value = null
     try {
-      const userRes = await axios.get(`/users/${userId}/`)
-      const billsRes = await axios.get('/bills/', { params: { user_id: userId } })
+      const userRes = await axios.get(`/api/users/${userId}/`)
+      const billsRes = await axios.get('/api/bills/', { params: { user_id: userId } })
       return {
         ...userRes.data,
         bills: billsRes.data || []
@@ -68,7 +68,7 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     error.value = null
     try {
-      const billsRes = await axios.get('/bills/', { params: { user_id: userId } })
+      const billsRes = await axios.get('/api/bills/', { params: { user_id: userId } })
       return billsRes.data || []
     } catch (err: any) {
       error.value = err as any
@@ -83,7 +83,7 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.patch(`/users/${userId}/`, { status: newStatus })
+      const response = await axios.patch(`/api/users/${userId}/`, { status: newStatus })
       if (response.status === 200) {
         const userIndex = users.value.findIndex(user => user.id === userId)
         if (userIndex !== -1) {
@@ -105,7 +105,7 @@ export const useUserStore = defineStore('user', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.delete(`/users/${userId}/`)
+      const response = await axios.delete(`/api/users/${userId}/`)
       if (response.status === 200 || response.status === 204) {
         users.value = users.value.filter(user => user.id !== userId)
         return true
@@ -127,7 +127,7 @@ export const useUserStore = defineStore('user', () => {
       const user = users.value.find(u => u.id === userId)
       if (!user) return false
       const newStatus = user.status === 'Suspended' ? 'Active' : 'Suspended'
-      const response = await axios.patch(`/users/${userId}/`, { status: newStatus })
+      const response = await axios.patch(`/api/users/${userId}/`, { status: newStatus })
       if (response.status === 200) {
         user.status = newStatus
         return true

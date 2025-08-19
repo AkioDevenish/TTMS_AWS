@@ -15,18 +15,18 @@
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <input class="form-control" id="con-name" type="text" v-model="name1" required
-                                            placeholder="First Name" autocomplete="off">
+                                            placeholder="First Name" autocomplete="given-name">
                                     </div>
                                     <div class="col-sm-6">
                                         <input class="form-control" id="con-last" type="text" v-model="name2" required
-                                            placeholder="Last Name" autocomplete="off">
+                                            placeholder="Last Name" autocomplete="family-name">
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3 col-md-12 mt-0">
                                 <label for="con-mail">Email Address</label>
                                 <input class="form-control" id="con-mail" type="email" v-model="email" required
-                                    autocomplete="off">
+                                    autocomplete="email">
                             </div>
                             <div class="mb-3 col-md-12 my-0">
                                 <label for="con-phone">Phone</label>

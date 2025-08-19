@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axios from '../plugins/axios';
 
 export interface HighestRecord {
     station_name: string;
@@ -55,7 +55,7 @@ export const useHighestRecordsStore = defineStore('highestRecords', {
             this.error = null;
             console.log('Store: fetchHighestRecords called with brand:', this.selectedBrand, 'page:', this.currentPage);
             try {
-                const stationsResponse = await axios.get('/stations/');
+                const stationsResponse = await axios.get('/api/stations/');
                 // Always include these brands as tabs
                 const requiredBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'];
                 const brandsFromStations = (stationsResponse.data || []).map((station: any) => station.brand || station.brand_name).filter((b: unknown): b is string => typeof b === 'string' && !!b);
@@ -72,7 +72,7 @@ export const useHighestRecordsStore = defineStore('highestRecords', {
                     this.isLoading = false;
                     return;
                 }
-                const response = await axios.get('/measurements/highest_by_brand/', {
+                const response = await axios.get('/api/measurements/highest_by_brand/', {
                     params: {
                         brand: this.selectedBrand
                     },

@@ -1,20 +1,20 @@
 <template>
 	<div class="col-4 col-xl-4 page-title" v-if="useRoute().path == '/'">
-		<h4 class="f-w-700">Default dashboard</h4>
+		<h4 class="f-w-700">MDPS - Default Dashboard</h4>
 		<nav>
 			<ol class="breadcrumb justify-content-sm-start align-items-center mb-0">
 				<li class="breadcrumb-item"><router-link to="/"> <vue-feather type="home"> </vue-feather></router-link></li>
-				<li class="breadcrumb-item f-w-400 text-capitalize">Dashboard</li>
+				<li class="breadcrumb-item f-w-400 text-capitalize">MDPS - Dashboard</li>
 				<li class="breadcrumb-item f-w-400 active text-capitalize">Dashboard Default</li>
 			</ol>
 		</nav>
 	</div>
 	<div class="col-4 col-xl-4 page-title" v-else>
-		<h4 class="f-w-700 text-capitalize">{{ route.name /*route.path.replaceAll("_", " ").split('/').slice(1)[1]*/ }}</h4>
+		<h4 class="f-w-700 text-capitalize">MDPS - {{ route.name /*route.path.replaceAll("_", " ").split('/').slice(1)[1]*/ }}</h4>
 		<nav>
 			<ol class="breadcrumb justify-content-sm-start align-items-center mb-0">
 				<li class="breadcrumb-item"><router-link to="/"> <vue-feather type="home"> </vue-feather></router-link></li>
-				<li class="breadcrumb-item f-w-400 text-capitalize">{{ route.path.split('/').slice(1)[0] }}
+				<li class="breadcrumb-item f-w-400 text-capitalize">MDPS - {{ route.path.split('/').slice(1)[0] }}
 				</li>
 				<li class="breadcrumb-item f-w-400 text-capitalize" v-if="route.path.split('/').slice(1).length > 1 && route.path.split('/').slice(1).length > 3">{{
 					route.path.split('/').slice(1)[route.path.split('/').slice(1).length - 2]
