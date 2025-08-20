@@ -16,6 +16,8 @@ from .serializers import (
     BillSerializer, ApiKeyUsageLogSerializer
 )
 from django.utils import timezone
+import pytz
+import datetime
 from rest_framework import serializers
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -667,9 +669,14 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             if cached_data:
                 return Response(cached_data)
 
-            # Get current time and 12 hours ago
+            # Get current time and determine appropriate time range
             now = timezone.now()
-            yesterday = now - timedelta(hours=12)
+            
+            # Use 12 hours for all brands to focus on recent data
+            time_threshold = now - timedelta(hours=12)
+            print(f"Using 12-hour time range for {brand} stations")
+            
+            yesterday = time_threshold
             
             # Base queryset with select_related and prefetch_related
             # Filter out decommissioned stations for dashboard overview
@@ -682,12 +689,44 @@ class MeasurementViewSet(viewsets.ModelViewSet):
 
             # Filter stations by sensor type if provided
             if sensor_type:
+                # Map frontend sensor name to database sensor code
+                mapped_sensor_type = self.get_sensor_mapping(sensor_type)
+                print(f"Filtering stations by sensor type: {sensor_type} -> {mapped_sensor_type}")
+                
                 # Get stations that actually have this sensor type configured
                 stations_with_sensor = Station.objects.filter(
                     id__in=stations.values_list('id', flat=True),
-                    station_sensors__sensor__type=sensor_type
+                    station_sensors__sensor__type=mapped_sensor_type
                 ).distinct()
-                stations = stations_with_sensor
+                
+                print(f"Found {stations_with_sensor.count()} stations with sensor type {mapped_sensor_type}")
+                
+                # Special filtering for Allmeteo stations based on sensor type
+                if brand == 'Allmeteo':
+                    wind_sensors = [
+                        'wind_Avg10', 'wind_Max10', 'wind_Min10', 'wind_Stdev10',
+                        'wdir_Avg10', 'wdir_Gust10', 'wdir_Max10', 'wdir_Min10', 'wdir_Stdev10'
+                    ]
+                    if sensor_type in wind_sensors:
+                        # Only show wind stations for wind sensors
+                        stations_with_sensor = stations_with_sensor.filter(
+                            name__icontains='Wind'
+                        )
+                    else:
+                        # Only show helix stations for non-wind sensors
+                        stations_with_sensor = stations_with_sensor.filter(
+                            name__icontains='Helix'
+                        )
+                
+                # Only apply sensor filtering if we found stations with the sensor
+                # Otherwise, show all stations (they might have data from other sources)
+                if stations_with_sensor.exists():
+                    stations = stations_with_sensor
+                    print(f"Applied sensor filtering, showing {stations.count()} stations")
+                else:
+                    print(f"No stations found with sensor type {mapped_sensor_type}, showing all stations")
+                    # Don't filter by sensor type if no stations have it configured
+                    # This allows showing stations that might have data from other sources
 
             # Get total count for pagination
             total_count = stations.count()
@@ -704,12 +743,25 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 # Get the latest measurement for this station and sensor type
                 latest_measurement = None
                 if sensor_type:
-                    # For all brands, only get recent measurements (last 12 hours)
-                    latest_measurement = Measurement.objects.filter(
+                    # Map frontend sensor name to database sensor code
+                    mapped_sensor_type = self.get_sensor_mapping(sensor_type)
+                    
+                    # Get recent measurements based on the appropriate time range
+                    measurement_query = Measurement.objects.filter(
                         station_id=station.id,
-                        sensor__type=sensor_type,
+                        sensor__type=mapped_sensor_type,
                         date__gte=yesterday.date()
-                    ).order_by('-date', '-time').first()
+                    )
+                    
+                    print(f"Station {station.name}: Looking for measurements with sensor type {mapped_sensor_type} from {yesterday.date()}")
+                    print(f"  Query found {measurement_query.count()} measurements")
+                    
+                    latest_measurement = measurement_query.order_by('-date', '-time').first()
+                    
+                    if latest_measurement:
+                        print(f"  Latest measurement: {latest_measurement.date} {latest_measurement.time} - Value: {latest_measurement.value}")
+                    else:
+                        print(f"  No measurements found for this sensor type")
                 
                 station_data = {
                     'id': station.id,
@@ -720,7 +772,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     'latest_measurement': {
                         'value': float(latest_measurement.value) if latest_measurement else None,
                         'date': latest_measurement.date.isoformat() if latest_measurement else None,
-                        'time': latest_measurement.time.isoformat() if latest_measurement else None,
+                        'time': self.convert_time_to_local(latest_measurement.date, latest_measurement.time) if latest_measurement else None,
                         'status': latest_measurement.status if latest_measurement else 'No Data'
                     } if latest_measurement else None
                 }
@@ -751,6 +803,54 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 'error': str(e)
             })
 
+    def convert_time_to_local(self, date, time):
+        """Helper function to format time (data is already in local timezone)"""
+        try:
+            # The data is already stored in Trinidad timezone (UTC-4)
+            # Just format the time as is
+            if time:
+                return time.strftime('%H:%M:%S')
+            return None
+        except Exception as e:
+            print(f"Error formatting time: {e}")
+            return time.isoformat() if time else None
+
+    def get_sensor_mapping(self, sensor_type):
+        """Map frontend sensor names to database sensor codes"""
+        if not sensor_type:
+            return None
+        
+        # 3D Paws sensor mapping (frontend name -> database code)
+        sensor_mapping = {
+            'Temperature 1': 'bt1',
+            'Temperature 2': 'mt1',
+            'Pressure': 'bp1',
+            'Wind Speed': 'ws',
+            'Wind Direction': 'wd',
+            'Precipitation': 'rg',
+            'Downwelling Visible': 'sv1',
+            'Downwelling Infrared': 'si1',
+            'Downwelling Ultraviolet': 'su1',
+            'Battery Percent': 'bpc',
+            'Cell Signal Strength': 'css',
+            'Wind Gust': 'wg',
+            'Wind Gust Direction': 'wgd',
+            'Battery Cell Signal': 'bcs',
+            'Heat Index': 'hth',
+            'Battery Health': 'bh1',
+            'Cloud Fraction': 'cfr',
+            'Heat Temperature': 'ht1',
+            'Heat Humidity': 'hh1',
+            'Wet Bulb Globe Temperature': 'wbgt',
+            'Solar Heat': 'sh1',
+            'Wet Bulb Temperature': 'wbt',
+            'Soil Temperature': 'st1'
+        }
+        
+        # If the sensor_type is already a database code (like 'bt1'), return it as-is
+        # If it's a frontend name (like 'Temperature 1'), map it to database code
+        return sensor_mapping.get(sensor_type, sensor_type)
+    
     def get_sensor_unit(self, sensor_type):
         """Helper function to get the unit for a sensor type"""
         sensor_units = {
@@ -765,6 +865,19 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'su1': 'W/m²',
             'bpc': '%',
             'css': '%',
+            'wg': 'm/s',
+            'wgd': '°',
+            'bcs': '%',
+            'hth': '°C',
+            'bh1': '%',
+            'cfr': '%',
+            'ht1': '°C',
+            'hh1': '%',
+            'wbgt': '°C',
+            'hi': '°C',
+            'sh1': 'W/m²',
+            'wbt': '°C',
+            'st1': '°C',
             'Air Temperature': '°C',
             'Wind Speed': 'm/s',
             'Precipitation': 'mm',
@@ -772,8 +885,29 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'Relative Humidity': '%',
             'Atmospheric Pressure': 'kPa',
             'wind_ave10': 'm/s',
+            'wind_Max10': 'm/s',
+            'wind_Min10': 'm/s',
+            'wdir_Max10': '°',
             'dir_ave10': '°',
             'battery': 'V',
+            'humidity': '%',
+            'irradiation': 'W/m²',
+            'irradiation_max': 'W/m²',
+            'pressure': 'hPa',
+            'pressure_raw': 'hPa',
+            'rain': 'mm',
+            'rainfall_rate_max': 'mm/h',
+            'temperature': '°C',
+            'temperature_max': '°C',
+            'temperature_min': '°C',
+            'temperature_wetbulb_stull2011_C': '°C',
+            'wdir_Avg10': '°',
+            'wdir_Gust10': '°',
+            'wdir_Min10': '°',
+            'wdir_Stdev10': '°',
+            'wind_Avg10': 'm/s',
+            'wind_Stdev10': 'm/s',
+            'dewPoint': '°C',
             # OTT sensor types
             '5 min rain': 'mm',
             'Barometric Pressure': 'hPa',
@@ -805,10 +939,10 @@ class MeasurementViewSet(viewsets.ModelViewSet):
         - hours: Number of hours to look back (default: 12)
         """
         try:
-            print("History endpoint called with params:", request.query_params)
-            station_ids_param = request.query_params.get('station_ids', '')
-            sensor_type_param = request.query_params.get('sensor_type')
-            hours = int(request.query_params.get('hours', 12))  # Default to 12 hours
+            print("History endpoint called with params:", request.GET)
+            station_ids_param = request.GET.get('station_ids', '')
+            sensor_type_param = request.GET.get('sensor_type')
+            hours = int(request.GET.get('hours', 12))  # Default to 12 hours
             print(f"Parsed parameters: station_ids={station_ids_param}, sensor_type={sensor_type_param}, hours={hours}")
             if not station_ids_param or not sensor_type_param:
                 print("Missing required parameters")
@@ -835,11 +969,14 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 )
             
             # Get the brand name to determine time range
-            # All brands now use consistent time range (default 12 hours)
             station_ids_list = [int(id) for id in station_ids_param.split(',')]
             stations = Station.objects.filter(id__in=station_ids_list).select_related('brand')
             
-            # Use the requested hours (default 12) for all brands
+            # Check if any of the requested stations are 3D Paws
+            paws_stations = stations.filter(brand__name='3D_Paws')
+            has_paws = paws_stations.exists()
+            
+            # Use the requested hours for all brands (focus on recent data)
             effective_hours = hours
             print(f"Using time range of {effective_hours} hours for all brands")
             
@@ -848,6 +985,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             threshold_date = time_threshold.date()
             threshold_time = time_threshold.time()
             print(f"Time threshold: {threshold_date} {threshold_time}")
+            
             measurements = Measurement.objects.filter(
                 station_id__in=station_ids,
                 sensor__type__in=sensor_types
@@ -863,12 +1001,16 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     'sensor_type': m.sensor.type,
                     'value': m.value,
                     'date': m.date.strftime('%Y-%m-%d'),
-                    'time': m.time.strftime('%H:%M:%S')
+                    'time': self.convert_time_to_local(m.date, m.time)
                 })
 
+            # Return the measurements data
+            result = {
+                'measurements': result_data
+            }
+            
             # Insert into api_key_usage logs and update Api_Access_Keys
-            print(f"Checking request.auth type: {type(request.auth)}") # Debug print
-            if request.auth and isinstance(request.auth, ApiAccessKey):
+            if hasattr(request, 'auth') and request.auth and isinstance(request.auth, ApiAccessKey):
                 print("API key authenticated, attempting to log usage.") # Debug print
                 try:
                     api_key = request.auth
@@ -883,8 +1025,8 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                         'api_key': api_key,
                         'user': user,
                         'request_path': request.path,
-                        'query_params': dict(request.query_params),
-                        'response_format': request.accepted_renderer.format,
+                        'query_params': dict(request.GET),
+                        'response_format': getattr(request, 'accepted_renderer', None),
                         'status_code': 200,
                         'user_agent': request.META.get('HTTP_USER_AGENT', '')
                     }

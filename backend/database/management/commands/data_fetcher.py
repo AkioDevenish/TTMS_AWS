@@ -13,6 +13,9 @@ import os
 from logging.handlers import RotatingFileHandler
 import asyncio
 import concurrent.futures
+import mysql.connector
+from mysql.connector import Error
+from django.db import transaction
 
 # Set up logging
 log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
@@ -35,8 +38,22 @@ logger.setLevel(logging.INFO)
 class Command(BaseCommand):
     help = 'Fetches data from PAWS, Zentra, and Barani instruments and stores it in the database'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force-full-sync',
+            action='store_true',
+            help='Force a complete 3-month reimport for all data sources',
+        )
+
     def handle(self, *args, **kwargs):
         logger.info("Starting data_fetcher management command")
+        
+        # Set environment variable if force-full-sync is requested
+        if kwargs.get('force_full_sync'):
+            os.environ['FORCE_SUTRON_SYNC'] = 'true'
+            os.environ['FORCE_XC_SYNC'] = 'true'
+            self.stdout.write(self.style.WARNING("Force full sync enabled - will reimport all data from last 3 months"))
+        
         try:
             # Set Trinidad and Tobago timezone (UTC-4)
             tt_tz = timezone.get_fixed_timezone(-240)
@@ -51,17 +68,30 @@ class Command(BaseCommand):
             self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
             self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
-            # Run fetchers concurrently (only OTT Hydromet active)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            # Run fetchers concurrently (including XC Data and Sutron)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
                 logger.info("Starting data fetchers")
                 # Start all fetchers
                 paws_future = executor.submit(self.fetch_paws_data)
                 zentra_future = executor.submit(self.fetch_zentra_data)
                 barani_future = executor.submit(self.fetch_barani_data)
                 ott_future = executor.submit(self.fetch_ott_hydromet_data)
+                xc_future = executor.submit(self.fetch_xc_data)
+                sutron_future = executor.submit(self.fetch_sutron_data)
 
-                # Wait for all fetchers to complete
-                concurrent.futures.wait([paws_future, zentra_future, barani_future, ott_future])
+                # Wait for all fetchers to complete and check for errors
+                futures = [paws_future, zentra_future, barani_future, ott_future, xc_future, sutron_future]
+                concurrent.futures.wait(futures)
+                
+                # Check for exceptions
+                for i, future in enumerate(futures):
+                    try:
+                        future.result()  # This will raise any exception that occurred
+                    except Exception as e:
+                        fetcher_names = ['PAWS', 'Zentra', 'Barani', 'OTT', 'XC Data', 'Sutron']
+                        logger.error(f"Error in {fetcher_names[i]} fetcher: {e}")
+                        self.stdout.write(self.style.ERROR(f"Error in {fetcher_names[i]} fetcher: {e}"))
+                
                 logger.info("All data fetchers completed")
                 
         except Exception as e:
@@ -76,6 +106,668 @@ class Command(BaseCommand):
         """Get sensor mapping directly from database"""
         sensors = Sensor.objects.all()
         return {sensor.type: sensor.id for sensor in sensors}
+
+    def fetch_sutron_data(self):
+        """Fetch data from Sutron MySQL database"""
+        self.stdout.write(self.style.SUCCESS('\n=== Starting Sutron Data Fetch ==='))
+        
+        # Sutron database configuration (actually xc_data database)
+        SUTRON_DB_CONFIG = {
+            'host': '10.222.3.39',
+            'port': 3306,
+            'database': 'xc_data',
+            'user': 'root',
+            'password': 'My$Ql2',
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            'autocommit': True,
+            'connect_timeout': 30,
+            'read_timeout': 30,
+            'write_timeout': 30
+        }
+        
+        try:
+            # Connect to Sutron database
+            self.stdout.write("Connecting to Sutron database...")
+            connection = self.connect_to_sutron_db(SUTRON_DB_CONFIG)
+            if not connection:
+                logger.error("Failed to connect to Sutron database")
+                self.stdout.write(self.style.ERROR("Failed to connect to Sutron database"))
+                return
+            
+            self.stdout.write("Connected to Sutron database successfully!")
+            
+            # Get last sync time (3 months ago if no measurements exist)
+            self.stdout.write("Getting last sync time...")
+            last_sync_time = self.get_last_sutron_sync_time()
+            logger.info(f"Last Sutron sync time: {last_sync_time}")
+            self.stdout.write(f"Last Sutron sync time: {last_sync_time}")
+            
+            # Run synchronization with transaction
+            self.stdout.write("Starting Sutron synchronization...")
+            with transaction.atomic():
+                # Sync brands
+                self.stdout.write("Syncing Sutron brands...")
+                brands = self.sync_sutron_brands()
+                self.stdout.write(f"Synced {len(brands)} brands")
+                
+                # Sync stations
+                self.stdout.write("Syncing Sutron stations...")
+                stations = self.sync_sutron_stations(connection, brands)
+                self.stdout.write(f"Synced {len(stations)} stations")
+                
+                # Sync sensors
+                self.stdout.write("Syncing Sutron sensors...")
+                sensors = self.sync_sutron_sensors(connection, stations)
+                self.stdout.write(f"Synced {len(sensors)} sensors")
+                
+                # Ensure all historical station-sensor relationships are established
+                self.stdout.write("Ensuring historical station-sensor relationships...")
+                self.ensure_historical_station_sensor_relationships(connection, stations, sensors)
+                
+                # Sync measurements (with safety limit)
+                self.stdout.write("Syncing Sutron measurements...")
+                measurement_count = self.sync_sutron_measurements(connection, stations, sensors, last_sync_time)
+                self.stdout.write(f"Synced {measurement_count} measurements")
+                
+                # Sync health data (skip for now as no health table exists)
+                health_count = 0  # self.sync_sutron_health_data(connection, stations, last_sync_time)
+                
+                logger.info(f"Sutron data synchronization completed successfully!")
+                logger.info(f"Total measurements synced: {measurement_count}")
+                logger.info(f"Total health records synced: {health_count}")
+                
+                self.stdout.write(f"Sutron data synchronization completed successfully!")
+                self.stdout.write(f"Total measurements synced: {measurement_count}")
+                self.stdout.write(f"Total health records synced: {health_count}")
+            
+            connection.close()
+            self.stdout.write(self.style.SUCCESS("=== Sutron Data Fetch Complete ===\n"))
+            
+        except Exception as e:
+            logger.error(f"Error during Sutron data synchronization: {e}")
+            self.stdout.write(self.style.ERROR(f"Error during Sutron data synchronization: {e}"))
+            import traceback
+            traceback.print_exc()
+
+    def connect_to_sutron_db(self, config):
+        """Connect to Sutron MySQL database"""
+        try:
+            self.stdout.write(f"Attempting to connect to {config['host']}:{config['port']}...")
+            connection = mysql.connector.connect(**config)
+            
+            # Test the connection
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
+            
+            self.stdout.write("Database connection test successful!")
+            return connection
+        except Error as e:
+            logger.error(f"Error connecting to Sutron database: {e}")
+            self.stdout.write(self.style.ERROR(f"Database connection error: {e}"))
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error connecting to Sutron database: {e}")
+            self.stdout.write(self.style.ERROR(f"Unexpected database error: {e}"))
+            return None
+
+    def get_last_sutron_sync_time(self):
+        """Get the last sync time from local database for Sutron data"""
+        try:
+            # Check if we want to force a complete 3-month reimport
+            # This can be useful when stations/sensors have been added or when fixing sync issues
+            force_full_sync = os.environ.get('FORCE_SUTRON_SYNC', 'false').lower() == 'true'
+            
+            if force_full_sync:
+                self.stdout.write("FORCE_SUTRON_SYNC environment variable set - performing full 3-month reimport")
+                return timezone.now() - timedelta(days=90)
+            
+            # Get the most recent measurement timestamp
+            latest_measurement = Measurement.objects.order_by('-created_at').first()
+            if latest_measurement:
+                return latest_measurement.created_at
+            
+            # Fallback to 3 months ago if no measurements exist
+            return timezone.now() - timedelta(days=90)
+            
+        except Exception as e:
+            logger.error(f"Error getting last Sutron sync time: {e}")
+            return timezone.now() - timedelta(days=90)
+
+    def sync_sutron_brands(self):
+        """Sync brands from Sutron"""
+        brands = {}
+        try:
+            # Get or create Sutron brand
+            sutron_brand, created = Brand.objects.get_or_create(
+                name="Sutron",
+                defaults={'description': 'Data imported from Sutron system'}
+            )
+            brands['Sutron'] = sutron_brand
+            
+            if created:
+                self.stdout.write(f"Created new brand: Sutron")
+            
+            return brands
+        except Exception as e:
+            logger.error(f"Error syncing Sutron brands: {e}")
+            return {}
+
+    def sync_sutron_stations(self, connection, brands):
+        """Sync stations from Sutron"""
+        stations = {}
+        try:
+            cursor = connection.cursor(dictionary=True)
+            # Use the correct table name and column names from xc_data database
+            cursor.execute("""
+                SELECT 
+                    STATION_ID as station_id,
+                    SITE_LONG_NAME as station_name,
+                    SITE_TYPE as station_type,
+                    LATITUDE as latitude,
+                    LONGITUDE as longitude,
+                    ELEVATION as elevation,
+                    INSTALLATION_DATE as installation_date,
+                    ENABLED as enabled,
+                    STATUS as status,
+                    LAST_UPDATE as last_communication,
+                    AGENCY as agency,
+                    CITY as city,
+                    STATE as state,
+                    COUNTRY as country
+                FROM xc_sites 
+                WHERE ENABLED = 'Y'
+                ORDER BY STATION_ID
+            """)
+            sutron_stations = cursor.fetchall()
+            cursor.close()
+            
+            self.stdout.write(f"Found {len(sutron_stations)} enabled stations in xc_sites table")
+            
+            for sutron_station in sutron_stations:
+                # Use STATION_ID as name since descriptive fields are empty in the database
+                station_name = sutron_station['station_id']
+                
+                station, created = Station.objects.get_or_create(
+                    serial_number=sutron_station['station_id'],
+                    defaults={
+                        'name': station_name,
+                        'brand': brands.get('Sutron'),
+                        'latitude': sutron_station.get('latitude', 0.0),
+                        'longitude': sutron_station.get('longitude', 0.0),
+                        'elevation': sutron_station.get('elevation', 0.0),
+                        'status': 'Active'
+                    }
+                )
+                
+                # Update existing stations with latest info
+                if not created:
+                    station.name = station_name
+                    station.latitude = sutron_station.get('latitude', 0.0)
+                    station.longitude = sutron_station.get('longitude', 0.0)
+                    station.elevation = sutron_station.get('elevation', 0.0)
+                    station.save()
+                
+                stations[sutron_station['station_id']] = station
+                
+                if created:
+                    self.stdout.write(f"Created new Sutron station: {station.name}")
+                else:
+                    self.stdout.write(f"Updated existing Sutron station: {station.name}")
+            
+            return stations
+        except Exception as e:
+            logger.error(f"Error syncing Sutron stations: {e}")
+            return {}
+
+    def sync_sutron_sensors(self, connection, stations):
+        """Sync sensors from Sutron"""
+        sensors = {}
+        try:
+            cursor = connection.cursor(dictionary=True)
+            # Use the correct table and column names from xc_data database
+            cursor.execute("""
+                SELECT DISTINCT 
+                    SENSORNAME as sensor_name,
+                    UNITS as units,
+                    DESCRIPTION as description
+                FROM xc_sitesensors 
+                WHERE ENABLED = 'Y'
+                ORDER BY SENSORNAME
+            """)
+            sensor_types = cursor.fetchall()
+            cursor.close()
+            
+            self.stdout.write(f"Found {len(sensor_types)} enabled sensors in xc_sitesensors table")
+            
+            for sensor_row in sensor_types:
+                sensor_name = sensor_row['sensor_name']
+                units = sensor_row['units'] or self.get_sensor_unit(sensor_name)
+                
+                sensor, created = Sensor.objects.get_or_create(
+                    type=sensor_name,
+                    defaults={'unit': units}
+                )
+                
+                # Update existing sensors with latest info
+                if not created:
+                    sensor.unit = units
+                    sensor.save()
+                
+                sensors[sensor_name] = sensor
+                
+                if created:
+                    self.stdout.write(f"Created new Sutron sensor: {sensor_name} ({units})")
+                else:
+                    self.stdout.write(f"Updated existing Sutron sensor: {sensor_name} ({units})")
+            
+            # Now ensure all station-sensor relationships are established for the last 3 months
+            self.stdout.write("Establishing station-sensor relationships for all stations and sensors...")
+            for station_id, station in stations.items():
+                sensor_types = list(sensors.keys())
+                self.pre_create_station_sensor_relationships(station.id, sensor_types)
+                self.stdout.write(f"Established relationships for station {station.name} with {len(sensor_types)} sensors")
+            
+            return sensors
+        except Exception as e:
+            logger.error(f"Error syncing Sutron sensors: {e}")
+            return {}
+
+    def sync_sutron_measurements(self, connection, stations, sensors, last_sync_time):
+        """Sync measurements from Sutron"""
+        measurement_count = 0
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Query for measurements after last sync time using the correct table structure
+            query = """
+                SELECT 
+                    d.STATION_ID as station_id,
+                    d.SENSORNAME as sensor_name,
+                    d.TIME_TAG as timestamp,
+                    d.ORIG_VALUE as value,
+                    d.ED_VALUE as edited_value,
+                    d.FLAG1 as flag1,
+                    d.FLAG2 as flag2,
+                    d.FLAG3 as flag3,
+                    d.FLAG4 as flag4,
+                    d.HIGH_FLAG as high_flag,
+                    d.LOW_FLAG as low_flag,
+                    d.ALARM_FLAG as alarm_flag
+                FROM xc_data1 d
+                JOIN xc_sites s ON d.STATION_ID = s.STATION_ID
+                WHERE d.TIME_TAG > %s AND s.ENABLED = 'Y'
+                ORDER BY d.TIME_TAG
+            """
+            cursor.execute(query, (last_sync_time,))
+            sutron_measurements = cursor.fetchall()
+            cursor.close()
+            
+            self.stdout.write(f"Found {len(sutron_measurements)} measurements to sync")
+            
+            for sutron_measurement in sutron_measurements:
+                station_id = sutron_measurement['station_id']
+                sensor_name = sutron_measurement['sensor_name']
+                
+                if station_id in stations and sensor_name in sensors:
+                    try:
+                        # Parse timestamp
+                        timestamp = parse_datetime(sutron_measurement['timestamp'])
+                        if not timestamp:
+                            continue
+                        
+                        # Round to nearest hour
+                        rounded_timestamp = self.round_to_nearest_hour(timestamp.isoformat())
+                        
+                        # Use edited value if available, otherwise original value
+                        value = sutron_measurement.get('edited_value') or sutron_measurement.get('value')
+                        
+                        # Validate measurement
+                        is_valid, validation_message = DataValidator.validate_measurement(
+                            sensor_name, value
+                        )
+                        
+                        # Create measurement
+                        Measurement.objects.create(
+                            station_id=stations[station_id].id,
+                            sensor_id=sensors[sensor_name].id,
+                            date=rounded_timestamp.date(),
+                            time=rounded_timestamp.time(),
+                            value=sutron_measurement['value'],
+                            status="Successful",
+                            note=f"Sutron Data Import - Validation: {validation_message}",
+                            flag=is_valid,
+                            created_at=timezone.now()
+                        )
+                        
+                        measurement_count += 1
+                        
+                    except Exception as e:
+                        logger.error(f"Error saving Sutron measurement: {e}")
+                        continue
+            
+            return measurement_count
+        except Exception as e:
+            logger.error(f"Error syncing Sutron measurements: {e}")
+            return 0
+
+    def sync_sutron_health_data(self, connection, stations, last_sync_time):
+        """Sync health data from Sutron"""
+        health_count = 0
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Query for health data after last sync time
+            query = """
+                SELECT h.*, s.station_id 
+                FROM health_data h 
+                JOIN stations s ON h.station_id = s.station_id 
+                WHERE h.timestamp > %s AND s.status = 'active'
+                ORDER BY h.timestamp
+            """
+            cursor.execute(query, (last_sync_time,))
+            sutron_health = cursor.fetchall()
+            cursor.close()
+            
+            for sutron_health_record in sutron_health:
+                station_id = sutron_health_record['station_id']
+                
+                if station_id in stations:
+                    try:
+                        # Parse timestamp
+                        timestamp = parse_datetime(sutron_health_record['timestamp'])
+                        if not timestamp:
+                            continue
+                        
+                        # Create health log entry
+                        StationHealthLog.objects.create(
+                            station_id=stations[station_id].id,
+                            battery_status=sutron_health_record.get('battery_status', 'Unknown'),
+                            connectivity_status=sutron_health_record.get('connectivity_status', 'Unknown'),
+                            created_at=timestamp
+                        )
+                        
+                        health_count += 1
+                        
+                    except Exception as e:
+                        logger.error(f"Error saving Sutron health data: {e}")
+                        continue
+            
+            return health_count
+        except Exception as e:
+            logger.error(f"Error syncing Sutron health data: {e}")
+            return 0
+
+    def fetch_xc_data(self):
+        """Fetch data from XC Data MySQL database"""
+        self.stdout.write(self.style.SUCCESS('\n=== Starting XC Data Fetch ==='))
+        
+        # XC Data database configuration
+        XC_DB_CONFIG = {
+            'host': '10.222.3.39',
+            'port': 3306,
+            'database': 'xc_data',
+            'user': 'root',
+            'password': 'My$Ql2',
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            'autocommit': True
+        }
+        
+        try:
+            # Connect to XC Data database
+            connection = self.connect_to_xc_db(XC_DB_CONFIG)
+            if not connection:
+                logger.error("Failed to connect to XC Data database")
+                return
+            
+            # Get last sync time (3 months ago if no measurements exist)
+            last_sync_time = self.get_last_xc_sync_time()
+            logger.info(f"Last XC sync time: {last_sync_time}")
+            
+            # Run synchronization with transaction
+            with transaction.atomic():
+                # Sync brands
+                brands = self.sync_xc_brands()
+                
+                # Sync sites
+                sites = self.sync_xc_sites(connection, brands)
+                
+                # Sync sensors
+                sensors = self.sync_xc_sensors(connection, sites)
+                
+                # Sync measurements
+                measurement_count = self.sync_xc_measurements(connection, sites, sensors, last_sync_time)
+                
+                # Sync health data
+                health_count = self.sync_xc_health_data(connection, sites, last_sync_time)
+                
+                logger.info(f"XC Data synchronization completed successfully!")
+                logger.info(f"Total measurements synced: {measurement_count}")
+                logger.info(f"Total health records synced: {health_count}")
+            
+            connection.close()
+            self.stdout.write(self.style.SUCCESS("=== XC Data Fetch Complete ===\n"))
+            
+        except Exception as e:
+            logger.error(f"Error during XC data synchronization: {e}")
+            self.stdout.write(self.style.ERROR(f"Error during XC data synchronization: {e}"))
+
+    def connect_to_xc_db(self, config):
+        """Connect to XC Data MySQL database"""
+        try:
+            connection = mysql.connector.connect(**config)
+            return connection
+        except Error as e:
+            logger.error(f"Error connecting to XC Data database: {e}")
+            return None
+
+    def get_last_xc_sync_time(self):
+        """Get the last sync time from local database for XC data"""
+        try:
+            # Check if we want to force a complete 3-month reimport
+            force_full_sync = os.environ.get('FORCE_XC_SYNC', 'false').lower() == 'true'
+            
+            if force_full_sync:
+                self.stdout.write("FORCE_XC_SYNC environment variable set - performing full 3-month reimport")
+                return timezone.now() - timedelta(days=90)
+            
+            # Get the most recent measurement timestamp
+            latest_measurement = Measurement.objects.order_by('-created_at').first()
+            if latest_measurement:
+                return latest_measurement.created_at
+            
+            # Fallback to 3 months ago if no measurements exist
+            return timezone.now() - timedelta(days=90)
+            
+        except Exception as e:
+            logger.error(f"Error getting last XC sync time: {e}")
+            return timezone.now() - timedelta(days=90)
+
+    def sync_xc_brands(self):
+        """Sync brands from XC Data"""
+        brands = {}
+        try:
+            # Get or create XC Data brand
+            xc_brand, created = Brand.objects.get_or_create(
+                name="XC Data Import",
+                defaults={'description': 'Data imported from XC Data system'}
+            )
+            brands['XC Data Import'] = xc_brand
+            
+            if created:
+                self.stdout.write(f"Created new brand: XC Data Import")
+            
+            return brands
+        except Exception as e:
+            logger.error(f"Error syncing XC brands: {e}")
+            return {}
+
+    def sync_xc_sites(self, connection, brands):
+        """Sync sites from XC Data"""
+        sites = {}
+        try:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM sites WHERE status = 'active'")
+            xc_sites = cursor.fetchall()
+            cursor.close()
+            
+            for xc_site in xc_sites:
+                site, created = Station.objects.get_or_create(
+                    serial_number=xc_site['site_id'],
+                    defaults={
+                        'name': xc_site.get('site_name', f"XC Site {xc_site['site_id']}"),
+                        'brand': brands.get('XC Data Import'),
+                        'latitude': xc_site.get('latitude', 0.0),
+                        'longitude': xc_site.get('longitude', 0.0),
+                        'elevation': xc_site.get('elevation', 0.0),
+                        'status': 'Active'
+                    }
+                )
+                sites[xc_site['site_id']] = site
+                
+                if created:
+                    self.stdout.write(f"Created new XC site: {site.name}")
+            
+            return sites
+        except Exception as e:
+            logger.error(f"Error syncing XC sites: {e}")
+            return {}
+
+    def sync_xc_sensors(self, connection, sites):
+        """Sync sensors from XC Data"""
+        sensors = {}
+        try:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT DISTINCT sensor_type FROM measurements")
+            sensor_types = cursor.fetchall()
+            cursor.close()
+            
+            for sensor_type_row in sensor_types:
+                sensor_type = sensor_type_row['sensor_type']
+                sensor, created = Sensor.objects.get_or_create(
+                    type=sensor_type,
+                    defaults={'unit': self.get_sensor_unit(sensor_type)}
+                )
+                sensors[sensor_type] = sensor
+                
+                if created:
+                    self.stdout.write(f"Created new XC sensor: {sensor_type}")
+            
+            return sensors
+        except Exception as e:
+            logger.error(f"Error syncing XC sensors: {e}")
+            return {}
+
+    def sync_xc_measurements(self, connection, sites, sensors, last_sync_time):
+        """Sync measurements from XC Data"""
+        measurement_count = 0
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Query for measurements after last sync time
+            query = """
+                SELECT m.*, s.site_id 
+                FROM measurements m 
+                JOIN sites s ON m.site_id = s.site_id 
+                WHERE m.timestamp > %s AND s.status = 'active'
+                ORDER BY m.timestamp
+            """
+            cursor.execute(query, (last_sync_time,))
+            xc_measurements = cursor.fetchall()
+            cursor.close()
+            
+            for xc_measurement in xc_measurements:
+                site_id = xc_measurement['site_id']
+                sensor_type = xc_measurement['sensor_type']
+                
+                if site_id in sites and sensor_type in sensors:
+                    try:
+                        # Parse timestamp
+                        timestamp = parse_datetime(xc_measurement['timestamp'])
+                        if not timestamp:
+                            continue
+                        
+                        # Round to nearest hour
+                        rounded_timestamp = self.round_to_nearest_hour(timestamp.isoformat())
+                        
+                        # Validate measurement
+                        is_valid, validation_message = DataValidator.validate_measurement(
+                            sensor_type, xc_measurement['value']
+                        )
+                        
+                        # Create measurement
+                        Measurement.objects.create(
+                            station_id=sites[site_id].id,
+                            sensor_id=sensors[sensor_type].id,
+                            date=rounded_timestamp.date(),
+                            time=rounded_timestamp.time(),
+                            value=xc_measurement['value'],
+                            status="Successful",
+                            note=f"XC Data Import - Validation: {validation_message}",
+                            flag=is_valid,
+                            created_at=timezone.now()
+                        )
+                        
+                        measurement_count += 1
+                        
+                    except Exception as e:
+                        logger.error(f"Error saving XC measurement: {e}")
+                        continue
+            
+            return measurement_count
+        except Exception as e:
+            logger.error(f"Error syncing XC measurements: {e}")
+            return 0
+
+    def sync_xc_health_data(self, connection, sites, last_sync_time):
+        """Sync health data from XC Data"""
+        health_count = 0
+        try:
+            cursor = connection.cursor(dictionary=True)
+            
+            # Query for health data after last sync time
+            query = """
+                SELECT h.*, s.site_id 
+                FROM health_data h 
+                JOIN sites s ON h.site_id = s.site_id 
+                WHERE h.timestamp > %s AND s.status = 'active'
+                ORDER BY h.timestamp
+            """
+            cursor.execute(query, (last_sync_time,))
+            xc_health = cursor.fetchall()
+            cursor.close()
+            
+            for xc_health_record in xc_health:
+                site_id = xc_health_record['site_id']
+                
+                if site_id in sites:
+                    try:
+                        # Parse timestamp
+                        timestamp = parse_datetime(xc_health_record['timestamp'])
+                        if not timestamp:
+                            continue
+                        
+                        # Create health log entry
+                        StationHealthLog.objects.create(
+                            station_id=sites[site_id].id,
+                            battery_status=xc_health_record.get('battery_status', 'Unknown'),
+                            connectivity_status=xc_health_record.get('connectivity_status', 'Unknown'),
+                            created_at=timestamp
+                        )
+                        
+                        health_count += 1
+                        
+                    except Exception as e:
+                        logger.error(f"Error saving XC health data: {e}")
+                        continue
+            
+            return health_count
+        except Exception as e:
+            logger.error(f"Error syncing XC health data: {e}")
+            return 0
 
     def fetch_paws_data(self):
         """Fetch data from PAWS instruments"""
@@ -386,7 +1078,7 @@ class Command(BaseCommand):
             
             for attempt in range(max_retries):
                 try:
-                    response = requests.get(url, verify=False, timeout=30)
+                    response = requests.get(url, verify=False, timeout=30, allow_redirects=True)
                     
                     if response.status_code == 403:
                         logger.error(
@@ -412,10 +1104,12 @@ class Command(BaseCommand):
                     
                 except requests.exceptions.RequestException as e:
                     if attempt < max_retries - 1:
-                        logger.warning(f"Attempt {attempt + 1} failed, retrying in {retry_delay} seconds...")
+                        logger.warning(f"Attempt {attempt + 1} failed for station {station_id}: {str(e)}")
                         time.sleep(retry_delay)
                     else:
-                        raise
+                        logger.error(f"All attempts failed for station {station_id}: {str(e)}")
+                        self.stdout.write(self.style.ERROR(f"Failed to fetch data for station {station_id}: {str(e)}"))
+                        return None
                         
         except Exception as e:
             logger.error(f"Error fetching data for PAWS station {station_id}: {str(e)}")
@@ -733,11 +1427,27 @@ class Command(BaseCommand):
                     closest_reading = min(readings, key=lambda x: abs(x['timestamp'] - rounded_hour))
                     
                     # Try to find a matching sensor in the database
-                    for sensor_type, sensor_id in sensor_map.items():
-                        if field.lower() in sensor_type.lower():
+                    # First try exact match, then try partial match
+                    matched_sensor = None
+                    matched_sensor_id = None
+                    
+                    # Try exact match first (remove units and special characters)
+                    clean_field = field.split(' (')[0].strip()  # Remove units like "(V)", "(°C)", etc.
+                    if clean_field in sensor_map:
+                        matched_sensor = clean_field
+                        matched_sensor_id = sensor_map[clean_field]
+                    else:
+                        # Try partial match as fallback
+                        for sensor_type, sensor_id in sensor_map.items():
+                            if field.lower() in sensor_type.lower() or clean_field.lower() in sensor_type.lower():
+                                matched_sensor = sensor_type
+                                matched_sensor_id = sensor_id
+                                break
+                    
+                    if matched_sensor and matched_sensor_id:
                             try:
                                 # Debug: Log what we're validating
-                                self.stdout.write(f"  Validating field '{field}' with sensor_type '{sensor_type}' and value {closest_reading['value']}")
+                                self.stdout.write(f"  Validating field '{field}' with sensor_type '{matched_sensor}' and value {closest_reading['value']}")
                                 
                                 # Validate the measurement value using the field name from the instrument, not the database sensor type
                                 is_valid, validation_message = DataValidator.validate_measurement(field, closest_reading['value'])
@@ -748,10 +1458,10 @@ class Command(BaseCommand):
                                 # Create note with validation information
                                 note = f"Data Acquired - Validation: {validation_message}"
                                 
-                                self.ensure_station_sensor_relationship(station_id, sensor_id)
+                                self.ensure_station_sensor_relationship(station_id, matched_sensor_id)
                                 Measurement.objects.create(
                                     station_id=station_id,
-                                    sensor_id=sensor_id,
+                                    sensor_id=matched_sensor_id,
                                     date=rounded_hour.date(),
                                     time=rounded_hour.time(),
                                     value=closest_reading['value'],
@@ -1067,6 +1777,10 @@ class Command(BaseCommand):
                     'battery', 'Battery', 'Battery Voltage', 'Battery Percent',
                     'batt', 'batt_v', 'batt_volt', 'batt_percent', 'battery_level', 'battLevel', 'battVolt', 'battPct'
                 ],
+                "Sutron": [
+                    'battery', 'Battery', 'Battery Voltage', 'Battery Percent',
+                    'batt', 'batt_v', 'batt_volt', 'batt_percent', 'battery_level', 'battLevel', 'battVolt', 'battPct'
+                ],
             }
 
             if rounded_hour in measurements_by_hour:
@@ -1100,6 +1814,13 @@ class Command(BaseCommand):
                         connectivity_status = "No Data"
                 elif brand_name in ["Allmeteo", "Zentra"]:
                     # For Allmeteo and Zentra stations, determine connectivity based on data freshness
+                    # If we have recent battery data, consider it connected
+                    if battery_status != "Unknown":
+                        connectivity_status = "Connected"
+                    else:
+                        connectivity_status = "No Data"
+                elif brand_name == "Sutron":
+                    # For Sutron stations, determine connectivity based on data freshness
                     # If we have recent battery data, consider it connected
                     if battery_status != "Unknown":
                         connectivity_status = "Connected"
@@ -1188,3 +1909,48 @@ class Command(BaseCommand):
         else:
             logger.warning("Invalid datetime value: %s", datetime_str)
             return None
+
+    def ensure_historical_station_sensor_relationships(self, connection, stations, sensors):
+        """Ensure all historical station-sensor relationships are established for the last 3 months"""
+        try:
+            self.stdout.write("Ensuring all historical station-sensor relationships are established...")
+            
+            # Get all unique sensor types that have been used in the last 3 months
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT DISTINCT SENSORNAME as sensor_name
+                FROM xc_data1 d
+                JOIN xc_sites s ON d.STATION_ID = s.STATION_ID
+                WHERE d.TIME_TAG > DATE_SUB(NOW(), INTERVAL 3 MONTH) 
+                AND s.ENABLED = 'Y'
+                ORDER BY SENSORNAME
+            """)
+            historical_sensors = cursor.fetchall()
+            cursor.close()
+            
+            self.stdout.write(f"Found {len(historical_sensors)} sensors with data in the last 3 months")
+            
+            # Ensure all these sensors exist in our local database
+            for sensor_row in historical_sensors:
+                sensor_name = sensor_row['sensor_name']
+                if sensor_name not in sensors:
+                    units = self.get_sensor_unit(sensor_name)
+                    sensor, created = Sensor.objects.get_or_create(
+                        type=sensor_name,
+                        defaults={'unit': units}
+                    )
+                    sensors[sensor_name] = sensor
+                    if created:
+                        self.stdout.write(f"Created missing historical sensor: {sensor_name}")
+            
+            # Now establish relationships for all stations with all historical sensors
+            for station_id, station in stations.items():
+                historical_sensor_types = [s['sensor_name'] for s in historical_sensors]
+                self.pre_create_station_sensor_relationships(station.id, historical_sensor_types)
+                self.stdout.write(f"Established historical relationships for station {station.name}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error ensuring historical station-sensor relationships: {e}")
+            return False

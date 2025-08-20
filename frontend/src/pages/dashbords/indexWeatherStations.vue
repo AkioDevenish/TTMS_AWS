@@ -81,6 +81,23 @@
               <i class="fas fa-chevron-right"></i>
             </div>
           </div>
+
+          <!-- Sutron -->
+          <div class="station-type-card" @click="navigateToStation('AWS_Sutron')">
+            <div class="card-icon sutron">
+              <i class="fas fa-database"></i>
+            </div>
+            <div class="card-content">
+              <h3>Sutron</h3>
+              <p>Professional weather monitoring and data collection systems</p>
+              <div class="station-count" v-if="stationCounts.sutron > 0">
+                {{ stationCounts.sutron }} active stations
+              </div>
+            </div>
+            <div class="card-arrow">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -128,7 +145,8 @@ const stationCounts = ref({
   ott: 0,
   barani: 0,
   zentra: 0,
-  paws: 0
+  paws: 0,
+  sutron: 0
 });
 
 const navigateToStation = (route: string) => {
@@ -155,7 +173,8 @@ const fetchStationCounts = async () => {
       ott: stations.filter((s: any) => s.brand_name === 'OTT').length,
       barani: stations.filter((s: any) => s.brand_name === 'Allmeteo').length,
       zentra: stations.filter((s: any) => s.brand_name === 'Zentra').length,
-      paws: stations.filter((s: any) => s.brand_name === '3D_Paws').length
+      paws: stations.filter((s: any) => s.brand_name === '3D_Paws').length,
+      sutron: stations.filter((s: any) => s.brand_name === 'Sutron').length
     };
   } catch (error) {
     console.error('Error fetching station counts:', error);
@@ -243,6 +262,10 @@ onMounted(() => {
 
 .card-icon.paws {
   background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.card-icon.sutron {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .card-content h3 {

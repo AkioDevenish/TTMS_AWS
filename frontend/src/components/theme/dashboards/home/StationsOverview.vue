@@ -100,9 +100,9 @@
                                     </div>
                                 </div>
                                 <div v-else class="no-data-placeholder">
-                                    <p>No historical data available</p>
-                                    <small v-if="station.chartData" class="text-muted">
-                                        Debug: Chart data length: {{ station.chartData[0]?.data?.length || 0 }}
+                                    <p>Station Offline</p>
+                                    <small class="text-muted">
+                                        No data received from this station
                                     </small>
                                 </div>
                             </div>
@@ -221,7 +221,7 @@ const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardDa
 const store = useStationOverviewStore();
 
 // Initialize reactive variables
-const uniqueBrandsData = ref(['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']); // Add OTT
+const uniqueBrandsData = ref(['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']); // Add Sutron
 const stationContainer = ref(null);
 const visibleStations = ref([]);
 const selectedPageSize = ref(6); // Default page size for station overview (matches store default)
@@ -322,7 +322,20 @@ const sensorConfigs = {
     'si1': { name: 'Downwelling Infrared', unit: 'W/m²' },
     'su1': { name: 'Downwelling Ultraviolet', unit: 'W/m²' },
     'bpc': { name: 'Battery Percent', unit: '%' },
-    'css': { name: 'Cell Signal Strength', unit: '%' }
+    'css': { name: 'Cell Signal Strength', unit: '%' },
+    'wg': { name: 'Wind Gust', unit: 'm/s' },
+    'wgd': { name: 'Wind Gust Direction', unit: '°' },
+    'bcs': { name: 'Battery Cell Signal', unit: '%' },
+    'hth': { name: 'Heat Index', unit: '°C' },
+    'bh1': { name: 'Battery Health', unit: '%' },
+    'cfr': { name: 'Cloud Fraction', unit: '%' },
+    'ht1': { name: 'Heat Temperature', unit: '°C' },
+    'hh1': { name: 'Heat Humidity', unit: '%' },
+    'wbgt': { name: 'Wet Bulb Globe Temperature', unit: '°C' },
+    'hi': { name: 'Heat Index', unit: '°C' },
+    'sh1': { name: 'Solar Heat', unit: 'W/m²' },
+    'wbt': { name: 'Wet Bulb Temperature', unit: '°C' },
+    'st1': { name: 'Soil Temperature', unit: '°C' }
   },
   'Zentra': {
     'Air Temperature': { name: 'Air Temperature', unit: '°C' },
@@ -333,22 +346,28 @@ const sensorConfigs = {
     'Atmospheric Pressure': { name: 'Atmospheric Pressure', unit: 'kPa' }
   },
   'Allmeteo': {
-    'wind_ave10': { name: 'Wind Speed (Average)', unit: 'm/s' },
-    'wind_max10': { name: 'Wind Speed (Max)', unit: 'm/s' },
-    'wind_min10': { name: 'Wind Speed (Min)', unit: 'm/s' },
-    'dir_ave10': { name: 'Wind Direction (Average)', unit: '°' },
-    'dir_max10': { name: 'Wind Direction (Max)', unit: '°' },
-    'dir_hi10': { name: 'Wind Direction (High)', unit: '°' },
-    'dir_lo10': { name: 'Wind Direction (Low)', unit: '°' },
-    'Battery Percent': { name: 'Battery Percent', unit: '%' },
+    'battery': { name: 'Battery', unit: '%' },
+    'dewPoint': { name: 'Dew Point', unit: '°C' },
     'humidity': { name: 'Humidity', unit: '%' },
     'irradiation': { name: 'Irradiation', unit: 'W/m²' },
-    'irr_max': { name: 'Irradiation (Max)', unit: 'W/m²' },
-    'pressure': { name: 'Pressure', unit: 'Pa' },
+    'irradiation_max': { name: 'Irradiation (Max)', unit: 'W/m²' },
+    'pressure': { name: 'Pressure', unit: 'hPa' },
+    'pressure_raw': { name: 'Pressure (Raw)', unit: 'hPa' },
+    'rain': { name: 'Rain', unit: 'mm' },
+    'rainfall_rate_max': { name: 'Rainfall Rate (Max)', unit: 'mm/h' },
     'temperature': { name: 'Temperature', unit: '°C' },
     'temperature_max': { name: 'Temperature (Max)', unit: '°C' },
     'temperature_min': { name: 'Temperature (Min)', unit: '°C' },
-    'rain_counter': { name: 'Rain Counter', unit: 'mm' }
+    'temperature_wetbulb_stull2011_C': { name: 'Temperature (Wet Bulb)', unit: '°C' },
+    'wdir_Avg10': { name: 'Wind Direction (Average)', unit: '°' },
+    'wdir_Gust10': { name: 'Wind Direction (Gust)', unit: '°' },
+    'wdir_Max10': { name: 'Wind Direction (Max)', unit: '°' },
+    'wdir_Min10': { name: 'Wind Direction (Min)', unit: '°' },
+    'wdir_Stdev10': { name: 'Wind Direction (Std Dev)', unit: '°' },
+    'wind_Avg10': { name: 'Wind Speed (Average)', unit: 'm/s' },
+    'wind_Max10': { name: 'Wind Speed (Max)', unit: 'm/s' },
+    'wind_Min10': { name: 'Wind Speed (Min)', unit: 'm/s' },
+    'wind_Stdev10': { name: 'Wind Speed (Std Dev)', unit: 'm/s' }
   },
   'OTT': {
     '5 min rain': { name: '5 min Rain', unit: 'mm' },
@@ -370,6 +389,22 @@ const sensorConfigs = {
     'Wind Dir Inst': { name: 'Wind Direction Instantaneous', unit: '°' },
     'Wind Speed Average': { name: 'Wind Speed Average', unit: 'knots' },
     'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots' }
+  },
+  'Sutron': {
+    'AT': { name: 'Air Temperature', unit: '°C' },
+    'ATMAX': { name: 'Air Temperature Max', unit: '°C' },
+    'ATMIN': { name: 'Air Temperature Min', unit: '°C' },
+    'Barometric Pressure': { name: 'Barometric Pressure', unit: 'hPa' },
+    'DP': { name: 'Dew Point', unit: '°C' },
+    'GUST': { name: 'Wind Gust', unit: 'm/s' },
+    'GUSTDIR': { name: 'Wind Gust Direction', unit: '°' },
+    'Rainfall': { name: 'Rainfall', unit: 'mm' },
+    'RAINDAILY': { name: 'Daily Rainfall', unit: 'mm' },
+    'RH': { name: 'Relative Humidity', unit: '%' },
+    'WD10': { name: 'Wind Direction 10m', unit: '°' },
+    'WDI': { name: 'Wind Direction Instantaneous', unit: '°' },
+    'WS10': { name: 'Wind Speed 10m', unit: 'm/s' },
+    'WSI': { name: 'Wind Speed Instantaneous', unit: 'm/s' }
   }
 };
 
@@ -738,8 +773,31 @@ function formatValue(value) {
 // Format date and time
 function formatDateTime(measurement) {
   if (!measurement) return 'No Recent Data';
-  const date = new Date(`${measurement.date}T${measurement.time}`);
-  return date.toLocaleString();
+  
+  // The backend sends time in Trinidad timezone (UTC-4)
+  // Create a date string and parse it properly
+  const dateTimeString = `${measurement.date}T${measurement.time}`;
+  
+  try {
+    // Parse the date and time from Trinidad timezone
+    const date = new Date(dateTimeString);
+    
+    // Format using Trinidad timezone (UTC-4)
+    return date.toLocaleString('en-US', {
+      timeZone: 'America/Port_of_Spain',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    // Fallback to simple string concatenation
+    return `${measurement.date} ${measurement.time}`;
+  }
 }
 
 // Get sensor icon

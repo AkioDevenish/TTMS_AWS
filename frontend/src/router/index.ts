@@ -10,6 +10,7 @@ import indexBarani from "@/pages/dashbords/indexBarani.vue"
 import indexHydromet from "@/pages/dashbords/indexHydromet.vue"
 import indexPaws from "@/pages/dashbords/indexPaws.vue"
 import indexWeatherStations from "@/pages/dashbords/indexWeatherStations.vue"
+import indexSutron from "@/pages/dashbords/indexSutron.vue"
 import indexGeneral from "@/pages/widgets/indexGeneral.vue"
 import indexChart from "@/pages/widgets/indexChart.vue"
 import indexProjectlist from "@/pages/project/indexProjectlist.vue"
@@ -335,6 +336,15 @@ const routes: Array<RouteRecordRaw> = [
         component: indexZentra,
         meta: {
           title: 'Dashboards Education | MDPS',
+          requiresAuth: true
+        }
+      },
+      {
+        path: "AWS_Sutron",
+        name: "Sutron",
+        component: indexSutron,
+        meta: {
+          title: 'Sutron Weather Stations | MDPS',
           requiresAuth: true
         }
       },
