@@ -80,10 +80,10 @@
                         @change="changePageSize"
                         class="page-size-select"
                     >
-                        <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
                         <option value="50">50</option>
+                        <option value="100">100</option>
                     </select>
                     <span class="page-size-text">of {{ paginationInfo.totalStations }} stations</span>
                 </div>
@@ -185,7 +185,7 @@ const store = useAWSStationsStore();
 
 // Component state
 const showDebug = ref(false); // Set to true for development
-const selectedPageSize = ref(10); // Default page size
+const selectedPageSize = ref(50); // Default page size (increased to show all stations)
 
 // Computed properties
 const isLoading = computed(() => store.isLoading);
@@ -198,11 +198,11 @@ const paginationInfo = computed(() => store.getPaginationInfo);
 const pageRange = computed(() => store.getPageRange);
 
 const filteredStations = computed(() => {
-    if (selectedBrand.value) {
-        return store.getStationsByBrand(selectedBrand.value);
-    }
-    // Default to first brand if none selected
-    return store.getStationsByBrand(store.availableBrands[0]);
+    // The store already fetches data for the selected brand, so just return the store data
+    console.log('filteredStations computed - store data:', store.stationHealth);
+    console.log('filteredStations computed - selected brand:', selectedBrand.value);
+    console.log('filteredStations computed - available brands:', store.availableBrands);
+    return store.stationHealth;
 });
 
 // Helper functions
@@ -266,6 +266,7 @@ const refreshData = async () => {
 };
 
 const selectBrand = (brand: string | null) => {
+    console.log('selectBrand called with:', brand);
     store.setBrand(brand);
 };
 
@@ -298,10 +299,7 @@ onMounted(async () => {
         await store.init();
         console.log('Store initialized');
         
-        // Set default brand to first available brand
-        if (store.availableBrands.length > 0 && !selectedBrand.value) {
-            store.setBrand(store.availableBrands[0]);
-        }
+        // The store.init() already sets the default brand, no need to set it again
         
         // Sync selected page size with store
         selectedPageSize.value = store.pageSize;
@@ -317,6 +315,15 @@ onUnmounted(() => {
 // Watch for changes in store page size and sync with local state
 watch(() => store.pageSize, (newPageSize) => {
     selectedPageSize.value = newPageSize;
+});
+
+// Watch for changes in selected brand and refresh data
+watch(() => selectedBrand.value, (newBrand, oldBrand) => {
+    console.log('Brand watch triggered:', { oldBrand, newBrand });
+    if (newBrand && newBrand !== oldBrand) {
+        console.log('Brand changed to:', newBrand, 'refreshing data...');
+        refreshData();
+    }
 });
 </script>
 

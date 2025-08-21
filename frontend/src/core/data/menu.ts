@@ -92,9 +92,11 @@ export const menu: MenuItem[] = [
         title: "3D-Paws",
         type: "link"
       },
-  
-   
-
+      {
+        path: "/stations/AWS_Sutron",
+        title: "Sutron",
+        type: "link"
+      },
     ]
   },
   {

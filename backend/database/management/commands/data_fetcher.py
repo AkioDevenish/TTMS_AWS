@@ -1783,6 +1783,10 @@ class Command(BaseCommand):
                 ],
             }
 
+            # Initialize default values
+            battery_status = "Unknown"
+            connectivity_status = "Unknown"
+            
             if rounded_hour in measurements_by_hour:
                 # --- Battery status: check all possible fields ---
                 battery_fields = battery_fields_by_brand.get(brand_name, ['battery', 'Battery'])
@@ -1826,6 +1830,42 @@ class Command(BaseCommand):
                         connectivity_status = "Connected"
                     else:
                         connectivity_status = "No Data"
+            else:
+                # No measurements for this hour, but still create health log
+                logger.info(f"No measurements for station {station_id} at {rounded_hour}, creating health log with default values")
+                
+                # For OTT stations, try to get battery status from recent data
+                if brand_name == "OTT":
+                    try:
+                        from database.models import Measurement
+                        from django.utils import timezone
+                        from datetime import timedelta
+                        
+                        # Look for recent battery measurements (within last 24 hours)
+                        one_day_ago = timezone.now() - timedelta(days=1)
+                        recent_battery = Measurement.objects.filter(
+                            station_id=station_id,
+                            sensor__type='Battery',
+                            date__gte=one_day_ago.date()
+                        ).order_by('-date', '-time').first()
+                        
+                        if recent_battery:
+                            battery_value = float(recent_battery.value)
+                            if battery_value >= 80:
+                                battery_status = "Excellent"
+                            elif battery_value >= 60:
+                                battery_status = "Good"
+                            elif battery_value >= 40:
+                                battery_status = "Fair"
+                            elif battery_value >= 20:
+                                battery_status = "Poor"
+                            else:
+                                battery_status = "Critical"
+                            
+                            connectivity_status = "Connected"
+                            logger.info(f"OTT station {station_id}: Found recent battery data {battery_value}%, status: {battery_status}")
+                    except Exception as e:
+                        logger.warning(f"Error getting recent battery data for OTT station {station_id}: {e}")
 
             # Create health log entry
             StationHealthLog.objects.create(

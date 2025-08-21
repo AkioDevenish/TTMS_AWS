@@ -219,6 +219,22 @@ const sensorConfigs: SensorConfigs = {
     'Wind Dir Inst': { name: 'Wind Direction Instantaneous', unit: '°' },
     'Wind Speed Average': { name: 'Wind Speed Average', unit: 'knots' },
     'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots' }
+  },
+  'Sutron': {
+    'temperature': { name: 'Temperature', unit: '°C' },
+    'humidity': { name: 'Relative Humidity', unit: '%' },
+    'pressure': { name: 'Atmospheric Pressure', unit: 'hPa' },
+    'wind_speed': { name: 'Wind Speed', unit: 'm/s' },
+    'wind_direction': { name: 'Wind Direction', unit: '°' },
+    'rainfall': { name: 'Rainfall', unit: 'mm' },
+    'solar_radiation': { name: 'Solar Radiation', unit: 'W/m²' },
+    'battery': { name: 'Battery', unit: 'V' },
+    'dew_point': { name: 'Dew Point', unit: '°C' },
+    'barometric_pressure': { name: 'Barometric Pressure', unit: 'hPa' },
+    'wind_gust': { name: 'Wind Gust', unit: 'm/s' },
+    'wind_gust_direction': { name: 'Wind Gust Direction', unit: '°' },
+    'solar_radiation_avg': { name: 'Solar Radiation Average', unit: 'W/m²' },
+    'solar_radiation_total': { name: 'Solar Radiation Total', unit: 'W/m²' }
   }
 };
 

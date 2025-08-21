@@ -127,7 +127,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, onMounted, computed, ref } from 'vue';
+import { defineAsyncComponent, onMounted, computed, ref, watch } from 'vue';
 import { useInactiveSensorsStore, type InactiveSensor } from '@/store/inactiveSensors';
 import VueFeather from 'vue-feather';
 
@@ -206,6 +206,14 @@ const changePageSize = async () => {
 // Lifecycle
 onMounted(() => {
     store.fetchInactiveSensors();
+});
+
+// Watch for changes in selected brand and refresh data
+watch(() => selectedBrand.value, (newBrand) => {
+    if (newBrand) {
+        console.log('Brand changed to:', newBrand, 'refreshing data...');
+        store.fetchInactiveSensors(true);
+    }
 });
 
 </script>

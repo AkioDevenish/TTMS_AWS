@@ -89,10 +89,10 @@
                             <div class="station-info">
                                 <p class="mb-2">
                                     <VueFeather :type="currentSensorIcon" size="16" class="me-2" />
-                                    {{ formatValue(station.latest_measurement?.value) }}
+                                    {{ formatValue(station.latest_measurement?.value, station) }}
                                 </p>
                                 <p class="mb-2 text-muted">
-                                    <small>Last Updated: {{ formatDateTime(station.latest_measurement) }}</small>
+                                    <small>Last Updated: {{ formatDateTime(station.latest_measurement, station) }}</small>
                                 </p>
                                     </div>
                             <div class="chart-container">
@@ -106,8 +106,8 @@
                                 <div v-else-if="station.chartData && station.chartData[0].data.length === 1" class="single-data-point">
                                     <div class="text-center">
                                         <p class="mb-1"><strong>Current Value:</strong></p>
-                                        <p class="h4 mb-0">{{ formatValue(station.chartData[0].data[0].y) }}</p>
-                                        <small class="text-muted">{{ formatDateTime(station.latest_measurement) }}</small>
+                                        <p class="h4 mb-0">{{ formatValue(station.chartData[0].data[0].y, station) }}</p>
+                                        <small class="text-muted">{{ formatDateTime(station.latest_measurement, station) }}</small>
                                     </div>
                                 </div>
                                 <div v-else class="no-data-placeholder">
@@ -593,8 +593,15 @@ const getStatusText = (station) => {
     hasLatestMeasurement: !!station.latest_measurement,
     latestValue: station.latest_measurement?.value,
     latestStatus: station.latest_measurement?.status,
-    lastUpdateTime: station.latest_measurement?.date
+    lastUpdateTime: station.latest_measurement?.date,
+    stationHealth: station.station_health
   });
+
+  // SPECIAL HANDLING FOR STATIONS WITH STATION HEALTH DATA: Check if they have any recent data
+  if (station.station_health?.has_any_recent_data && !station.latest_measurement) {
+    console.log(`  ${station.name}: Station has recent data for other sensors -> Online`);
+    return 'Online'; // Station with any recent data is considered online, even if not for the requested sensor type
+  }
 
   // FIRST: Check if sensor is actually communicating (not offline)
   if (!station.latest_measurement) {
@@ -819,8 +826,12 @@ const checkStuckSensor = (station) => {
 };
 
 // Format value with unit
-function formatValue(value) {
+function formatValue(value, station = null) {
   if (value === null || value === undefined) {
+    // Check if station has any recent data through station_health
+    if (station?.station_health?.has_any_recent_data) {
+      return 'No Data (this sensor)';
+    }
     return 'No Data';
   }
   
@@ -831,8 +842,14 @@ function formatValue(value) {
 }
 
 // Format date and time
-function formatDateTime(measurement) {
-  if (!measurement) return 'No Recent Data';
+function formatDateTime(measurement, station = null) {
+  if (!measurement) {
+    // Check if station has any recent data through station_health
+    if (station?.station_health?.has_any_recent_data && station?.station_health?.last_data_time) {
+      return `${station.station_health.last_data_time} (other sensors)`;
+    }
+    return 'No Recent Data';
+  }
   
   // The backend sends time in Trinidad timezone (UTC-4)
   // Create a date string and parse it properly

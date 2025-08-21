@@ -337,6 +337,14 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        """Override permissions for specific actions"""
+        if self.action == 'station_overview':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
     @action(detail=False, methods=['get'])
     def by_station(self, request):
         """Get measurements for a specific station with optimized performance."""
@@ -763,6 +771,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             for station in stations:
                 # Get the latest measurement for this station and sensor type
                 latest_measurement = None
+                
                 if sensor_type:
                     # Map frontend sensor name to database sensor code
                     mapped_sensor_type = self.get_sensor_mapping(sensor_type)
@@ -795,8 +804,32 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                         'date': latest_measurement.date.isoformat() if latest_measurement else None,
                         'time': self.convert_time_to_local(latest_measurement.date, latest_measurement.time) if latest_measurement else None,
                         'status': latest_measurement.status if latest_measurement else 'No Data'
-                    } if latest_measurement else None
+                    } if latest_measurement else None,
+                    # Add station health information
+                    'station_health': {
+                        'has_recent_data': latest_measurement is not None,
+                        'has_any_recent_data': False,  # Will be populated below
+                        'last_data_time': latest_measurement.date.isoformat() if latest_measurement else None
+                    }
                 }
+                
+                # Check if station has ANY recent data (not just the specific sensor type)
+                if not latest_measurement:
+                    any_recent_measurement = Measurement.objects.filter(
+                        station_id=station.id,
+                        date__gte=yesterday.date()
+                    ).order_by('-date', '-time').first()
+                    
+                    if any_recent_measurement:
+                        print(f"  Station {station.name}: No {sensor_type} data, but has recent {any_recent_measurement.sensor.type} data")
+                        station_data['station_health']['has_any_recent_data'] = True
+                        station_data['station_health']['last_data_time'] = any_recent_measurement.date.isoformat()
+                    else:
+                        print(f"  Station {station.name}: No recent data of any type")
+                        station_data['station_health']['has_any_recent_data'] = False
+                else:
+                    # Station has data for the requested sensor type
+                    station_data['station_health']['has_any_recent_data'] = True
                 response_data.append(station_data)
 
             result = {

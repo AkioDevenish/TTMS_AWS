@@ -38,17 +38,9 @@
 		</div>
 		
 		<div v-else-if="selectedStation" class="row">
-			<div class="col-12">
-				<div class="card">
-					<div class="card-header">
-						<h5 class="card-title">Sutron Station Data</h5>
-					</div>
-					<div class="card-body">
-						<p>Station: <strong>{{ getSelectedStationName }}</strong></p>
-						<p>Data will be displayed here once measurements are available.</p>
-					</div>
-				</div>
-			</div>
+			<SutronInsMonitor :selectedStation="selectedStation" :measurements="sutronData.measurements?.value || []" :stationInfo="sutronData.stationInfo?.value || {}" />
+			<SutronStatistics :selectedStation="selectedStation" :measurements="sutronData.measurements?.value || []" :stationInfo="sutronData.stationInfo?.value || {}" />
+			<SutronTempCard :selectedStation="selectedStation" :measurements="sutronData.measurements?.value || []" :stationInfo="sutronData.stationInfo?.value || {}" />
 		</div>
 		
 		<div v-else class="text-center py-4">
@@ -71,6 +63,9 @@ interface Station {
 }
 
 const StationDataExport = defineAsyncComponent(() => import("@/components/theme/stations/StationDataExport.vue"));
+const SutronInsMonitor = defineAsyncComponent(() => import("@/components/theme/stations/sutron/SutronInsMonitor.vue"));
+const SutronStatistics = defineAsyncComponent(() => import("@/components/theme/stations/sutron/SutronStatistics.vue"));
+const SutronTempCard = defineAsyncComponent(() => import("@/components/theme/stations/sutron/SutronTempCard.vue"));
 
 const stationNames = ref<Station[]>([]);
 const selectedStation = ref<number>(0);
@@ -93,7 +88,13 @@ const availableSensors = computed(() => [
 	'wind_direction',
 	'rainfall',
 	'solar_radiation',
-	'battery'
+	'battery',
+	'dew_point',
+	'barometric_pressure',
+	'wind_gust',
+	'wind_gust_direction',
+	'solar_radiation_avg',
+	'solar_radiation_total'
 ]);
 
 const fetchStationNames = async () => {

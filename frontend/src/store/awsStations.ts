@@ -40,7 +40,7 @@ export const useAWSStationsStore = defineStore('awsStations', {
         refreshInterval: null,
         // Pagination state
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 50, // Increased from 10 to 50 to show all stations
         totalStations: 0,
         totalPages: 0,
         hasNext: false,
@@ -214,7 +214,13 @@ export const useAWSStationsStore = defineStore('awsStations', {
 
         async init() {
             console.log('Initializing AWS Stations store');
-            await this.fetchStationHealth(undefined, 1, this.pageSize);
+            // Start with the first available brand instead of undefined (all brands)
+            if (this.availableBrands.length > 0) {
+                this.selectedBrand = this.availableBrands[0];
+                await this.fetchStationHealth(this.availableBrands[0], 1, this.pageSize);
+            } else {
+                await this.fetchStationHealth(undefined, 1, this.pageSize);
+            }
             
             // Set up auto-refresh every 5 minutes
             this.refreshInterval = window.setInterval(() => {
