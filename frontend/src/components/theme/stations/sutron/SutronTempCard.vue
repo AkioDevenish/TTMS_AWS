@@ -16,7 +16,7 @@
                 <p class="f-light mb-0">Last updated: {{ item.month }}</p>
               </div>
               <div class="flex-shrink-0">
-                <img :src="getImages(item.img)" alt="" />
+                <font-awesome-icon :icon="getWeatherIcon(item.sensorType)" style="font-size: 2rem; color: #007bff;" />
               </div>
             </div>
           </Card1>
@@ -48,6 +48,7 @@
     timeDiff: string;
     trend: string;
     unit: string;
+    sensorType: string;
   }
   
   const props = defineProps({
@@ -65,9 +66,52 @@
   } = useStationData();
   
   const localSutronData = ref<CardData[]>([]);
+
+// Function to handle both local assets and external URLs
+const getImageSource = (imgPath: string): string => {
+  // If it's a full URL (starts with http/https), return it directly
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+    return imgPath;
+  }
+  // Otherwise, treat it as a local asset and use getImages
+  return getImages(imgPath);
+};
+
+// Function to get weather-appropriate icons from Font Awesome
+const getWeatherIcon = (sensorType: string): string[] => {
+  const iconMap: Record<string, string[]> = {
+    // Temperature sensors
+    'temperature': ['fas', 'thermometer-half'],
+    'dew_point': ['fas', 'tint'],
+    
+    // Precipitation sensors
+    'rainfall': ['fas', 'cloud'],
+    
+    // Atmospheric sensors
+    'humidity': ['fas', 'tint'],
+    'pressure': ['fas', 'tachometer'],
+    'barometric_pressure': ['fas', 'tachometer'],
+    
+    // Wind sensors
+    'wind_speed': ['fas', 'cloud'],
+    'wind_direction': ['fas', 'compass'],
+    'wind_gust': ['fas', 'cloud'],
+    'wind_gust_direction': ['fas', 'location-arrow'],
+    
+    // Solar sensors
+    'solar_radiation': ['fas', 'sun-o'],
+    'solar_radiation_avg': ['fas', 'sun-o'],
+    'solar_radiation_total': ['fas', 'sun-o'],
+    
+    // System sensors
+    'battery': ['fas', 'battery-three-quarters']
+  };
   
-  // Memoize date parsing to avoid repeated operations
-  const dateCache = new Map<string, number>();
+  return iconMap[sensorType] || ['fas', 'question-circle'];
+};
+
+// Memoize date parsing to avoid repeated operations
+const dateCache = new Map<string, number>();
   const getDateTime = (date: string, time: string): number => {
     const key = `${date}T${time}`;
     if (!dateCache.has(key)) {
@@ -170,7 +214,7 @@
                        changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
           icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
                        changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
-          img: 'dashboard-4/icon/student.png',
+          img: sensorType,
           cardclass: "student",
           fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                          changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
@@ -182,7 +226,8 @@
           rateOfChange: `${changes.rateOfChange}${config.unit}`,
           timeDiff: changes.timeDiff,
           trend: changes.trend,
-          unit: config.unit
+          unit: config.unit,
+          sensorType: sensorType
         };
       })
       .filter(Boolean) as CardData[];

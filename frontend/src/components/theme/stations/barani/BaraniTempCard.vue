@@ -16,7 +16,7 @@
                             <p class="f-light mb-0">Last updated: {{ item.month }}</p>
                         </div>
                         <div class="flex-shrink-0">
-                            <img :src="getImages(item.img)" alt="" />
+                            <font-awesome-icon :icon="getWeatherIcon(item.sensorType)" style="font-size: 2rem; color: #007bff;" />
                         </div>
                     </div>
                 </Card1>
@@ -48,6 +48,7 @@ interface CardData {
     timeDiff: string;
     trend: string;
     unit: string;
+    sensorType: string;
 }
 
 const props = defineProps({
@@ -66,6 +67,52 @@ const {
 } = useStationData();
 
 const localBaraniData = ref<CardData[]>([]);
+
+// Function to handle both local assets and external URLs
+const getImageSource = (imgPath: string): string => {
+  // If it's a full URL (starts with http/https), return it directly
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+    return imgPath;
+  }
+  // Otherwise, treat it as a local asset and use getImages
+  return getImages(imgPath);
+};
+
+// Function to get weather-appropriate icons from Font Awesome
+const getWeatherIcon = (sensorType: string): string[] => {
+  const iconMap: Record<string, string[]> = {
+    // Temperature sensors
+    'temperature': ['fas', 'thermometer-half'],
+    'temperature_max': ['fas', 'thermometer-full'],
+    'temperature_min': ['fas', 'thermometer-empty'],
+    
+    // Precipitation sensors
+    'rain_counter': ['fas', 'cloud'],
+    'rain_intensity_max': ['fas', 'cloud'],
+    
+    // Atmospheric sensors
+    'humidity': ['fas', 'tint'],
+    'pressure': ['fas', 'tachometer'],
+    
+    // Wind sensors
+    'wind_ave10': ['fas', 'cloud'],
+    'wind_max10': ['fas', 'cloud'],
+    'wind_min10': ['fas', 'cloud'],
+    'dir_ave10': ['fas', 'compass'],
+    'dir_max10': ['fas', 'compass'],
+    'dir_lo10': ['fas', 'compass'],
+    'dir_hi10': ['fas', 'compass'],
+    
+    // Solar sensors
+    'irradiation': ['fas', 'sun-o'],
+    'irr_max': ['fas', 'sun-o'],
+    
+    // System sensors
+    'battery': ['fas', 'battery-three-quarters']
+  };
+  
+  return iconMap[sensorType] || ['fas', 'question-circle'];
+};
 
 // Enhanced sensor configuration with thresholds
 const sensorConfig: Record<string, { name: string; unit: string; threshold: number }> = {
@@ -167,7 +214,7 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                                  changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
                 icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
                                  changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
-                img: 'dashboard-4/icon/student.png',
+                img: sensorType,
                 cardclass: "student",
                 fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                                       changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
@@ -178,7 +225,8 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                 rateOfChange: `${changes.rateOfChange}${config.unit}`,
                 timeDiff: changes.timeDiff,
                 trend: changes.trend,
-                unit: config.unit
+                unit: config.unit,
+                sensorType: sensorType
             };
         })
         .filter(Boolean) as CardData[];

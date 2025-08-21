@@ -94,7 +94,15 @@ const availableSensors = computed(() => [
 	'Wind Dir Average',
 	'Wind Dir Inst',
 	'Wind Speed Average',
-	'Wind Speed Inst'
+	'Wind Speed Inst',
+	// Additional OTT sensors found in backend
+	'EvapoTranspiration',
+	'Leaf Wetness',
+	'Soil Moisture (10cm)',
+	'Soil Moisture (20cm)',
+	'Soil Moisture (30cm)',
+	'Soil Temp (15cm)',
+	'Solar Radiation'
 ]);
 
 const fetchStationNames = async () => {
@@ -134,6 +142,7 @@ watch(() => selectedStation.value, async (newVal) => {
 		try {
 			console.log('Selected station changed to:', newVal);
 			console.log('Available sensors:', availableSensors.value);
+			// Fetch data for all available sensors
 			await ottData.fetchStationData(newVal, availableSensors.value.join(','), 12);
 			console.log('Updated measurements:', ottData.measurements.value);
 			console.log('Updated station info:', ottData.stationInfo.value);

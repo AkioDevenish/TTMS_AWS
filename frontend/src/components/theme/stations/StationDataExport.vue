@@ -218,7 +218,15 @@ const sensorConfigs: SensorConfigs = {
     'Wind Dir Average': { name: 'Wind Direction Average', unit: '°' },
     'Wind Dir Inst': { name: 'Wind Direction Instantaneous', unit: '°' },
     'Wind Speed Average': { name: 'Wind Speed Average', unit: 'knots' },
-    'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots' }
+    'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots' },
+    // Additional OTT sensors
+    'EvapoTranspiration': { name: 'EvapoTranspiration', unit: 'mm' },
+    'Leaf Wetness': { name: 'Leaf Wetness', unit: '%' },
+    'Soil Moisture (10cm)': { name: 'Soil Moisture (10cm)', unit: '%' },
+    'Soil Moisture (20cm)': { name: 'Soil Moisture (20cm)', unit: '%' },
+    'Soil Moisture (30cm)': { name: 'Soil Moisture (30cm)', unit: '%' },
+    'Soil Temp (15cm)': { name: 'Soil Temperature (15cm)', unit: '°C' },
+    'Solar Radiation': { name: 'Solar Radiation', unit: 'W/m²' }
   },
   'Sutron': {
     'temperature': { name: 'Temperature', unit: '°C' },

@@ -441,7 +441,15 @@ export const useStationOverviewStore = defineStore('stationOverview', {
           'Wind Dir Average': 'Wind Direction Average',
           'Wind Dir Inst': 'Wind Direction Instantaneous',
           'Wind Speed Average': 'Wind Speed Average',
-          'Wind Speed Inst': 'Wind Speed Instantaneous'
+          'Wind Speed Inst': 'Wind Speed Instantaneous',
+          // Additional OTT sensors
+          'EvapoTranspiration': 'EvapoTranspiration',
+          'Leaf Wetness': 'Leaf Wetness',
+          'Soil Moisture (10cm)': 'Soil Moisture (10cm)',
+          'Soil Moisture (20cm)': 'Soil Moisture (20cm)',
+          'Soil Moisture (30cm)': 'Soil Moisture (30cm)',
+          'Soil Temp (15cm)': 'Soil Temperature (15cm)',
+          'Solar Radiation': 'Solar Radiation'
         },
         'Sutron': {
           'AT': 'Air Temperature',

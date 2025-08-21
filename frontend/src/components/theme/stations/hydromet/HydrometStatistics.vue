@@ -51,10 +51,10 @@
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref, computed, watch, defineProps, onMounted, onUnmounted } from 'vue';
+import { defineAsyncComponent, ref, computed, watch, defineProps, onMounted } from 'vue';
 import { OTTOptions1 } from '@/core/data/chart';
 import axios from 'axios';
-import { useStationData, type Measurement } from '@/composables/useStationData';
+import type { Measurement } from '@/composables/useStationData';
 const Card1 = defineAsyncComponent(() => import('@/components/common/card/CardData1.vue'));
 
 const props = defineProps({
@@ -75,7 +75,7 @@ const props = defineProps({
 const selectedSensorType = ref<string>('');
 const availableSensors = ref<Array<{type: string, name: string, unit: string}>>([]);
 
-const hydrometData = useStationData();
+// Component now uses props instead of composable
 
 const fetchAvailableSensors = async () => {
   if (!props.selectedStation) return;
@@ -96,7 +96,11 @@ const fetchAvailableSensors = async () => {
         'Battery', 'Daily Rain', 'Dew Point', 'Gust Direction', 'Gust Speed', 
         'Hours of Sunshine', 'Maximum Air Temperature', 'Minimum Air Temperature', 
         'Relative Humidity', 'Solar Radiation Avg', 'Solar Radiation Total', 
-        'Wind Dir Average', 'Wind Dir Inst', 'Wind Speed Average', 'Wind Speed Inst'
+        'Wind Dir Average', 'Wind Dir Inst', 'Wind Speed Average', 'Wind Speed Inst',
+        // Additional OTT sensors found in backend
+        'EvapoTranspiration', 'Leaf Wetness', 'Soil Moisture (10cm)', 
+        'Soil Moisture (20cm)', 'Soil Moisture (30cm)', 'Soil Temp (15cm)', 
+        'Solar Radiation'
       ];
 
       response.data.forEach(sensor => {
@@ -135,13 +139,13 @@ const currentSensorUnit = computed(() => {
 });
 
 const chartData = computed(() => {
-  const filteredData = hydrometData.measurements.value.filter(
+  const filteredData = (props.measurements as Measurement[]).filter(
     (measurement: Measurement) => measurement.sensor_type === selectedSensorType.value
   );
   if (!filteredData.length) return [];
   return [{
     name: availableSensors.value.find(s => s.type === selectedSensorType.value)?.name || selectedSensorType.value,
-    data: filteredData.map(item => ({
+    data: filteredData.map((item: Measurement) => ({
       x: new Date(`${item.date}T${item.time}`).getTime(),
       y: parseFloat(item.value.toString())
     }))
@@ -198,18 +202,13 @@ const chartOptions = computed(() => ({
   }
 }));
 
-let fetchTimeout: number | null = null;
+// No longer needed since component doesn't fetch data
 
 watch([() => props.selectedStation, () => availableSensors.value], ([newStationId, newAvailableSensors]) => {
   if (newStationId && newAvailableSensors.length > 0) {
-    if (fetchTimeout) {
-      clearTimeout(fetchTimeout);
-    }
-    fetchTimeout = setTimeout(() => {
-      hydrometData.fetchStationData(newStationId, newAvailableSensors.map(sensor => sensor.type).join(','), 12);
-    }, 300);
-  } else {
-    hydrometData.measurements.value = [];
+    // Data is fetched by parent component, just log for debugging
+    console.log('HydrometStatistics: Station changed to:', newStationId);
+    console.log('Available sensors:', newAvailableSensors);
   }
 }, { immediate: true });
 
@@ -217,17 +216,13 @@ onMounted(() => {
   fetchAvailableSensors();
 });
 
-onUnmounted(() => {
-  if (fetchTimeout) {
-    clearTimeout(fetchTimeout);
-  }
-});
+// Component cleanup handled by parent
 
 const selectMeasurement = (sensorType: string) => {
   selectedSensorType.value = sensorType;
 };
 
-const isLoading = computed(() => hydrometData.isLoading.value);
+const isLoading = ref(false); // Component doesn't manage loading state
 </script>
 
 <style scoped>
