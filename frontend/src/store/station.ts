@@ -12,7 +12,9 @@ export const useStationStore = defineStore('station', () => {
     loading.value = true
     error.value = null
     try {
-      const response = await axios.get('/api/stations/?include_decommissioned=true')
+      // Add timestamp to prevent caching issues
+      const timestamp = new Date().getTime()
+      const response = await axios.get(`/api/stations/?include_decommissioned=true&_t=${timestamp}`)
       // Handle both paginated and non-paginated responses
       if (response.data && response.data.results) {
         // Paginated response
@@ -26,6 +28,14 @@ export const useStationStore = defineStore('station', () => {
       stations.value = stations.value.filter(station => station && typeof station === 'object')
       
       console.log(`Fetched ${stations.value.length} stations`)
+      
+      // Debug: Log first few stations to check their status
+      if (stations.value.length > 0) {
+        console.log('Sample stations:')
+        stations.value.slice(0, 3).forEach((station, index) => {
+          console.log(`  ${index + 1}. ${station.name}: Status=${station.status}, Decommissioned=${station.decommissioned_at}`)
+        })
+      }
     } catch (err: any) {
       console.error('Error fetching stations:', err)
       error.value = err
@@ -99,14 +109,25 @@ export const useStationStore = defineStore('station', () => {
     loading.value = true
     error.value = null
     try {
+      console.log(`Attempting to decommission station ${stationId}...`)
       const response = await axios.post(`/api/stations/${stationId}/decommission/`)
+      console.log('Decommission response:', response.data)
+      
       if (response.status === 200) {
         const index = stations.value.findIndex(station => station.id === stationId)
+        console.log(`Found station at index ${index}`)
+        
         if (index !== -1) {
+          const oldStatus = stations.value[index].status
+          console.log(`Old status: ${oldStatus}`)
+          
           // Update the station in the local array
           stations.value[index] = { ...stations.value[index], ...response.data.station }
+          console.log(`New status: ${stations.value[index].status}`)
+          
           // Force reactivity update
           stations.value = [...stations.value]
+          console.log('Station array updated, new length:', stations.value.length)
         }
         return true
       }
@@ -125,14 +146,25 @@ export const useStationStore = defineStore('station', () => {
     loading.value = true
     error.value = null
     try {
+      console.log(`Attempting to reactivate station ${stationId}...`)
       const response = await axios.post(`/api/stations/${stationId}/reactivate/`)
+      console.log('Reactivate response:', response.data)
+      
       if (response.status === 200) {
         const index = stations.value.findIndex(station => station.id === stationId)
+        console.log(`Found station at index ${index}`)
+        
         if (index !== -1) {
+          const oldStatus = stations.value[index].status
+          console.log(`Old status: ${oldStatus}`)
+          
           // Update the station in the local array
           stations.value[index] = { ...stations.value[index], ...response.data.station }
+          console.log(`New status: ${stations.value[index].status}`)
+          
           // Force reactivity update
           stations.value = [...stations.value]
+          console.log('Station array updated, new length:', stations.value.length)
         }
         return true
       }

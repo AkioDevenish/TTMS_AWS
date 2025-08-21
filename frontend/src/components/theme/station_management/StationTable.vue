@@ -134,7 +134,11 @@ const handleDecommissionStation = async (stationId: number) => {
                 showConfirmButton: false,
                 timer: 3000
             })
-            await stationStore.fetchStations() // Refresh the list
+            // Don't refresh immediately - let the local state update handle it
+            // The decommissionStation function already updates the local state
+            
+            // Notify other components that station status has changed
+            window.dispatchEvent(new CustomEvent('stationStatusChanged'));
         }
     } catch (error) {
         console.error('Error in handleDecommissionStation:', error)
@@ -187,7 +191,11 @@ const handleReactivateStation = async (stationId: number) => {
                 showConfirmButton: false,
                 timer: 3000
             })
-            await stationStore.fetchStations() // Refresh the list
+            // Don't refresh immediately - let the local state update handle it
+            // The reactivateStation function already updates the local state
+            
+            // Notify other components that station status has changed
+            window.dispatchEvent(new CustomEvent('stationStatusChanged'));
         }
     } catch (error) {
         console.error('Error in handleReactivateStation:', error)

@@ -36,7 +36,7 @@ export const useAWSStationsStore = defineStore('awsStations', {
         isLoading: false,
         error: null,
         selectedBrand: null,
-        availableBrands: ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'],
+        availableBrands: ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron'],
         refreshInterval: null,
         // Pagination state
         currentPage: 1,
@@ -159,7 +159,7 @@ export const useAWSStationsStore = defineStore('awsStations', {
                 
                 // Update available brands if not already set
                 if (this.availableBrands.length === 0) {
-                    this.availableBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'];
+                    this.availableBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron'];
                 }
                 
             } catch (err: any) {

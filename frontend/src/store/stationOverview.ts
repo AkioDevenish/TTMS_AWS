@@ -353,7 +353,8 @@ export const useStationOverviewStore = defineStore('stationOverview', {
         '3D_Paws': 'bt1',
         'Zentra': 'Air Temperature',
         'Allmeteo': 'temperature',
-        'OTT': 'Air Temperature'
+        'OTT': 'Air Temperature',
+        'Sutron': 'AT'
       };
       
       const defaultSensorType = defaultSensorTypes[brand];
@@ -441,6 +442,46 @@ export const useStationOverviewStore = defineStore('stationOverview', {
           'Wind Dir Inst': 'Wind Direction Instantaneous',
           'Wind Speed Average': 'Wind Speed Average',
           'Wind Speed Inst': 'Wind Speed Instantaneous'
+        },
+        'Sutron': {
+          'AT': 'Air Temperature',
+          'ATMAX': 'Air Temperature Max',
+          'ATMIN': 'Air Temperature Min',
+          'AT_ADJUSTED': 'Air Temperature Adjusted',
+          'BARO': 'Barometric Pressure',
+          'BATT': 'Battery',
+          'DP': 'Dew Point',
+          'GUST': 'Wind Gust',
+          'GUSTDIR': 'Wind Gust Direction',
+          'HRSSUN': 'Hours of Sunshine',
+          'LEAF DRY': 'Leaf Dry',
+          'LEAF SLIGHT WET': 'Leaf Slight Wet',
+          'LEAF WET': 'Leaf Wet',
+          'LEAFW': 'Leaf Wetness',
+          'LWC': 'Leaf Wetness Count',
+          'LWTIME': 'Leaf Wetness Time',
+          'QFE': 'QFE Pressure',
+          'QFF': 'QFF Pressure',
+          'QNH': 'QNH Pressure',
+          'RAIN': 'Rainfall',
+          'RAINDAILY': 'Daily Rainfall',
+          'RH': 'Relative Humidity',
+          'SOILCOND': 'Soil Conductivity',
+          'SOILEC': 'Soil EC',
+          'SOILM': 'Soil Moisture',
+          'SOILPERM': 'Soil Permittivity',
+          'SOILT': 'Soil Temperature',
+          'SOLARV': 'Solar Voltage',
+          'SOLARVOLTAGE': 'Solar Voltage',
+          'SOLRAD': 'Solar Radiation',
+          'UNKNOWN': 'Unknown Sensor',
+          'WD10': 'Wind Direction 10m',
+          'WDA': 'Wind Direction Average',
+          'WDI': 'Wind Direction Instantaneous',
+          'WS10': 'Wind Speed 10m',
+          'WSA': 'Wind Speed Average',
+          'WSI': 'Wind Speed Instantaneous',
+          'BATTERY': 'Battery'
         }
       };
 

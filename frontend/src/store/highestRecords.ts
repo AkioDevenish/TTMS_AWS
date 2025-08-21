@@ -59,7 +59,7 @@ export const useHighestRecordsStore = defineStore('highestRecords', {
                 console.log('Store: Stations response:', stationsResponse.data);
                 
                 // Always include these brands as tabs
-                const requiredBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'];
+                const requiredBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron'];
                 
                 // Handle paginated response - check if data has 'results' property
                 const stationsData = stationsResponse.data.results || stationsResponse.data;

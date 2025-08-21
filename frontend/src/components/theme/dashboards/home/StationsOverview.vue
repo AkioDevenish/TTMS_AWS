@@ -24,6 +24,17 @@
                     </li>
                 </ul>
                 
+                <!-- Refresh button -->
+                <button 
+                    @click="refreshData" 
+                    class="btn btn-outline-secondary btn-sm me-3"
+                    :disabled="isLoading"
+                    title="Refresh station data"
+                >
+                    <i class="fa fa-refresh" :class="{ 'fa-spin': isLoading }"></i>
+                    Refresh
+                </button>
+                
                 <!-- Improved sensor type selection dropdown -->
                 <div class="sensor-dropdown" v-if="sensorConfig && Object.keys(sensorConfig).length">
                     <div class="dropdown w-100">
@@ -338,12 +349,24 @@ const sensorConfigs = {
     'st1': { name: 'Soil Temperature', unit: '°C' }
   },
   'Zentra': {
-    'Air Temperature': { name: 'Air Temperature', unit: '°C' },
-    'Wind Speed': { name: 'Wind Speed', unit: 'm/s' },
     'Solar Radiation': { name: 'Solar Radiation', unit: 'W/m²' },
     'Precipitation': { name: 'Precipitation', unit: 'mm' },
+    'Lightning Activity': { name: 'Lightning Activity', unit: 'count' },
+    'Lightning Distance': { name: 'Lightning Distance', unit: 'km' },
+    'Wind Direction': { name: 'Wind Direction', unit: '°' },
+    'Wind Speed': { name: 'Wind Speed', unit: 'm/s' },
+    'Gust Speed': { name: 'Gust Speed', unit: 'm/s' },
+    'Air Temperature': { name: 'Air Temperature', unit: '°C' },
     'Relative Humidity': { name: 'Relative Humidity', unit: '%' },
-    'Atmospheric Pressure': { name: 'Atmospheric Pressure', unit: 'kPa' }
+    'Atmospheric Pressure': { name: 'Atmospheric Pressure', unit: 'kPa' },
+    'X-axis Level': { name: 'X-axis Level', unit: 'mm' },
+    'Y-axis Level': { name: 'Y-axis Level', unit: 'mm' },
+    'Max Precipitation Rate': { name: 'Max Precipitation Rate', unit: 'mm/h' },
+    'RH Sensor Temperature': { name: 'RH Sensor Temperature', unit: '°C' },
+    'Vapor Pressure Deficit': { name: 'Vapor Pressure Deficit', unit: 'kPa' },
+    'Battery Percent': { name: 'Battery Percent', unit: '%' },
+    'Battery Voltage': { name: 'Battery Voltage', unit: 'mV' },
+    'Atmospheric Pressure (Reference Pressure)': { name: 'Atmospheric Pressure (Reference Pressure)', unit: 'kPa' }
   },
   'Allmeteo': {
     'battery': { name: 'Battery', unit: '%' },
@@ -394,17 +417,41 @@ const sensorConfigs = {
     'AT': { name: 'Air Temperature', unit: '°C' },
     'ATMAX': { name: 'Air Temperature Max', unit: '°C' },
     'ATMIN': { name: 'Air Temperature Min', unit: '°C' },
-    'Barometric Pressure': { name: 'Barometric Pressure', unit: 'hPa' },
+    'AT_ADJUSTED': { name: 'Air Temperature Adjusted', unit: '°C' },
+    'BARO': { name: 'Barometric Pressure', unit: 'hPa' },
+    'BATT': { name: 'Battery', unit: 'V' },
     'DP': { name: 'Dew Point', unit: '°C' },
     'GUST': { name: 'Wind Gust', unit: 'm/s' },
     'GUSTDIR': { name: 'Wind Gust Direction', unit: '°' },
-    'Rainfall': { name: 'Rainfall', unit: 'mm' },
+    'HRSSUN': { name: 'Hours of Sunshine', unit: 'hr' },
+    'LEAF DRY': { name: 'Leaf Dry', unit: 'status' },
+    'LEAF SLIGHT WET': { name: 'Leaf Slight Wet', unit: 'status' },
+    'LEAF WET': { name: 'Leaf Wet', unit: 'status' },
+    'LEAFW': { name: 'Leaf Wetness', unit: 'status' },
+    'LWC': { name: 'Leaf Wetness Count', unit: 'count' },
+    'LWTIME': { name: 'Leaf Wetness Time', unit: 'min' },
+    'QFE': { name: 'QFE Pressure', unit: 'hPa' },
+    'QFF': { name: 'QFF Pressure', unit: 'hPa' },
+    'QNH': { name: 'QNH Pressure', unit: 'hPa' },
+    'RAIN': { name: 'Rainfall', unit: 'mm' },
     'RAINDAILY': { name: 'Daily Rainfall', unit: 'mm' },
     'RH': { name: 'Relative Humidity', unit: '%' },
+    'SOILCOND': { name: 'Soil Conductivity', unit: 'mS/cm' },
+    'SOILEC': { name: 'Soil EC', unit: 'mS/cm' },
+    'SOILM': { name: 'Soil Moisture', unit: '%' },
+    'SOILPERM': { name: 'Soil Permittivity', unit: 'dimensionless' },
+    'SOILT': { name: 'Soil Temperature', unit: '°C' },
+    'SOLARV': { name: 'Solar Voltage', unit: 'V' },
+    'SOLARVOLTAGE': { name: 'Solar Voltage', unit: 'V' },
+    'SOLRAD': { name: 'Solar Radiation', unit: 'W/m²' },
+    'UNKNOWN': { name: 'Unknown Sensor', unit: 'unknown' },
     'WD10': { name: 'Wind Direction 10m', unit: '°' },
+    'WDA': { name: 'Wind Direction Average', unit: '°' },
     'WDI': { name: 'Wind Direction Instantaneous', unit: '°' },
     'WS10': { name: 'Wind Speed 10m', unit: 'm/s' },
-    'WSI': { name: 'Wind Speed Instantaneous', unit: 'm/s' }
+    'WSA': { name: 'Wind Speed Average', unit: 'm/s' },
+    'WSI': { name: 'Wind Speed Instantaneous', unit: 'm/s' },
+    'BATTERY': { name: 'Battery', unit: 'V' }
   }
 };
 
@@ -474,6 +521,19 @@ onMounted(() => {
   refreshIntervalId = setInterval(() => {
     store.fetchStationData(true);
   }, 5 * 60 * 1000);
+  
+  // Listen for station status changes from other components
+  window.addEventListener('stationStatusChanged', refreshData);
+});
+
+onUnmounted(() => {
+  if (refreshIntervalId) {
+    clearInterval(refreshIntervalId);
+    refreshIntervalId = null;
+  }
+  
+  // Remove event listener
+  window.removeEventListener('stationStatusChanged', refreshData);
 });
 
 onUnmounted(() => {
@@ -1038,7 +1098,13 @@ function selectSensorType(type) {
     selectedSensorType.value = type;
     // Fetch data after sensor type is set
     store.fetchStationData(true);
+  }
 }
+
+// Function to refresh all data
+function refreshData() {
+  console.log('Refreshing station overview data...');
+  store.fetchStationData(true);
 }
 </script>
 

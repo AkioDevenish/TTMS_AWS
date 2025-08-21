@@ -181,6 +181,23 @@ class StationViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({'error': 'No health data available'}, status=404)
 
+    def _clear_station_cache(self, brand_name):
+        """Helper method to clear station-related cache in a compatible way"""
+        from django.core.cache import cache
+        try:
+            # Try to use delete_pattern if available
+            cache.delete_pattern('stations_list_*')
+        except AttributeError:
+            # Fallback for cache backends that don't support delete_pattern
+            # Clear some common cache keys manually
+            for i in range(1, 11):  # Clear first 10 pages
+                cache.delete(f'stations_list_{i}')
+                cache.delete(f'stations_list_page_{i}')
+                cache.delete(f'stations_list_all_false')
+                cache.delete(f'stations_list_all_true')
+                cache.delete(f'stations_list_{brand_name}_false')
+                cache.delete(f'stations_list_{brand_name}_true')
+
     @action(detail=True, methods=['post'])
     def decommission(self, request, pk=None):
         """Decommission a station instead of deleting it"""
@@ -210,6 +227,9 @@ class StationViewSet(viewsets.ModelViewSet):
                         cache.delete(cache_key)
                         cache_key = f'station_overview_{instance.brand.name}_{sensor_type}_{page}_{page_size}_False'
                         cache.delete(cache_key)
+            
+            # Clear station list cache to ensure fresh data
+            self._clear_station_cache(instance.brand.name)
             
             serializer = self.get_serializer(instance)
             return Response(
@@ -257,6 +277,9 @@ class StationViewSet(viewsets.ModelViewSet):
                         cache_key = f'station_overview_{instance.brand.name}_{sensor_type}_{page}_{page_size}_False'
                         cache.delete(cache_key)
             
+            # Clear station list cache to ensure fresh data
+            self._clear_station_cache(instance.brand.name)
+            
             serializer = self.get_serializer(instance)
             return Response(
                 {"message": "Station reactivated successfully", "station": serializer.data},
@@ -275,21 +298,19 @@ class StationViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """Override update to clear cache when stations are modified."""
-        from django.core.cache import cache
+        # Get the instance to access brand name for cache clearing
+        instance = self.get_object()
+        self._clear_station_cache(instance.brand.name)
         
-        # Clear stations cache when updating
-        cache.delete_pattern('stations_list_*')
-        
-        return super().update(request, *args, **kwargs)
+        return super().partial_update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         """Override partial_update to clear cache when stations are modified."""
-        from django.core.cache import cache
+        # Get the instance to access brand name for cache clearing
+        instance = self.get_object()
+        self._clear_station_cache(instance.brand.name)
         
-        # Clear stations cache when updating
-        cache.delete_pattern('stations_list_*')
-        
-        return super().partial_update(request, *args, **kwargs)
+        return super().update(request, *args, **kwargs)
 
 
 class SensorViewSet(viewsets.ModelViewSet):
@@ -681,7 +702,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             # Base queryset with select_related and prefetch_related
             # Filter out decommissioned stations for dashboard overview
             stations = Station.objects.filter(
-                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
+                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
             ).exclude(status='Decommissioned').select_related('brand')
 
             if brand:
@@ -847,6 +868,78 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'Soil Temperature': 'st1'
         }
         
+        # Zentra sensor mapping (frontend name -> database code)
+        zentra_mapping = {
+            'Solar Radiation': 'Solar Radiation',
+            'Precipitation': 'Precipitation',
+            'Lightning Activity': 'Lightning Activity',
+            'Lightning Distance': 'Lightning Distance',
+            'Wind Direction': 'Wind Direction',
+            'Wind Speed': 'Wind Speed',
+            'Gust Speed': 'Gust Speed',
+            'Air Temperature': 'Air Temperature',
+            'Relative Humidity': 'Relative Humidity',
+            'Atmospheric Pressure': 'Atmospheric Pressure',
+            'X-axis Level': 'X-axis Level',
+            'Y-axis Level': 'Y-axis Level',
+            'Max Precipitation Rate': 'Max Precipitation Rate',
+            'RH Sensor Temperature': 'RH Sensor Temperature',
+            'Vapor Pressure Deficit': 'Vapor Pressure Deficit',
+            'Battery Percent': 'Battery Percent',
+            'Battery Voltage': 'Battery Voltage',
+            'Atmospheric Pressure (Reference Pressure)': 'Atmospheric Pressure (Reference Pressure)'
+        }
+        
+        # Sutron sensor mapping (frontend name -> database code)
+        sutron_mapping = {
+            'AT': 'AT',
+            'ATMAX': 'ATMAX',
+            'ATMIN': 'ATMIN',
+            'AT_ADJUSTED': 'AT_ADJUSTED',
+            'BARO': 'BARO',
+            'BATT': 'BATT',
+            'DP': 'DP',
+            'GUST': 'GUST',
+            'GUSTDIR': 'GUSTDIR',
+            'HRSSUN': 'HRSSUN',
+            'LEAF DRY': 'LEAF DRY',
+            'LEAF SLIGHT WET': 'LEAF SLIGHT WET',
+            'LEAF WET': 'LEAF WET',
+            'LEAFW': 'LEAFW',
+            'LWC': 'LWC',
+            'LWTIME': 'LWTIME',
+            'QFE': 'QFE',
+            'QFF': 'QFF',
+            'QNH': 'QNH',
+            'RAIN': 'RAIN',
+            'RAINDAILY': 'RAINDAILY',
+            'RH': 'RH',
+            'SOILCOND': 'SOILCOND',
+            'SOILEC': 'SOILEC',
+            'SOILM': 'SOILM',
+            'SOILPERM': 'SOILPERM',
+            'SOILT': 'SOILT',
+            'SOLARV': 'SOLARV',
+            'SOLARVOLTAGE': 'SOLARVOLTAGE',
+            'SOLRAD': 'SOLRAD',
+            'UNKNOWN': 'UNKNOWN',
+            'WD10': 'WD10',
+            'WDA': 'WDA',
+            'WDI': 'WDI',
+            'WS10': 'WS10',
+            'WSA': 'WSA',
+            'WSI': 'WSI',
+            'BATTERY': 'BATTERY'
+        }
+        
+        # Check if it's a Zentra sensor type first
+        if sensor_type in zentra_mapping:
+            return zentra_mapping[sensor_type]
+        
+        # Check if it's a Sutron sensor type
+        if sensor_type in sutron_mapping:
+            return sutron_mapping[sensor_type]
+        
         # If the sensor_type is already a database code (like 'bt1'), return it as-is
         # If it's a frontend name (like 'Temperature 1'), map it to database code
         return sensor_mapping.get(sensor_type, sensor_type)
@@ -884,6 +977,56 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'Solar Radiation': 'W/m²',
             'Relative Humidity': '%',
             'Atmospheric Pressure': 'kPa',
+            'Lightning Activity': 'count',
+            'Lightning Distance': 'km',
+            'Gust Speed': 'm/s',
+            'X-axis Level': 'mm',
+            'Y-axis Level': 'mm',
+            'Max Precipitation Rate': 'mm/h',
+            'RH Sensor Temperature': '°C',
+            'Vapor Pressure Deficit': 'kPa',
+            'Battery Percent': '%',
+            'Battery Voltage': 'mV',
+            'Atmospheric Pressure (Reference Pressure)': 'kPa',
+            # Sutron sensor units
+            'AT': '°C',
+            'ATMAX': '°C',
+            'ATMIN': '°C',
+            'AT_ADJUSTED': '°C',
+            'BARO': 'hPa',
+            'BATT': 'V',
+            'DP': '°C',
+            'GUST': 'm/s',
+            'GUSTDIR': '°',
+            'HRSSUN': 'hr',
+            'LEAF DRY': 'status',
+            'LEAF SLIGHT WET': 'status',
+            'LEAF WET': 'status',
+            'LEAFW': 'status',
+            'LWC': 'count',
+            'LWTIME': 'min',
+            'QFE': 'hPa',
+            'QFF': 'hPa',
+            'QNH': 'hPa',
+            'RAIN': 'mm',
+            'RAINDAILY': 'mm',
+            'RH': '%',
+            'SOILCOND': 'mS/cm',
+            'SOILEC': 'mS/cm',
+            'SOILM': '%',
+            'SOILPERM': 'dimensionless',
+            'SOILT': '°C',
+            'SOLARV': 'V',
+            'SOLARVOLTAGE': 'V',
+            'SOLRAD': 'W/m²',
+            'UNKNOWN': 'unknown',
+            'WD10': '°',
+            'WDA': '°',
+            'WDI': '°',
+            'WS10': 'm/s',
+            'WSA': 'm/s',
+            'WSI': 'm/s',
+            'BATTERY': 'V',
             'wind_ave10': 'm/s',
             'wind_Max10': 'm/s',
             'wind_Min10': 'm/s',
@@ -2169,9 +2312,9 @@ def latest_station_health(request):
     # Get timestamp for 1 hour ago
     one_hour_ago = timezone.now() - timedelta(hours=1)
     
-    # Only get weather stations (3D_Paws, Allmeteo, or Zentra)
+    # Only get weather stations (3D_Paws, Allmeteo, Zentra, OTT, or Sutron)
     stations = Station.objects.filter(
-        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra'],
+        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron'],
         health_logs__created_at__gte=one_hour_ago
     ).distinct().annotate(
         latest_battery_status=Subquery(
@@ -2193,7 +2336,7 @@ def station_health_logs(request):
         if cached_response:
             return Response(cached_response)
         # Get parameters
-        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,AWS')
+        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,OTT,Sutron,AWS')
         brand_list = brands.split(',')
 
         # Annotate each station with the latest health log id
@@ -2249,7 +2392,7 @@ def station_temperature_overview(request):
     
     # Get all stations with their latest measurements
     stations = Station.objects.filter(
-        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
+        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
     ).prefetch_related('measurements')
     
     response_data = []
@@ -2296,7 +2439,7 @@ def aws_station_health_logs(request):
         
         # Get stations, filtered by brand if provided
         stations_queryset = Station.objects.filter(
-            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
+            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
         ).exclude(status='Decommissioned').select_related('brand')
         
         if brand:
@@ -2436,7 +2579,7 @@ def get_latest_health_logs(request):
     """Get latest health logs for all stations."""
     try:
         # Get parameters
-        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,AWS')
+        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,OTT,Sutron,AWS')
         brand_list = brands.split(',')
 
         # Get stations with their latest health log using subquery
@@ -2521,7 +2664,7 @@ def inactive_sensors(request):
         # Get stations, filtered by brand if provided
         # Exclude decommissioned stations for dashboard purposes
         stations_queryset = Station.objects.filter(
-            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
+            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
         ).exclude(status='Decommissioned').select_related('brand')
 
         if brand:
@@ -2553,7 +2696,7 @@ def inactive_sensors(request):
         # Collect all potential inactive sensors
         all_inactive_sensors_list = []
         # Always show all brands in the tab list
-        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
+        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
 
         # Get sensors that have had measurements in the last 7 days (to be more lenient about recent activity)
         # This accounts for potential timezone issues and data fetcher delays
