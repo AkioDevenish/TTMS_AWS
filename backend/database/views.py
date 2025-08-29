@@ -701,9 +701,15 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             # Get current time and determine appropriate time range
             now = timezone.now()
             
-            # Use 12 hours for all brands to focus on recent data
-            time_threshold = now - timedelta(hours=12)
-            print(f"Using 12-hour time range for {brand} stations")
+            # Use different time ranges for different brands
+            if brand == 'OTT':
+                # OTT stations may have less frequent data updates, use 7 days
+                time_threshold = now - timedelta(days=7)
+                print(f"Using 7-day time range for {brand} stations")
+            else:
+                # Use 12 hours for other brands to focus on recent data
+                time_threshold = now - timedelta(hours=12)
+                print(f"Using 12-hour time range for {brand} stations")
             
             yesterday = time_threshold
             
@@ -923,6 +929,29 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'Atmospheric Pressure (Reference Pressure)': 'Atmospheric Pressure (Reference Pressure)'
         }
         
+        # OTT sensor mapping (frontend name -> database code)
+        ott_mapping = {
+            '5 min rain': '5 min rain',
+            'Air Temperature': 'Air Temperature',
+            'Barometric Pressure': 'Barometric Pressure',
+            'Baro Tendency': 'Baro Tendency',
+            'Battery': 'Battery',
+            'Daily Rain': 'Daily Rain',
+            'Dew Point': 'Dew Point',
+            'Gust Direction': 'Gust Direction',
+            'Gust Speed': 'Gust Speed',
+            'Hours of Sunshine': 'Hours of Sunshine',
+            'Maximum Air Temperature': 'Maximum Air Temperature',
+            'Minimum Air Temperature': 'Minimum Air Temperature',
+            'Relative Humidity': 'Relative Humidity',
+            'Solar Radiation Avg': 'Solar Radiation Avg',
+            'Solar Radiation Total': 'Solar Radiation Total',
+            'Wind Dir Average': 'Wind Dir Average',
+            'Wind Dir Inst': 'Wind Dir Inst',
+            'Wind Speed Average': 'Wind Speed Average',
+            'Wind Speed Inst': 'Wind Speed Inst'
+        }
+        
         # Sutron sensor mapping (frontend name -> database code)
         sutron_mapping = {
             'AT': 'AT',
@@ -968,6 +997,10 @@ class MeasurementViewSet(viewsets.ModelViewSet):
         # Check if it's a Zentra sensor type first
         if sensor_type in zentra_mapping:
             return zentra_mapping[sensor_type]
+        
+        # Check if it's an OTT sensor type
+        if sensor_type in ott_mapping:
+            return ott_mapping[sensor_type]
         
         # Check if it's a Sutron sensor type
         if sensor_type in sutron_mapping:
@@ -1086,6 +1119,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'dewPoint': '°C',
             # OTT sensor types
             '5 min rain': 'mm',
+            'Air Temperature': '°C',
             'Barometric Pressure': 'hPa',
             'Baro Tendency': 'hPa',
             'Battery': 'V',
@@ -1096,6 +1130,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'Hours of Sunshine': 'hr',
             'Maximum Air Temperature': '°C',
             'Minimum Air Temperature': '°C',
+            'Relative Humidity': '%',
             'Solar Radiation Avg': 'Wh/m²',
             'Solar Radiation Total': 'Wh/m²',
             'Wind Dir Average': '°',

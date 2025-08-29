@@ -13,8 +13,8 @@ import os
 from logging.handlers import RotatingFileHandler
 import asyncio
 import concurrent.futures
-import mysql.connector
-from mysql.connector import Error
+import MySQLdb
+from MySQLdb import Error
 from django.db import transaction
 
 # Set up logging
@@ -55,11 +55,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Force full sync enabled - will reimport all data from last 3 months"))
         
         try:
-            # Set Trinidad and Tobago timezone (UTC-4)
-            tt_tz = timezone.get_fixed_timezone(-240)
-            
-            # Calculate time range from 12 hours ago to now
-            end_time = timezone.now().astimezone(tt_tz)
+            # Use UTC time consistently for all operations
+            end_time = timezone.now()
             start_time = end_time - timedelta(hours=12)
 
             logger.info(f"Fetching data from {start_time} to {end_time}")
@@ -68,35 +65,61 @@ class Command(BaseCommand):
             self.start_datetime = start_time.strftime("%Y-%m-%d %H:%M:%S")
             self.end_datetime = end_time.strftime("%Y-%m-%d %H:%M:%S")
 
-            # Run fetchers concurrently (including XC Data and Sutron)
+            # Run all fetchers concurrently (including XC Data and Sutron)
             with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
                 logger.info("Starting data fetchers")
-                # Start all fetchers
+                
+                # Start core fetchers (these are more reliable)
                 paws_future = executor.submit(self.fetch_paws_data)
                 zentra_future = executor.submit(self.fetch_zentra_data)
                 barani_future = executor.submit(self.fetch_barani_data)
                 ott_future = executor.submit(self.fetch_ott_hydromet_data)
-                xc_future = executor.submit(self.fetch_xc_data)
-                sutron_future = executor.submit(self.fetch_sutron_data)
+                
+                # Start optional fetchers (these might have connection issues)
+                try:
+                    xc_future = executor.submit(self.fetch_xc_data)
+                    sutron_future = executor.submit(self.fetch_sutron_data)
+                    optional_futures = [xc_future, sutron_future]
+                    fetcher_names = ['PAWS', 'Zentra', 'Barani', 'OTT', 'XC Data', 'Sutron']
+                except Exception as e:
+                    logger.warning(f"Failed to start optional fetchers: {e}")
+                    self.stdout.write(self.style.WARNING("Skipping optional fetchers due to startup error"))
+                    xc_future = None
+                    sutron_future = None
+                    optional_futures = []
+                    fetcher_names = ['PAWS', 'Zentra', 'Barani', 'OTT']
 
                 # Wait for all fetchers to complete and check for errors
-                futures = [paws_future, zentra_future, barani_future, ott_future, xc_future, sutron_future]
-                concurrent.futures.wait(futures)
+                core_futures = [paws_future, zentra_future, barani_future, ott_future]
+                all_futures = core_futures + optional_futures
+                concurrent.futures.wait(all_futures)
                 
                 # Check for exceptions
-                for i, future in enumerate(futures):
+                for i, future in enumerate(all_futures):
+                    if future is None:
+                        continue
                     try:
                         future.result()  # This will raise any exception that occurred
                     except Exception as e:
-                        fetcher_names = ['PAWS', 'Zentra', 'Barani', 'OTT', 'XC Data', 'Sutron']
                         logger.error(f"Error in {fetcher_names[i]} fetcher: {e}")
                         self.stdout.write(self.style.ERROR(f"Error in {fetcher_names[i]} fetcher: {e}"))
+                        # Continue with other fetchers instead of crashing
+                        self.stdout.write(self.style.WARNING(f"Continuing with other fetchers..."))
                 
                 logger.info("All data fetchers completed")
+            
+            # Comment out the Sutron-only code
+            # # Run only Sutron fetcher for debugging
+            # logger.info("Starting Sutron fetcher only")
+            # self.fetch_sutron_data()
+            # logger.info("Sutron fetcher completed")
                 
         except Exception as e:
             logger.error(f"Error in data_fetcher command: {str(e)}")
-            raise
+            self.stdout.write(self.style.ERROR(f"Critical error in data_fetcher: {str(e)}"))
+            # Don't raise the exception, just log it and continue
+            import traceback
+            traceback.print_exc()
 
     def get_stations_by_brand(self, brand_name):
         """Get stations by brand name directly from database"""
@@ -121,9 +144,7 @@ class Command(BaseCommand):
             'charset': 'utf8mb4',
             'use_unicode': True,
             'autocommit': True,
-            'connect_timeout': 30,
-            'read_timeout': 30,
-            'write_timeout': 30
+            'connect_timeout': 30
         }
         
         try:
@@ -133,6 +154,7 @@ class Command(BaseCommand):
             if not connection:
                 logger.error("Failed to connect to Sutron database")
                 self.stdout.write(self.style.ERROR("Failed to connect to Sutron database"))
+                self.stdout.write(self.style.WARNING("Skipping Sutron data fetch due to connection failure"))
                 return
             
             self.stdout.write("Connected to Sutron database successfully!")
@@ -192,26 +214,61 @@ class Command(BaseCommand):
 
     def connect_to_sutron_db(self, config):
         """Connect to Sutron MySQL database"""
-        try:
-            self.stdout.write(f"Attempting to connect to {config['host']}:{config['port']}...")
-            connection = mysql.connector.connect(**config)
-            
-            # Test the connection
-            cursor = connection.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-            cursor.close()
-            
-            self.stdout.write("Database connection test successful!")
-            return connection
-        except Error as e:
-            logger.error(f"Error connecting to Sutron database: {e}")
-            self.stdout.write(self.style.ERROR(f"Database connection error: {e}"))
-            return None
-        except Exception as e:
-            logger.error(f"Unexpected error connecting to Sutron database: {e}")
-            self.stdout.write(self.style.ERROR(f"Unexpected database error: {e}"))
-            return None
+        max_retries = 3
+        retry_delay = 5
+        
+        for attempt in range(max_retries):
+            try:
+                self.stdout.write(f"Attempting to connect to {config['host']}:{config['port']} (attempt {attempt + 1}/{max_retries})...")
+                
+                # Convert config to MySQLdb format
+                db_config = {
+                    'host': config['host'],
+                    'port': config['port'],
+                    'user': config['user'],
+                    'passwd': config['password'],
+                    'db': config['database'],
+                    'charset': config['charset'],
+                    'use_unicode': config['use_unicode'],
+                    'autocommit': config['autocommit'],
+                    'connect_timeout': config['connect_timeout']
+                }
+                
+                # Add timeout and connection safety
+                connection = MySQLdb.connect(**db_config)
+                
+                # Test the connection with timeout
+                cursor = connection.cursor()
+                cursor.execute("SELECT 1")
+                result = cursor.fetchone()
+                cursor.close()
+                
+                if result and result[0] == 1:
+                    self.stdout.write("Database connection test successful!")
+                    return connection
+                else:
+                    raise Exception("Connection test failed - unexpected result")
+                    
+            except Error as e:
+                logger.error(f"MySQL error connecting to Sutron database (attempt {attempt + 1}): {e}")
+                self.stdout.write(self.style.ERROR(f"Database connection error (attempt {attempt + 1}): {e}"))
+                if attempt < max_retries - 1:
+                    self.stdout.write(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    self.stdout.write(self.style.ERROR("Max retries reached, giving up"))
+                    return None
+            except Exception as e:
+                logger.error(f"Unexpected error connecting to Sutron database (attempt {attempt + 1}): {e}")
+                self.stdout.write(self.style.ERROR(f"Unexpected database error (attempt {attempt + 1}): {e}"))
+                if attempt < max_retries - 1:
+                    self.stdout.write(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                else:
+                    self.stdout.write(self.style.ERROR("Max retries reached, giving up"))
+                    return None
+        
+        return None
 
     def get_last_sutron_sync_time(self):
         """Get the last sync time from local database for Sutron data"""
@@ -224,17 +281,29 @@ class Command(BaseCommand):
                 self.stdout.write("FORCE_SUTRON_SYNC environment variable set - performing full 3-month reimport")
                 return timezone.now() - timedelta(days=90)
             
-            # Get the most recent measurement timestamp
-            latest_measurement = Measurement.objects.order_by('-created_at').first()
-            if latest_measurement:
-                return latest_measurement.created_at
+            # Get the most recent measurement timestamp for Sutron stations
+            from database.models import Measurement, Station, Brand
+            
+            sutron_brand = Brand.objects.filter(name="Sutron").first()
+            if sutron_brand:
+                latest_measurement = Measurement.objects.filter(
+                    station__brand=sutron_brand
+                ).order_by('-created_at').first()
+                
+                if latest_measurement:
+                    self.stdout.write(f"Found latest Sutron measurement from: {latest_measurement.created_at}")
+                    return latest_measurement.created_at
             
             # Fallback to 3 months ago if no measurements exist
-            return timezone.now() - timedelta(days=90)
+            fallback_time = timezone.now() - timedelta(days=90)
+            self.stdout.write(f"No Sutron measurements found, using fallback time: {fallback_time}")
+            return fallback_time
             
         except Exception as e:
             logger.error(f"Error getting last Sutron sync time: {e}")
-            return timezone.now() - timedelta(days=90)
+            fallback_time = timezone.now() - timedelta(days=90)
+            self.stdout.write(f"Error getting sync time, using fallback: {fallback_time}")
+            return fallback_time
 
     def sync_sutron_brands(self):
         """Sync brands from Sutron"""
@@ -259,7 +328,7 @@ class Command(BaseCommand):
         """Sync stations from Sutron"""
         stations = {}
         try:
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor()
             # Use the correct table name and column names from xc_data database
             cursor.execute("""
                 SELECT 
@@ -288,16 +357,15 @@ class Command(BaseCommand):
             
             for sutron_station in sutron_stations:
                 # Use STATION_ID as name since descriptive fields are empty in the database
-                station_name = sutron_station['station_id']
+                station_name = sutron_station[0]  # STATION_ID is first column
                 
                 station, created = Station.objects.get_or_create(
-                    serial_number=sutron_station['station_id'],
+                    serial_number=station_name,
                     defaults={
                         'name': station_name,
                         'brand': brands.get('Sutron'),
-                        'latitude': sutron_station.get('latitude', 0.0),
-                        'longitude': sutron_station.get('longitude', 0.0),
-                        'elevation': sutron_station.get('elevation', 0.0),
+                        'latitude': sutron_station[3] if sutron_station[3] else 0.0,  # LATITUDE
+                        'longitude': sutron_station[4] if sutron_station[4] else 0.0,  # LONGITUDE
                         'status': 'Active'
                     }
                 )
@@ -305,12 +373,11 @@ class Command(BaseCommand):
                 # Update existing stations with latest info
                 if not created:
                     station.name = station_name
-                    station.latitude = sutron_station.get('latitude', 0.0)
-                    station.longitude = sutron_station.get('longitude', 0.0)
-                    station.elevation = sutron_station.get('elevation', 0.0)
+                    station.latitude = sutron_station[3] if sutron_station[3] else 0.0
+                    station.longitude = sutron_station[4] if sutron_station[4] else 0.0
                     station.save()
                 
-                stations[sutron_station['station_id']] = station
+                stations[station_name] = station
                 
                 if created:
                     self.stdout.write(f"Created new Sutron station: {station.name}")
@@ -326,7 +393,7 @@ class Command(BaseCommand):
         """Sync sensors from Sutron"""
         sensors = {}
         try:
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor()
             # Use the correct table and column names from xc_data database
             cursor.execute("""
                 SELECT DISTINCT 
@@ -343,18 +410,23 @@ class Command(BaseCommand):
             self.stdout.write(f"Found {len(sensor_types)} enabled sensors in xc_sitesensors table")
             
             for sensor_row in sensor_types:
-                sensor_name = sensor_row['sensor_name']
-                units = sensor_row['units'] or self.get_sensor_unit(sensor_name)
+                sensor_name = sensor_row[0]  # SENSORNAME is first column
+                units = sensor_row[1] or self.get_sensor_unit(sensor_name)  # UNITS is second column
                 
-                sensor, created = Sensor.objects.get_or_create(
-                    type=sensor_name,
-                    defaults={'unit': units}
-                )
-                
-                # Update existing sensors with latest info
-                if not created:
-                    sensor.unit = units
-                    sensor.save()
+                # Handle duplicate sensors by using .first() instead of .get()
+                sensor = Sensor.objects.filter(type=sensor_name).first()
+                if not sensor:
+                    sensor = Sensor.objects.create(
+                        type=sensor_name,
+                        unit=units
+                    )
+                    created = True
+                else:
+                    # Update existing sensor with latest info
+                    if sensor.unit != units:
+                        sensor.unit = units
+                        sensor.save()
+                    created = False
                 
                 sensors[sensor_name] = sensor
                 
@@ -379,9 +451,14 @@ class Command(BaseCommand):
         """Sync measurements from Sutron"""
         measurement_count = 0
         try:
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor()
             
-            # Query for measurements after last sync time using the correct table structure
+            # Debug: Show what we're looking for
+            self.stdout.write(f"Looking for measurements after: {last_sync_time}")
+            self.stdout.write(f"Current time: {timezone.now()}")
+            self.stdout.write(f"Fetch window: {self.start_datetime} to {self.end_datetime}")
+            
+            # Query for measurements within our fetch window instead of after last sync time
             query = """
                 SELECT 
                     d.STATION_ID as station_id,
@@ -398,23 +475,35 @@ class Command(BaseCommand):
                     d.ALARM_FLAG as alarm_flag
                 FROM xc_data1 d
                 JOIN xc_sites s ON d.STATION_ID = s.STATION_ID
-                WHERE d.TIME_TAG > %s AND s.ENABLED = 'Y'
+                WHERE d.TIME_TAG BETWEEN %s AND %s AND s.ENABLED = 'Y'
                 ORDER BY d.TIME_TAG
             """
-            cursor.execute(query, (last_sync_time,))
+            
+            # Debug: Show the query and parameters
+            self.stdout.write(f"Executing query: {query}")
+            self.stdout.write(f"With parameters: {self.start_datetime} to {self.end_datetime}")
+            
+            cursor.execute(query, (self.start_datetime, self.end_datetime))
             sutron_measurements = cursor.fetchall()
             cursor.close()
             
             self.stdout.write(f"Found {len(sutron_measurements)} measurements to sync")
             
+            # Debug: Show first few measurements if any exist
+            if sutron_measurements:
+                self.stdout.write("Sample measurements:")
+                for i, m in enumerate(sutron_measurements[:3]):
+                    self.stdout.write(f"  {i+1}. Station: {m[0]}, Sensor: {m[1]}, Time: {m[2]}, Value: {m[3]}")
+            
             for sutron_measurement in sutron_measurements:
-                station_id = sutron_measurement['station_id']
-                sensor_name = sutron_measurement['sensor_name']
+                station_id = sutron_measurement[0]  # STATION_ID is first column
+                sensor_name = sutron_measurement[1]  # SENSORNAME is second column
                 
                 if station_id in stations and sensor_name in sensors:
                     try:
-                        # Parse timestamp
-                        timestamp = parse_datetime(sutron_measurement['timestamp'])
+                        # Handle timestamp - ensure it's a string
+                        timestamp_str = str(sutron_measurement[2])  # TIME_TAG is third column
+                        timestamp = parse_datetime(timestamp_str)
                         if not timestamp:
                             continue
                         
@@ -422,7 +511,7 @@ class Command(BaseCommand):
                         rounded_timestamp = self.round_to_nearest_hour(timestamp.isoformat())
                         
                         # Use edited value if available, otherwise original value
-                        value = sutron_measurement.get('edited_value') or sutron_measurement.get('value')
+                        value = sutron_measurement[4] if sutron_measurement[4] is not None else sutron_measurement[3]  # ED_VALUE or ORIG_VALUE
                         
                         # Validate measurement
                         is_valid, validation_message = DataValidator.validate_measurement(
@@ -435,7 +524,7 @@ class Command(BaseCommand):
                             sensor_id=sensors[sensor_name].id,
                             date=rounded_timestamp.date(),
                             time=rounded_timestamp.time(),
-                            value=sutron_measurement['value'],
+                            value=sutron_measurement[3],  # ORIG_VALUE
                             status="Successful",
                             note=f"Sutron Data Import - Validation: {validation_message}",
                             flag=is_valid,
@@ -592,8 +681,7 @@ class Command(BaseCommand):
         try:
             # Get or create XC Data brand
             xc_brand, created = Brand.objects.get_or_create(
-                name="XC Data Import",
-                defaults={'description': 'Data imported from XC Data system'}
+                name="XC Data Import"
             )
             brands['XC Data Import'] = xc_brand
             
@@ -913,9 +1001,21 @@ class Command(BaseCommand):
             "Authorization": f"Bearer {TOKEN}"
         }
 
-        # Use the same time range as other fetchers
-        START_DATE = parse_datetime(self.start_datetime)
-        END_DATE = parse_datetime(self.end_datetime)
+        # Use the same time range as other fetchers, with fallback if not set
+        try:
+            if hasattr(self, 'start_datetime') and hasattr(self, 'end_datetime'):
+                START_DATE = parse_datetime(self.start_datetime)
+                END_DATE = parse_datetime(self.end_datetime)
+            else:
+                # Fallback: use last 12 hours
+                from django.utils import timezone
+                from datetime import timedelta
+                END_DATE = timezone.now()
+                START_DATE = END_DATE - timedelta(hours=12)
+                self.stdout.write(f"Using fallback time range: {START_DATE} to {END_DATE}")
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Error parsing datetime: {e}"))
+            return
 
         # Convert to Unix timestamps
         params = {
@@ -923,11 +1023,17 @@ class Command(BaseCommand):
             "to_time": int(END_DATE.timestamp())
         }
 
+        self.stdout.write(f"Fetching data from {START_DATE} to {END_DATE}")
+        self.stdout.write(f"API parameters: {params}")
+
         # Get stations directly from database
         barani_stations = self.get_stations_by_brand("Allmeteo")
         if not barani_stations.exists():
             logger.warning("No stations found for brand 'Allmeteo'.")
+            self.stdout.write(self.style.WARNING("No Allmeteo stations found in database"))
             return
+
+        self.stdout.write(f"Found {barani_stations.count()} Allmeteo stations")
 
         sensor_map = self.get_sensor_map()
         
@@ -935,9 +1041,12 @@ class Command(BaseCommand):
         self.stdout.write(f"Available sensor types in database: {list(sensor_map.keys())}")
         self.stdout.write(f"Available validation thresholds: {list(DataValidator.get_all_thresholds().keys())}")
 
+        total_measurements = 0
+        
         for station in barani_stations:
             if not station.serial_number:
                 logger.warning(f"No serial number for station {station.name}")
+                self.stdout.write(self.style.WARNING(f"Skipping station {station.name} - no serial number"))
                 continue
 
             # Prepare request body with station's device ID
@@ -945,7 +1054,7 @@ class Command(BaseCommand):
                 "devices": (None, f'["{station.serial_number.strip()}"]')  # Ensure clean serial number
             }
 
-            self.stdout.write(f"Fetcring data for Barani station: {station.name} (Serial: {station.serial_number})")
+            self.stdout.write(f"Fetching data for Allmeteo station: {station.name} (Serial: {station.serial_number})")
             
             try:
                 response = requests.post(
@@ -957,16 +1066,20 @@ class Command(BaseCommand):
 
                 if response.status_code == 200:
                     data = response.json()
+                    self.stdout.write(f"  API Response: {data}")
                     saved_data = self.process_barani_data(station.id, data, sensor_map)
                     self.stdout.write(self.style.SUCCESS(f"  Successfully processed {len(saved_data)} measurements"))
+                    total_measurements += len(saved_data)
                 else:
                     self.stdout.write(self.style.ERROR(f"  Failed to fetch data. Status code: {response.status_code}"))
                     self.stdout.write(f"  Response content: {response.text}")
 
             except requests.exceptions.RequestException as e:
                 self.stdout.write(self.style.ERROR(f"  Request error: {str(e)}"))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"  Unexpected error: {str(e)}"))
 
-        self.stdout.write(self.style.SUCCESS("=== Barani Data Fetch Complete ===\n"))
+        self.stdout.write(self.style.SUCCESS(f"=== Allmeteo Data Fetch Complete - Total measurements: {total_measurements} ===\n"))
 
     def fetch_ott_hydromet_data(self):
         """Fetch data from OTT Hydromet instruments"""
@@ -989,9 +1102,9 @@ class Command(BaseCommand):
 
         # List of stations with API IDs and database IDs
         stations = [
-            {"api_id": 2303, "db_id": 28, "name": "POS_SAT"},
-            {"api_id": 2304, "db_id": 29, "name": "SYNOP_SAT"},
-            {"api_id": 2305, "db_id": 30, "name": "TOCO_SAT"},
+            {"api_id": 2303, "db_id": 35, "name": "POS_SAT"},
+            {"api_id": 2304, "db_id": 36, "name": "SYNOP_SAT"},
+            {"api_id": 2305, "db_id": 37, "name": "TOCO_SAT"},
         ]
 
         sensor_map = self.get_sensor_map()
@@ -1601,11 +1714,13 @@ class Command(BaseCommand):
             # Get or create sensors for all types
             sensors_to_create = []
             for sensor_type in sensor_types:
-                sensor, created = Sensor.objects.get_or_create(
-                    type=sensor_type,
-                    defaults={'unit': self.get_sensor_unit(sensor_type)}
-                )
-                if created:
+                # Be resilient to duplicate Sensor rows with same type
+                sensor = Sensor.objects.filter(type=sensor_type).order_by('id').first()
+                if not sensor:
+                    sensor = Sensor.objects.create(
+                        type=sensor_type,
+                        unit=self.get_sensor_unit(sensor_type)
+                    )
                     self.stdout.write(f"Created new sensor: {sensor_type}")
                 sensors_to_create.append(sensor)
             
@@ -1956,7 +2071,7 @@ class Command(BaseCommand):
             self.stdout.write("Ensuring all historical station-sensor relationships are established...")
             
             # Get all unique sensor types that have been used in the last 3 months
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor()
             cursor.execute("""
                 SELECT DISTINCT SENSORNAME as sensor_name
                 FROM xc_data1 d
@@ -1972,20 +2087,22 @@ class Command(BaseCommand):
             
             # Ensure all these sensors exist in our local database
             for sensor_row in historical_sensors:
-                sensor_name = sensor_row['sensor_name']
+                sensor_name = sensor_row[0]  # SENSORNAME is first column
                 if sensor_name not in sensors:
                     units = self.get_sensor_unit(sensor_name)
-                    sensor, created = Sensor.objects.get_or_create(
-                        type=sensor_name,
-                        defaults={'unit': units}
-                    )
-                    sensors[sensor_name] = sensor
-                    if created:
+                    # Handle duplicate sensors by using .first() instead of .get()
+                    sensor = Sensor.objects.filter(type=sensor_name).first()
+                    if not sensor:
+                        sensor = Sensor.objects.create(
+                            type=sensor_name,
+                            unit=units
+                        )
                         self.stdout.write(f"Created missing historical sensor: {sensor_name}")
+                    sensors[sensor_name] = sensor
             
             # Now establish relationships for all stations with all historical sensors
             for station_id, station in stations.items():
-                historical_sensor_types = [s['sensor_name'] for s in historical_sensors]
+                historical_sensor_types = [s[0] for s in historical_sensors]  # Extract sensor names
                 self.pre_create_station_sensor_relationships(station.id, historical_sensor_types)
                 self.stdout.write(f"Established historical relationships for station {station.name}")
             
