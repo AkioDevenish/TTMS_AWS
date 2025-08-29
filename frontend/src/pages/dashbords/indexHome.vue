@@ -1,22 +1,22 @@
 <template>
-    <div class="container-fluid default-dashboard">
+    <div class="container-fluid default-dashboard scheduled-updates">
         <div class="row widget-grid">
    
             <!-- Admin Components -->
             <template v-if="isAdmin">
+                <InactiveSensors/>
+                <StationsOverview/>
                 <ScheduledUpdates />
                 <ActiveMembers :users="users" :loading="loading" />
                 <AWSstatus/>
-                <InactiveSensors/>
-                <StationsOverview/>
            
             </template>
 
             <!-- Regular User Components -->
             <template v-else>
+                <StationsOverview/>
                 <AWSstatus/>
                 <HighestRecord/>
-                <StationsOverview/>
           
             
             </template>

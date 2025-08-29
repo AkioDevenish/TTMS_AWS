@@ -111,8 +111,10 @@ const fetchAllSensorsData = async (stationId: number) => {
 const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
-		const response = await axios.get<Station[]>('/stations/');
-		const pawsStations = response.data.filter(station => station.brand_name === "3D_Paws");
+		const response = await axios.get<any>('/api/stations/');
+		// Fix: Handle paginated response structure
+		const stationsData = response.data.results || response.data;
+		const pawsStations = stationsData.filter((station: any) => station.brand_name === "3D_Paws");
 		stationNames.value = pawsStations;
 
 		if (pawsStations.length > 0 && !selectedStation.value) {

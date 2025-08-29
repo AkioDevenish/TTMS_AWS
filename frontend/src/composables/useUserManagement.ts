@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import axios from '../plugins/axios'
 import { useAuth } from './useAuth'
 
 interface User {
@@ -50,7 +50,7 @@ export function useUserManagement() {
   const fetchRecentUsers = async (limit: number = 4) => {
     try {
       loading.value = true
-      const response = await axios.get('/users/', {
+      const response = await axios.get('/api/users/', {
         params: {
           limit,
           ordering: '-id'  // Order by id descending to get most recent
@@ -75,12 +75,12 @@ export function useUserManagement() {
   const fetchUsers = async () => {
     try {
       loading.value = true
-      const response = await axios.get('/users/')
+      const response = await axios.get('/api/users/')
       
       if (Array.isArray(response.data)) {
         const billsResponse = await Promise.all(
           response.data.map(user => 
-            axios.get('/bills/', {
+            axios.get('/api/bills/', {
               params: { user_id: user.id },
               headers: getHeaders()
             })
@@ -120,7 +120,7 @@ export function useUserManagement() {
   // Update user status
   const updateUserStatus = async (userId: number, newStatus: 'Active' | 'Inactive' | 'Pending' | 'Paused' | 'Suspended') => {
     try {
-      const response = await axios.patch(`/users/${userId}/`, {
+      const response = await axios.patch(`/api/users/${userId}/`, {
         status: newStatus
       }, {
         headers: getHeaders()
@@ -149,7 +149,7 @@ export function useUserManagement() {
       const user = allData.value.find(u => u.id === userId)
       const newStatus = user?.status === 'Suspended' ? 'Active' : 'Suspended'
 
-      const response = await axios.patch(`/users/${userId}/`, {
+      const response = await axios.patch(`/api/users/${userId}/`, {
         status: newStatus
       }, {
         headers: getHeaders()
@@ -179,7 +179,7 @@ export function useUserManagement() {
       errorMessage.value = ''
       successMessage.value = ''
 
-      const response = await axios.delete(`/users/${userId}/`, {
+      const response = await axios.delete(`/api/users/${userId}/`, {
         headers: getHeaders()
       })
 

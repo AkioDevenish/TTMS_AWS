@@ -94,7 +94,7 @@ const fetchUserData = async () => {
         
         const userId = route.query.id
         // Match the endpoint used in useUserManagement
-        const response = await axios.get('/users/', { headers })
+        		const response = await axios.get('/api/users/', { headers })
         
         if (Array.isArray(response.data)) {
             const user = response.data.find((u: any) => u.id === parseInt(userId as string))
@@ -141,7 +141,7 @@ const uploadReceipt = async () => {
         const token = localStorage.getItem('access_token')
         const billId = route.query.bill_id
         
-        const response = await axios.post(`/bills/${billId}/upload_receipt/`, formData, {
+        const response = await axios.post(`/api/bills/${billId}/upload_receipt/`, formData, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'

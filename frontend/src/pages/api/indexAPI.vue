@@ -1,5 +1,5 @@
 <template>
-    <div class="container-fluid">
+    <div class="container-fluid api-accounts-overview">
         <div class="row">
             <Card3 colClass="col-sm-12 " title="API Accounts Overview" headerTitle="true" cardhaderClass="title-header"
                 text="true" :desc="desc">

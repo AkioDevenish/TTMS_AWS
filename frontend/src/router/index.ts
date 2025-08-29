@@ -9,6 +9,8 @@ import indexZentra from "@/pages/dashbords/indexZentra.vue"
 import indexBarani from "@/pages/dashbords/indexBarani.vue"
 import indexHydromet from "@/pages/dashbords/indexHydromet.vue"
 import indexPaws from "@/pages/dashbords/indexPaws.vue"
+import indexWeatherStations from "@/pages/dashbords/indexWeatherStations.vue"
+import indexSutron from "@/pages/dashbords/indexSutron.vue"
 import indexGeneral from "@/pages/widgets/indexGeneral.vue"
 import indexChart from "@/pages/widgets/indexChart.vue"
 import indexProjectlist from "@/pages/project/indexProjectlist.vue"
@@ -135,10 +137,11 @@ import indexCourse from "@/pages/learning/indexCourse.vue"
 import indexLeaflet from "@/pages/maps/indexLeaflet.vue"
 import indexCk from "@/pages/editor/indexCk.vue"
 import simpleEditor from "@/pages/editor/simpleEditor.vue"
-import indexKnowledgebase from "@/pages/knowledgebase/indexKnowledgebase.vue"
+import indexKnowledgebase from "@/pages/faq/indexFaq.vue"
 import indexAPI from "@/pages/api/indexAPI.vue"
 import indexUserManagement from "@/pages/users_management/indexUserManagement.vue"
 import indexCreateUser from "@/pages/createuser/indexCreateUser.vue"
+import indexStationManagement from "@/pages/station_management/indexStationManagement.vue"
 import indexScrollable from "@/pages/advance/indexScrollable.vue"
 import indexTree from "@/pages/advance/indexTree.vue"
 import indexToasts from "@/pages/advance/indexToasts.vue"
@@ -180,7 +183,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'home',
     component: BodyView,
     meta: {
-      title: 'Mofi - Premium Vue Admin Template',
+      title: 'Meteorological Data Processing System',
     },
     children: [
       {
@@ -188,7 +191,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'defaultRoot',
         component: indexHome,
         meta: {
-          title: 'Mofi - Premium Vue Admin Template',
+          title: 'Meteorological Data Processing System',
         }
       }
     ]
@@ -201,10 +204,10 @@ const routes: Array<RouteRecordRaw> = [
         path: "login",
         name: "login",
         component: LoginPage,
-        meta: {
-          title: 'Mofi - Premium Vue Admin Template',
-          requiresAuth: false
-        }
+                          meta: {
+                    title: 'Meteorological Data Processing System',
+                    requiresAuth: false
+                  }
       }
     ]
   },
@@ -226,7 +229,7 @@ const routes: Array<RouteRecordRaw> = [
       //   name: "createProject",
       //   component: indexCreateProject,
       //   meta: {
-      //     title: 'Create Project| Mofi - Premium Vue Admin Template',
+      //     title: 'Create Project| MDPS',
       //     requiresAuth: true
       //   }
       // },
@@ -242,7 +245,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Main",
         component: indexHome,
         meta: {
-          title: 'Dashboards | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards | MDPS',
           requiresAuth: true
         }
       },
@@ -251,7 +254,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "project",
         component: indexProject,
         meta: {
-          title: 'Dashboards CRM | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards CRM | MDPS',
           requiresAuth: true
         }
       },
@@ -260,7 +263,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "ecommerce",
         component: indexEcommerce,
         meta: {
-          title: 'Dashboards Ecommerce | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards Ecommerce | MDPS',
           requiresAuth: true
         }
       },
@@ -269,7 +272,7 @@ const routes: Array<RouteRecordRaw> = [
       //   name: "createProject",
       //   component: indexCreateProject,
       //   meta: {
-      //     title: 'Create Project| Mofi - Premium Vue Admin Template',
+      //     title: 'Create Project| MDPS',
       //     requiresAuth: true
       //   }
       // },
@@ -282,11 +285,20 @@ const routes: Array<RouteRecordRaw> = [
     component: BodyView,
     children: [
       {
+        path: "",
+        name: "WeatherStations",
+        component: indexWeatherStations,
+        meta: {
+          title: 'Weather Stations | MDPS',
+          requiresAuth: true
+        }
+      },
+      {
         path: "create",
         name: "createProject",
         component: indexCreateProject,
         meta: {
-          title: 'Create Project| Mofi - Premium Vue Admin Template',
+          title: 'Create Project| MDPS',
           requiresAuth: true
         }
       },
@@ -296,7 +308,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Barani",
         component: indexBarani,
         meta: {
-          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards Education | MDPS',
           requiresAuth: true
         }
       },
@@ -305,7 +317,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "3DPaws",
         component: indexPaws,
         meta: {
-          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards Education | MDPS',
           requiresAuth: true
         }
       },
@@ -314,7 +326,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "OTT Hydromet",
         component: indexHydromet,
         meta: {
-          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards Education | MDPS',
           requiresAuth: true
         }
       },
@@ -323,7 +335,16 @@ const routes: Array<RouteRecordRaw> = [
         name: "Zentra",
         component: indexZentra,
         meta: {
-          title: 'Dashboards Education | Mofi - Premium Vue Admin Template',
+          title: 'Dashboards Education | MDPS',
+          requiresAuth: true
+        }
+      },
+      {
+        path: "AWS_Sutron",
+        name: "Sutron",
+        component: indexSutron,
+        meta: {
+          title: 'Sutron Weather Stations | MDPS',
           requiresAuth: true
         }
       },
@@ -339,7 +360,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "General",
         component: indexGeneral,
         meta: {
-          title: 'Widgets General | Mofi - Premium Vue Admin Template',
+          title: 'Widgets General | MDPS',
           requiresAuth: true
         }
       },
@@ -348,7 +369,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "charts",
         component: indexChart,
         meta: {
-          title: 'Widgets Chart | Mofi - Premium Vue Admin Template',
+          title: 'Widgets Chart | MDPS',
           requiresAuth: true
         }
       }
@@ -363,7 +384,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "projectList",
         component: indexProjectlist,
         meta: {
-          title: 'Project List| Mofi - Premium Vue Admin Template',
+          title: 'Project List | MDPS',
           requiresAuth: true
         }
       },
@@ -379,7 +400,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "fileManager",
         component: indexFileManeger,
         meta: {
-          title: 'File Manager| Mofi - Premium Vue Admin Template',
+          title: 'File Manager | MDPS',
           requiresAuth: true
         }
       },
@@ -388,7 +409,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "kanbanBoard",
         component: indexKanbanBoard,
         meta: {
-          title: 'kanban Board| Mofi - Premium Vue Admin Template',
+          title: 'Kanban Board | MDPS',
           requiresAuth: true
         }
       },
@@ -397,7 +418,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "letterbox",
         component: indexLetterBox,
         meta: {
-          title: 'Letter Box| Mofi - Premium Vue Admin Template',
+          title: 'Letter Box| MDPS',
           requiresAuth: true
         }
       },
@@ -406,7 +427,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Chatapp",
         component: indexPrivateChat,
         meta: {
-          title: 'Private Chat| Mofi - Premium Vue Admin Template',
+          title: 'Private Chat| MDPS',
           requiresAuth: true
         }
       },
@@ -415,7 +436,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Group Chat",
         component: indexGroupChat,
         meta: {
-          title: 'Group Chat| Mofi - Premium Vue Admin Template',
+          title: 'Group Chat| MDPS',
           requiresAuth: true
         }
       },
@@ -424,7 +445,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "bookmark",
         component: indexBookmark,
         meta: {
-          title: 'Bookmark| Mofi - Premium Vue Admin Template',
+          title: 'Bookmark| MDPS',
           requiresAuth: true
         }
       },
@@ -433,7 +454,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "contacts",
         component: indexContact,
         meta: {
-          title: 'contact| Mofi - Premium Vue Admin Template',
+          title: 'contact| MDPS',
           requiresAuth: true
         }
       },
@@ -442,7 +463,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "todo",
         component: indexTodo,
         meta: {
-          title: 'To Do| Mofi - Premium Vue Admin Template',
+          title: 'To Do| MDPS',
           requiresAuth: true
         }
       },
@@ -451,7 +472,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "task",
         component: indexTask,
         meta: {
-          title: 'Task| Mofi - Premium Vue Admin Template',
+          title: 'Task| MDPS',
           requiresAuth: true
         }
       },
@@ -460,7 +481,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "calendar",
         component: indexCalendar,
         meta: {
-          title: 'Calendar| Mofi - Premium Vue Admin Template',
+          title: 'Calendar| MDPS',
           requiresAuth: true
         }
       }
@@ -476,7 +497,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "addporduct",
         component: indexAddProduct,
         meta: {
-          title: 'Add Product | Mofi - Premium Vue Admin Template',
+          title: 'Add Product | MDPS',
           requiresAuth: true
         }
       },
@@ -485,7 +506,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "product",
         component: indexProduct,
         meta: {
-          title: 'Product | Mofi - Premium Vue Admin Template',
+          title: 'Product | MDPS',
           requiresAuth: true
         }
       },
@@ -494,7 +515,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "cart",
         component: indexCart,
         meta: {
-          title: 'Cart | Mofi - Premium Vue Admin Template',
+          title: 'Cart | MDPS',
           requiresAuth: true
         }
       },
@@ -503,7 +524,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "productPage",
         component: indexProductPage,
         meta: {
-          title: 'Product Page | Mofi - Premium Vue Admin Template',
+          title: 'Product Page | MDPS',
           requiresAuth: true
         }
       },
@@ -513,7 +534,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "paymentDetail",
         component: indexPaymentDetail,
         meta: {
-          title: 'Payment Detail | Mofi - Premium Vue Admin Template',
+          title: 'Payment Detail | MDPS',
           requiresAuth: true
         }
       },
@@ -522,7 +543,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Invoice_1",
         component: indexInvoiceOne,
         meta: {
-          title: 'Invoice | Mofi - Premium Vue Admin Template',
+          title: 'Invoice | MDPS',
           requiresAuth: true
         }
       },
@@ -531,7 +552,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Invoice_2",
         component: indexInvoiceTwo,
         meta: {
-          title: 'Invoice Two | Mofi - Premium Vue Admin Template',
+          title: 'Invoice Two | MDPS',
           requiresAuth: true
         }
       },
@@ -540,7 +561,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Invoice_3",
         component: indexInvoiceThree,
         meta: {
-          title: 'Invoice Three | Mofi - Premium Vue Admin Template',
+          title: 'Invoice Three | MDPS',
           requiresAuth: true
         }
       },
@@ -549,7 +570,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Invoice_4",
         component: indexInvoiceFour,
         meta: {
-          title: 'Invoice Four | Mofi - Premium Vue Admin Template',
+          title: 'Invoice Four | MDPS',
           requiresAuth: true
         }
       },
@@ -558,7 +579,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Invoice_5",
         component: indexInvoiceFive,
         meta: {
-          title: 'Invoice Five | Mofi - Premium Vue Admin Template',
+          title: 'Invoice Five | MDPS',
           requiresAuth: true
         }
       },
@@ -567,7 +588,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Invoice_6",
         component: indexInvoiceSix,
         meta: {
-          title: 'Invoice Six | Mofi - Premium Vue Admin Template',
+          title: 'Invoice Six | MDPS',
           requiresAuth: true
         }
       },
@@ -576,7 +597,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Checkout",
         component: indexCheckout,
         meta: {
-          title: 'Checkout | Mofi - Premium Vue Admin Template',
+          title: 'Checkout | MDPS',
           requiresAuth: true
         }
       },
@@ -585,7 +606,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "pricing",
         component: indexPricing,
         meta: {
-          title: 'Pricing | Mofi - Premium Vue Admin Template',
+          title: 'Pricing | MDPS',
           requiresAuth: true
         }
       },
@@ -594,7 +615,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Wishlist",
         component: indexWishlist,
         meta: {
-          title: 'Wish List | Mofi - Premium Vue Admin Template',
+          title: 'Wish List | MDPS',
           requiresAuth: true
         }
       },
@@ -603,7 +624,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Orderhistory",
         component: indexOrder,
         meta: {
-          title: 'Order History | Mofi - Premium Vue Admin Template',
+          title: 'Order History | MDPS',
           requiresAuth: true
         }
       },
@@ -612,7 +633,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "productlist",
         component: indexProductList,
         meta: {
-          title: 'Product list | Mofi - Premium Vue Admin Template',
+          title: 'Product list | MDPS',
           requiresAuth: true
         }
       }
@@ -627,7 +648,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "userProfile",
         component: indexProfile,
         meta: {
-          title: 'User Profile| Mofi - Premium Vue Admin Template',
+          title: 'User Profile| MDPS',
           requiresAuth: true
         }
       },
@@ -636,7 +657,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexEdit",
         component: indexEdit,
         meta: {
-          title: 'User Edit| Mofi - Premium Vue Admin Template',
+          title: 'User Edit| MDPS',
           requiresAuth: true
         }
       },
@@ -645,7 +666,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "usercard",
         component: indexCard,
         meta: {
-          title: 'User Cards| Mofi - Premium Vue Admin Template',
+          title: 'User Cards| MDPS',
           requiresAuth: true
         }
       }
@@ -660,7 +681,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "socialapp",
         component: indexSoical,
         meta: {
-          title: 'Social App| Mofi - Premium Vue Admin Template',
+          title: 'Social App| MDPS',
           requiresAuth: true
         }
       },
@@ -669,7 +690,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "searchresult",
         component: indexSearch,
         meta: {
-          title: 'Search| Mofi - Premium Vue Admin Template',
+          title: 'Search| MDPS',
           requiresAuth: true
         }
       },
@@ -678,7 +699,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "samplepage",
         component: indexSample,
         meta: {
-          title: 'Simple Page| Mofi - Premium Vue Admin Template',
+          title: 'Simple Page| MDPS',
           requiresAuth: true
         }
       },
@@ -687,7 +708,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Internationalization",
         component: indexInternationalization,
         meta: {
-          title: 'Internationalization| Mofi - Premium Vue Admin Template',
+          title: 'Internationalization| MDPS',
           requiresAuth: true
         }
       },
@@ -696,7 +717,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "faq",
         component: indexFaq,
         meta: {
-          title: 'Faq| Mofi - Premium Vue Admin Template',
+          title: 'Faq| MDPS',
           requiresAuth: true
         }
       },
@@ -705,7 +726,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "API Management",
         component: indexAPI,
         meta: {
-          title: 'Support | Mofi - Premium Vue Admin Template',
+          title: 'Support | MDPS',
           requiresAuth: true
         }
       },
@@ -714,7 +735,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Users Management",
         component: indexUserManagement,
         meta: {
-          title: 'Support | Mofi - Premium Vue Admin Template',
+          title: 'Support | MDPS',
           requiresAuth: true,
           requiresAdmin: true
         }
@@ -725,7 +746,26 @@ const routes: Array<RouteRecordRaw> = [
         component: indexCreateUser,
         meta: {
           requiresAuth: true,
-          title: 'Create User | Mofi - Premium Vue Admin Template'
+          title: 'Create User | MDPS'
+        }
+      },
+      {
+        path: "station_management",
+        name: "Station Management",
+        component: indexStationManagement,
+        meta: {
+          title: 'Station Management | MDPS',
+          requiresAuth: true,
+          requiresAdmin: true
+        }
+      },
+      {
+        path: "station_management/createstation",
+        name: "Create Station",
+        component: () => import("@/pages/station_management/createstation.vue"),
+        meta: {
+          requiresAuth: true,
+          title: 'Create Station | MDPS'
         }
       },
       {
@@ -749,7 +789,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "formValidation",
         component: indexValidation,
         meta: {
-          title: 'Form Controls Form Validation | Mofi - Premium Vue Admin Template',
+          title: 'Form Controls Form Validation | MDPS',
           requiresAuth: true
         }
       },
@@ -758,7 +798,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexInputs",
         component: indexInputs,
         meta: {
-          title: 'Form Controls Base Input | Mofi - Premium Vue Admin Template',
+          title: 'Form Controls Base Input | MDPS',
           requiresAuth: true
         }
       },
@@ -767,7 +807,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexCheckbox",
         component: indexCheckbox,
         meta: {
-          title: 'Form Controls Checkbox & Radio | Mofi - Premium Vue Admin Template',
+          title: 'Form Controls Checkbox & Radio | MDPS',
           requiresAuth: true
         }
       },
@@ -776,7 +816,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Select",
         component: indexSelect,
         meta: {
-          title: 'Form Widgets Select | Mofi - Premium Vue Admin Template',
+          title: 'Form Widgets Select | MDPS',
           requiresAuth: true
         }
       },
@@ -785,7 +825,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexGroups",
         component: indexGroups,
         meta: {
-          title: 'Form Controls Input Groups | Mofi - Premium Vue Admin Template',
+          title: 'Form Controls Input Groups | MDPS',
           requiresAuth: true
         }
       },
@@ -794,7 +834,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexMask",
         component: indexMask,
         meta: {
-          title: 'Form Controls Input Mask | Mofi - Premium Vue Admin Template',
+          title: 'Form Controls Input Mask | MDPS',
           requiresAuth: true
         }
       },
@@ -803,7 +843,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexMega",
         component: indexMega,
         meta: {
-          title: 'Form Controls Mega Options | Mofi - Premium Vue Admin Template',
+          title: 'Form Controls Mega Options | MDPS',
           requiresAuth: true
         }
       },
@@ -812,7 +852,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "datapicker",
         component: indexDatapicker,
         meta: {
-          title: 'Form Widgets Datepicker | Mofi - Premium Vue Admin Template',
+          title: 'Form Widgets Datepicker | MDPS',
           requiresAuth: true
         }
       },
@@ -821,7 +861,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexTouchspin",
         component: indexTouchspin,
         meta: {
-          title: 'Form Widgets Touchspin | Mofi - Premium Vue Admin Template',
+          title: 'Form Widgets Touchspin | MDPS',
           requiresAuth: true
         }
       },
@@ -830,7 +870,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexSwitch",
         component: indexSwitch,
         meta: {
-          title: 'Form Widgets Switch| Mofi - Premium Vue Admin Template',
+          title: 'Form Widgets Switch| MDPS',
           requiresAuth: true
         }
       },
@@ -839,7 +879,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexTypeahead",
         component: indexTypeahead,
         meta: {
-          title: 'Form Widgets Typeahead | Mofi - Premium Vue Admin Template',
+          title: 'Form Widgets Typeahead | MDPS',
           requiresAuth: true
         }
       },
@@ -848,7 +888,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexClipboard",
         component: indexClipboard,
         meta: {
-          title: 'Form Widgets Clipboard | Mofi - Premium Vue Admin Template',
+          title: 'Form Widgets Clipboard | MDPS',
           requiresAuth: true
         }
       },
@@ -857,7 +897,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "formWizardtwo",
         component: formWizard2,
         meta: {
-          title: 'Form Layout Form Wizard 2 | Mofi - Premium Vue Admin Template',
+          title: 'Form Layout Form Wizard 2 | MDPS',
           requiresAuth: true
         }
       },
@@ -866,7 +906,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Two Factor",
         component: indexTwofactor,
         meta: {
-          title: 'Form Layout Two Factor| Mofi - Premium Vue Admin Template',
+          title: 'Form Layout Two Factor| MDPS',
           requiresAuth: true
         }
       },
@@ -875,7 +915,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "formWizard",
         component: formWizard,
         meta: {
-          title: 'Form Layout Form Wizard 2| Mofi - Premium Vue Admin Template',
+          title: 'Form Layout Form Wizard 2| MDPS',
           requiresAuth: true
         }
       },
@@ -890,7 +930,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "bootstrp",
         component: indexBootstrap,
         meta: {
-          title: 'Table Bootstrap Table | Mofi - Premium Vue Admin Template',
+          title: 'Table Bootstrap Table | MDPS',
           requiresAuth: true
         }
       },
@@ -899,7 +939,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "tablecomponent",
         component: indexComponent,
         meta: {
-          title: 'Table Table Components | Mofi - Premium Vue Admin Template',
+          title: 'Table Table Components | MDPS',
           requiresAuth: true
         }
       },
@@ -908,7 +948,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "basicinit",
         component: indexInit,
         meta: {
-          title: 'Table Basic Init | Mofi - Premium Vue Admin Template',
+          title: 'Table Basic Init | MDPS',
           requiresAuth: true
         }
       }
@@ -923,7 +963,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Typography",
         component: indexTypography,
         meta: {
-          title: 'Uikits Typography | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Typography | MDPS',
           requiresAuth: true
         }
       },
@@ -932,7 +972,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Avatars",
         component: indexAvatars,
         meta: {
-          title: 'Uikits Avatars | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Avatars | MDPS',
           requiresAuth: true
         }
       },
@@ -941,7 +981,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Helper",
         component: indexHelper,
         meta: {
-          title: 'Uikits Helper Classes | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Helper Classes | MDPS',
           requiresAuth: true
         }
       },
@@ -950,7 +990,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Grid",
         component: indexGrid,
         meta: {
-          title: 'Uikits Grid | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Grid | MDPS',
           requiresAuth: true
         }
       },
@@ -959,7 +999,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "TagPills",
         component: indexTagPills,
         meta: {
-          title: 'Uikits Tag & Pills | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Tag & Pills | MDPS',
           requiresAuth: true
         }
       },
@@ -968,7 +1008,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Progress",
         component: indexProgress,
         meta: {
-          title: 'Uikits Progressbar | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Progressbar | MDPS',
           requiresAuth: true
         }
       },
@@ -977,7 +1017,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "model",
         component: indexModal,
         meta: {
-          title: 'Uikits Modal | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Modal | MDPS',
           requiresAuth: true
         }
       },
@@ -986,7 +1026,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "alert",
         component: indexAlert,
         meta: {
-          title: 'Uikits Alert | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Alert | MDPS',
           requiresAuth: true
         }
       },
@@ -995,7 +1035,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "popover",
         component: indexPopover,
         meta: {
-          title: 'Uikits popover | Mofi - Premium Vue Admin Template',
+          title: 'Uikits popover | MDPS',
           requiresAuth: true
         }
       },
@@ -1004,7 +1044,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "tooltip",
         component: indexTooltip,
         meta: {
-          title: 'Uikits Tooltip | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Tooltip | MDPS',
           requiresAuth: true
         }
       },
@@ -1013,7 +1053,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Dropdown",
         component: indexDropdown,
         meta: {
-          title: 'Uikits Dropdown | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Dropdown | MDPS',
           requiresAuth: true
         }
       },
@@ -1022,7 +1062,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Accordion",
         component: indexAccordion,
         meta: {
-          title: 'Uikits Accordion | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Accordion | MDPS',
           requiresAuth: true
         }
       },
@@ -1031,7 +1071,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Tabs",
         component: indexTabs,
         meta: {
-          title: 'Uikits Tabs | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Tabs | MDPS',
           requiresAuth: true
         }
       },
@@ -1040,7 +1080,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "lists",
         component: indexLists,
         meta: {
-          title: 'Uikits Lists | Mofi - Premium Vue Admin Template',
+          title: 'Uikits Lists | MDPS',
           requiresAuth: true
         }
       }
@@ -1055,7 +1095,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "animate",
         component: indexAnimate,
         meta: {
-          title: 'Animate | Mofi - Premium Vue Admin Template',
+          title: 'Animate | MDPS',
           requiresAuth: true
         }
       },
@@ -1064,7 +1104,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "aos",
         component: indexAos,
         meta: {
-          title: 'Aos Animation | Mofi - Premium Vue Admin Template',
+          title: 'Aos Animation | MDPS',
           requiresAuth: true
         }
       }
@@ -1079,7 +1119,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "flag",
         component: indexFlag,
         meta: {
-          title: 'Icons Flag | Mofi - Premium Vue Admin Template',
+          title: 'Icons Flag | MDPS',
           requiresAuth: true
         }
       },
@@ -1088,7 +1128,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Fontawesome",
         component: indexFontawesome,
         meta: {
-          title: 'Icons Fontawesome | Mofi - Premium Vue Admin Template',
+          title: 'Icons Fontawesome | MDPS',
           requiresAuth: true
         }
       },
@@ -1097,7 +1137,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Themify",
         component: indexThemify,
         meta: {
-          title: 'Icons Themify | Mofi - Premium Vue Admin Template',
+          title: 'Icons Themify | MDPS',
           requiresAuth: true
         }
       },
@@ -1106,7 +1146,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Feather",
         component: indexFeather,
         meta: {
-          title: 'Icons Feather | Mofi - Premium Vue Admin Template',
+          title: 'Icons Feather | MDPS',
           requiresAuth: true
         }
       },
@@ -1115,7 +1155,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexWether",
         component: indexWhether,
         meta: {
-          title: 'Icons Whether | Mofi - Premium Vue Admin Template',
+          title: 'Icons Whether | MDPS',
           requiresAuth: true
         }
       },
@@ -1124,7 +1164,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Icoicon",
         component: indexIcoicon,
         meta: {
-          title: 'Icons Icoicon | Mofi - Premium Vue Admin Template',
+          title: 'Icons Icoicon | MDPS',
           requiresAuth: true
         }
       }
@@ -1139,7 +1179,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "button",
         component: indexDefaultStyle,
         meta: {
-          title: 'Buttons Default | Mofi - Premium Vue Admin Template',
+          title: 'Buttons Default | MDPS',
           requiresAuth: true
         }
       },
@@ -1148,7 +1188,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Flat",
         component: indexFlat,
         meta: {
-          title: 'Buttons Flat | Mofi - Premium Vue Admin Template',
+          title: 'Buttons Flat | MDPS',
           requiresAuth: true
         }
       },
@@ -1157,7 +1197,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Edge",
         component: indexEdge,
         meta: {
-          title: 'Buttons Edge | Mofi - Premium Vue Admin Template',
+          title: 'Buttons Edge | MDPS',
           requiresAuth: true
         }
       },
@@ -1166,7 +1206,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Raised",
         component: indexRaised,
         meta: {
-          title: 'Buttons Raised | Mofi - Premium Vue Admin Template',
+          title: 'Buttons Raised | MDPS',
           requiresAuth: true
         }
       },
@@ -1175,7 +1215,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Group",
         component: indexGroup,
         meta: {
-          title: 'Buttons Group | Mofi - Premium Vue Admin Template',
+          title: 'Buttons Group | MDPS',
           requiresAuth: true
         }
       },
@@ -1191,7 +1231,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Apexchart",
         component: indexApexchart,
         meta: {
-          title: 'Chart Apex Chart | Mofi - Premium Vue Admin Template',
+          title: 'Chart Apex Chart | MDPS',
           requiresAuth: true
         }
       },
@@ -1200,7 +1240,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "google",
         component: indexGoogle,
         meta: {
-          title: 'Chart Google Chart | Mofi - Premium Vue Admin Template',
+          title: 'Chart Google Chart | MDPS',
           requiresAuth: true
         }
       },
@@ -1209,7 +1249,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "chartist",
         component: indexChartist,
         meta: {
-          title: 'Chart Chartist Chart | Mofi - Premium Vue Admin Template',
+          title: 'Chart Chartist Chart | MDPS',
           requiresAuth: true
         }
       }
@@ -1220,7 +1260,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "errorPage1",
     component: indexErrorPage1,
     meta: {
-      title: 'Error Page1 | Mofi - Premium Vue Admin Template',
+      title: 'Error Page1 | MDPS',
       requiresAuth: true
     }
   },
@@ -1229,7 +1269,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "errorPage2",
     component: indexErrorPage2,
     meta: {
-      title: 'Error Page2 | Mofi - Premium Vue Admin Template',
+      title: 'Error Page2 | MDPS',
       requiresAuth: true
     }
   },
@@ -1238,7 +1278,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "errorPage3",
     component: indexErrorPage3,
     meta: {
-      title: 'Error Page3 | Mofi - Premium Vue Admin Template',
+      title: 'Error Page3 | MDPS',
       requiresAuth: true
     }
   },
@@ -1247,7 +1287,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "errorPage4",
     component: indexErrorPage4,
     meta: {
-      title: 'Error Page4 | Mofi - Premium Vue Admin Template',
+      title: 'Error Page4 | MDPS',
       requiresAuth: true
     }
   },
@@ -1256,7 +1296,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "errorPage5",
     component: indexErrorPage5,
     meta: {
-      title: 'Error Page5 | Mofi - Premium Vue Admin Template',
+      title: 'Error Page5 | MDPS',
       requiresAuth: true
     }
   },
@@ -1265,7 +1305,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "errorPage6",
     component: indexErrorPage6,
     meta: {
-      title: 'Error Page6 | Mofi - Premium Vue Admin Template',
+      title: 'Error Page6 | MDPS',
       requiresAuth: true
     }
   },
@@ -1274,7 +1314,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "comingsoonPage",
     component: indexComingsoonPage,
     meta: {
-      title: 'Comingsoon Page | Mofi - Premium Vue Admin Template',
+      title: 'Comingsoon Page | MDPS',
       requiresAuth: true
     }
   },
@@ -1283,7 +1323,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "comingsoonVideo",
     component: indexComingsoonVideo,
     meta: {
-      title: 'Comingsoon Video | Mofi - Premium Vue Admin Template',
+      title: 'Comingsoon Video | MDPS',
       requiresAuth: true
     }
   },
@@ -1292,7 +1332,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "comingsoonImage",
     component: indexComingsoonImage,
     meta: {
-      title: 'Comingsoon Image | Mofi - Premium Vue Admin Template',
+      title: 'Comingsoon Image | MDPS',
       requiresAuth: true
     }
   },
@@ -1301,7 +1341,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "loginsimple",
     component: loginSimple,
     meta: {
-      title: 'Login Simple | Mofi - Premium Vue Admin Template',
+      title: 'Login Simple | MDPS',
       requiresAuth: false
     }
   },
@@ -1310,7 +1350,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "loginimage",
     component: loginImage,
     meta: {
-      title: 'Login Image | Mofi - Premium Vue Admin Template',
+      title: 'Login Image | MDPS',
       requiresAuth: false
     }
   },
@@ -1319,7 +1359,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "loginImagetwo",
     component: loginImageTwo,
     meta: {
-      title: 'Login Image Two | Mofi - Premium Vue Admin Template',
+      title: 'Login Image Two | MDPS',
       requiresAuth: false
     }
   },
@@ -1328,7 +1368,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "loginValidation",
     component: loginValidation,
     meta: {
-      title: 'Login Validation | Mofi - Premium Vue Admin Template',
+      title: 'Login Validation | MDPS',
       requiresAuth: false
     }
   },
@@ -1337,7 +1377,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "loginTooltip",
     component: loginTooltip,
     meta: {
-      title: 'Login Tooltip | Mofi - Premium Vue Admin Template',
+      title: 'Login Tooltip | MDPS',
       requiresAuth: false
     }
   },
@@ -1346,7 +1386,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "loginSweetalert",
     component: loginSweetalert,
     meta: {
-      title: 'Login Sweetalert | Mofi - Premium Vue Admin Template',
+      title: 'Login Sweetalert | MDPS',
       requiresAuth: false
     }
   },
@@ -1355,7 +1395,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "registerImagetwo",
     component: registerImageTwo,
     meta: {
-      title: 'Register Image Two | Mofi - Premium Vue Admin Template',
+      title: 'Register Image Two | MDPS',
       requiresAuth: false
     }
   },
@@ -1364,7 +1404,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "registerSimple",
     component: registerSimple,
     meta: {
-      title: 'Register | Mofi - Premium Vue Admin Template',
+      title: 'Register | MDPS',
       requiresAuth: false
     }
   },
@@ -1373,7 +1413,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "registerImage",
     component: registerImage,
     meta: {
-      title: 'Register Image | Mofi - Premium Vue Admin Template',
+      title: 'Register Image | MDPS',
       requiresAuth: false
     }
   },
@@ -1382,7 +1422,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "unlockUser",
     component: unlockUser,
     meta: {
-      title: 'Unlock User | Mofi - Premium Vue Admin Template',
+      title: 'Unlock User | MDPS',
       requiresAuth: false
     }
   },
@@ -1391,7 +1431,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "forgetPassword",
     component: forgetPassword,
     meta: {
-      title: 'Forget Password | Mofi - Premium Vue Admin Template',
+      title: 'Forget Password | MDPS',
       requiresAuth: false
     }
   },
@@ -1400,7 +1440,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "resetPassword",
     component: resetPassword,
     meta: {
-      title: 'Reset Password | Mofi - Premium Vue Admin Template',
+      title: 'Reset Password | MDPS',
       requiresAuth: false
     }
   },
@@ -1409,7 +1449,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "maintenanceView",
     component: maintenanceView,
     meta: {
-      title: 'Maintenance | Mofi - Premium Vue Admin Template',
+      title: 'Maintenance | MDPS',
       requiresAuth: false
     }
   },
@@ -1422,7 +1462,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Gallerygrid",
         component: indexGallery,
         meta: {
-          title: 'Grid Gallery | Mofi - Premium Vue Admin Template',
+          title: 'Grid Gallery | MDPS',
           requiresAuth: true
         }
       },
@@ -1431,7 +1471,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "griddesc",
         component: indexGriddesc,
         meta: {
-          title: 'Grid Gallery With Desc | Mofi - Premium Vue Admin Template',
+          title: 'Grid Gallery With Desc | MDPS',
           requiresAuth: true
         }
       },
@@ -1440,7 +1480,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Masonry",
         component: indexMasonry,
         meta: {
-          title: 'Masonry | Mofi - Premium Vue Admin Template',
+          title: 'Masonry | MDPS',
           requiresAuth: true
         }
       },
@@ -1449,7 +1489,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Masonarydesc",
         component: indexMasonarydesc,
         meta: {
-          title: 'Masonry Desc | Mofi - Premium Vue Admin Template',
+          title: 'Masonry Desc | MDPS',
           requiresAuth: true
         }
       },
@@ -1458,7 +1498,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "hovergallery",
         component: indexHoverGallery,
         meta: {
-          title: 'Hover Gallery | Mofi - Premium Vue Admin Template',
+          title: 'Hover Gallery | MDPS',
           requiresAuth: true
         }
       }
@@ -1473,7 +1513,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "blogdetails",
         component: indexDetails,
         meta: {
-          title: 'Blog Details | Mofi - Premium Vue Admin Template',
+          title: 'Blog Details | MDPS',
           requiresAuth: true
         }
       },
@@ -1482,7 +1522,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "blogsingle",
         component: indexSingle,
         meta: {
-          title: 'Blog Single | Mofi - Premium Vue Admin Template',
+          title: 'Blog Single | MDPS',
           requiresAuth: true
         }
       },
@@ -1491,7 +1531,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "addpost",
         component: indexAdd,
         meta: {
-          title: 'Add Post | Mofi - Premium Vue Admin Template',
+          title: 'Add Post | MDPS',
           requiresAuth: true
         }
       }
@@ -1506,7 +1546,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "jobcard",
         component: indexJobCard,
         meta: {
-          title: 'Job Card | Mofi - Premium Vue Admin Template',
+          title: 'Job Card | MDPS',
           requiresAuth: true
         }
       },
@@ -1516,7 +1556,7 @@ const routes: Array<RouteRecordRaw> = [
         component: indexJobDetails,
         props: true,
         meta: {
-          title: 'Job Details | Mofi - Premium Vue Admin Template',
+          title: 'Job Details | MDPS',
           requiresAuth: true
         }
       },
@@ -1525,7 +1565,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "jobapply",
         component: indexApply,
         meta: {
-          title: 'Job Apply | Mofi - Premium Vue Admin Template',
+          title: 'Job Apply | MDPS',
           requiresAuth: true
         }
       },
@@ -1534,7 +1574,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "joblist",
         component: indexList,
         meta: {
-          title: 'Job List | Mofi - Premium Vue Admin Template',
+          title: 'Job List | MDPS',
           requiresAuth: true
         }
       }
@@ -1549,7 +1589,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Learninglist",
         component: indexLearning,
         meta: {
-          title: 'Learning List | Mofi - Premium Vue Admin Template',
+          title: 'Learning List | MDPS',
           requiresAuth: true
         }
       },
@@ -1558,7 +1598,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "coursedetailed",
         component: indexCourse,
         meta: {
-          title: 'course Detailed | Mofi - Premium Vue Admin Template',
+          title: 'course Detailed | MDPS',
           requiresAuth: true
         }
       }
@@ -1573,7 +1613,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "googlemaps",
         component: indexGoogleMap,
         meta: {
-          title: 'Google Map | Mofi - Premium Vue Admin Template',
+          title: 'Google Map | MDPS',
           requiresAuth: true
         }
       },
@@ -1582,7 +1622,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "mapLeaflet",
         component: indexLeaflet,
         meta: {
-          title: 'Leaflet Map | Mofi - Premium Vue Admin Template',
+          title: 'Leaflet Map | MDPS',
           requiresAuth: true
         }
       },
@@ -1598,7 +1638,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "simpleEditor",
         component: simpleEditor,
         meta: {
-          title: 'Simple Editor | Mofi - Premium Vue Admin Template',
+          title: 'Simple Editor | MDPS',
           requiresAuth: true
         }
       },
@@ -1607,7 +1647,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "ckeditor",
         component: indexCk,
         meta: {
-          title: 'Ck Editor | Mofi - Premium Vue Admin Template',
+          title: 'Ck Editor | MDPS',
           requiresAuth: true
         }
       }
@@ -1623,7 +1663,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Knowledgebase",
         component: indexKnowledgebase,
         meta: {
-          title: 'Knowledgebase | Mofi - Premium Vue Admin Template',
+          title: 'Knowledgebase | MDPS',
           requiresAuth: true
         }
       },
@@ -1639,7 +1679,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Scrollable",
         component: indexScrollable,
         meta: {
-          title: 'Bonus UI  Scrollable | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Scrollable | MDPS',
           requiresAuth: true
         }
       },
@@ -1648,7 +1688,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "tree",
         component: indexTree,
         meta: {
-          title: 'Bonus UI  Tree | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Tree | MDPS',
           requiresAuth: true
         }
       },
@@ -1657,7 +1697,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Toasts",
         component: indexToasts,
         meta: {
-          title: 'Bonus UI  Toasts | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Toasts | MDPS',
           requiresAuth: true
         }
       },
@@ -1666,7 +1706,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "rating",
         component: indexRating,
         meta: {
-          title: 'Bonus UI  Rating | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Rating | MDPS',
           requiresAuth: true
         }
       },
@@ -1675,7 +1715,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Dropzone",
         component: indexDropzone,
         meta: {
-          title: 'Bonus UI  Dropzone | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Dropzone | MDPS',
           requiresAuth: true
         }
       },
@@ -1684,7 +1724,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "tour",
         component: indexTour,
         meta: {
-          title: 'Bonus UI  Tour | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Tour | MDPS',
           requiresAuth: true
         }
       },
@@ -1693,7 +1733,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "sweetalert",
         component: indexSweetalert,
         meta: {
-          title: 'Bonus UI  SweetAlert | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  SweetAlert | MDPS',
           requiresAuth: true
         }
       },
@@ -1702,7 +1742,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "animationModal",
         component: animationModal,
         meta: {
-          title: 'Bonus UI  Animated Modal | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Animated Modal | MDPS',
           requiresAuth: true
         }
       },
@@ -1711,7 +1751,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "owlCarousel",
         component: owlCarousel,
         meta: {
-          title: 'Bonus UI  Owl Carousel | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Owl Carousel | MDPS',
           requiresAuth: true
         }
       },
@@ -1720,7 +1760,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "ribbon",
         component: indexRibbon,
         meta: {
-          title: 'Bonus UI  Ribbons | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Ribbons | MDPS',
           requiresAuth: true
         }
       },
@@ -1729,7 +1769,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "pagenation",
         component: indexPagenation,
         meta: {
-          title: 'Bonus UI  Pagenation | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Pagenation | MDPS',
           requiresAuth: true
         }
       },
@@ -1738,7 +1778,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Breadcrumb",
         component: indexBreadcrumb,
         meta: {
-          title: 'Bonus UI  Breadcrumb | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Breadcrumb | MDPS',
           requiresAuth: true
         }
       },
@@ -1747,7 +1787,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Range",
         component: indexRange,
         meta: {
-          title: 'Bonus UI  Range | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Range | MDPS',
           requiresAuth: true
         }
       },
@@ -1756,7 +1796,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "imageCropper",
         component: indexCropper,
         meta: {
-          title: 'Bonus UI  imageCropper | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  imageCropper | MDPS',
           requiresAuth: true
         }
       },
@@ -1765,7 +1805,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Basiccard",
         component: indexBasiccard,
         meta: {
-          title: 'Bonus UI  Basic Card | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Basic Card | MDPS',
           requiresAuth: true
         }
       },
@@ -1774,7 +1814,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Creative",
         component: indexCreative,
         meta: {
-          title: 'Bonus UI  Creative Card | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Creative Card | MDPS',
           requiresAuth: true
         }
       },
@@ -1783,7 +1823,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Draggable",
         component: indexDraggable,
         meta: {
-          title: 'Bonus UI  Draggable Card | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Draggable Card | MDPS',
           requiresAuth: true
         }
       },
@@ -1792,7 +1832,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "indexTimeline",
         component: indexTimeline,
         meta: {
-          title: 'Bonus UI  Timeline | Mofi - Premium Vue Admin Template',
+          title: 'Bonus UI  Timeline | MDPS',
           requiresAuth: true
         }
       }
@@ -1845,6 +1885,15 @@ const { checkAuth, isAdmin } = authStore
     }
   },
   {
+    path: '/dashboards/station_status',
+    name: 'StationStatus',
+    component: () => import('@/pages/dashbords/indexStationStatus.vue'),
+    meta: {
+      requiresAuth: true,
+      title: 'Station Status | MDPS'
+    }
+  },
+  {
     path: "/api",
     component: BodyView,
     children: [
@@ -1877,6 +1926,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
+  // Set document title based on route meta
+  if (to.meta.title) {
+    document.title = to.meta.title as string
+        } else {
+        document.title = 'Meteorological Data Processing System'
+      }
+
   const authStore = useAuthStore()
   const { checkAuth, isAdmin, isStaff, currentUser } = authStore
   const chatStore = useChatStore()

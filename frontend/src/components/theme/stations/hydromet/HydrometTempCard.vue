@@ -16,7 +16,7 @@
                 <p class="f-light mb-0">Last updated: {{ item.month }}</p>
               </div>
               <div class="flex-shrink-0">
-                <img :src="getImages(item.img)" alt="" />
+                <font-awesome-icon :icon="getWeatherIcon(item.sensorType)" style="font-size: 2rem; color: #007bff;" />
               </div>
             </div>
           </Card1>
@@ -27,8 +27,7 @@
   
   <script lang="ts" setup>
   import { ref, defineAsyncComponent, watch, defineProps } from 'vue';
-  import { useStationData } from '@/composables/useStationData';
-  import { getImages } from "@/composables/common/getImages";
+import { getImages } from "@/composables/common/getImages";
   
   const Card1 = defineAsyncComponent(() => import("@/components/common/card/CardData1.vue"));
   
@@ -48,26 +47,117 @@
     timeDiff: string;
     trend: string;
     unit: string;
+    sensorType: string;
   }
   
   const props = defineProps({
     selectedStation: {
-      type: Number,
-      required: true
+        type: Number,
+        required: true
+    },
+    measurements: {
+        type: Array,
+        default: () => []
+    },
+    stationInfo: {
+        type: Object,
+        default: () => ({})
     }
-  });
+});
   
-  const { 
-    measurements,
-    stationInfo,
-    fetchStationData,
-    formatDateTime
-  } = useStationData();
+  // Use props instead of composable
+const formatDateTime = {
+    date: (timestamp: string) => {
+        try {
+            if (!timestamp) return 'Invalid Date';
+            const date = new Date(timestamp);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        } catch {
+            return 'Invalid Date';
+        }
+    },
+    time: (timestamp: string) => {
+        try {
+            const date = new Date(timestamp);
+            if (isNaN(date.getTime())) return 'Invalid Time';
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        } catch {
+            return 'Invalid Time';
+        }
+    }
+};
   
   const localOttData = ref<CardData[]>([]);
+
+// Function to handle both local assets and external URLs
+const getImageSource = (imgPath: string): string => {
+  // If it's a full URL (starts with http/https), return it directly
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+    return imgPath;
+  }
+  // Otherwise, treat it as a local asset and use getImages
+  return getImages(imgPath);
+};
+
+// Function to get weather-appropriate icons from Font Awesome
+const getWeatherIcon = (sensorType: string): string[] => {
+  const iconMap: Record<string, string[]> = {
+    // Temperature sensors
+    'Air Temperature': ['fas', 'thermometer-half'],
+    'Maximum Air Temperature': ['fas', 'thermometer-full'],
+    'Minimum Air Temperature': ['fas', 'thermometer-empty'],
+    'Dew Point': ['fas', 'tint'],
+    'Soil Temp (15cm)': ['fas', 'thermometer-quarter'],
+    
+    // Precipitation sensors
+    '5 min rain': ['fas', 'cloud'],
+    'Daily Rain': ['fas', 'cloud'],
+    'EvapoTranspiration': ['fas', 'leaf'],
+    
+    // Atmospheric sensors
+    'Barometric Pressure': ['fas', 'tachometer'],
+    'Baro Tendency': ['fas', 'arrow-up'],
+    'Relative Humidity': ['fas', 'tint'],
+    'Leaf Wetness': ['fas', 'leaf'],
+    
+    // Wind sensors
+    'Wind Speed Average': ['fas', 'cloud'],
+    'Wind Speed Inst': ['fas', 'cloud'],
+    'Wind Dir Average': ['fas', 'compass'],
+    'Wind Dir Inst': ['fas', 'compass'],
+    'Gust Speed': ['fas', 'cloud'],
+    'Gust Direction': ['fas', 'location-arrow'],
+    
+    // Solar sensors
+    'Solar Radiation': ['fas', 'sun-o'],
+    'Solar Radiation Avg': ['fas', 'sun-o'],
+    'Solar Radiation Total': ['fas', 'sun-o'],
+    'Hours of Sunshine': ['fas', 'clock-o'],
+    
+    // Soil sensors
+    'Soil Moisture (10cm)': ['fas', 'leaf'],
+    'Soil Moisture (20cm)': ['fas', 'leaf'],
+    'Soil Moisture (30cm)': ['fas', 'leaf'],
+    
+    // System sensors
+    'Battery': ['fas', 'battery-three-quarters']
+  };
   
-  // Memoize date parsing to avoid repeated operations
-  const dateCache = new Map<string, number>();
+  return iconMap[sensorType] || ['fas', 'question-circle'];
+};
+
+// Memoize date parsing to avoid repeated operations
+const dateCache = new Map<string, number>();
   const getDateTime = (date: string, time: string): number => {
     const key = `${date}T${time}`;
     if (!dateCache.has(key)) {
@@ -102,7 +192,15 @@
     'Wind Dir Average': { name: 'Wind Direction Average', unit: '°', threshold: 5 },
     'Wind Dir Inst': { name: 'Wind Direction Instantaneous', unit: '°', threshold: 5 },
     'Wind Speed Average': { name: 'Wind Speed Average', unit: 'knots', threshold: 0.2 },
-    'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots', threshold: 0.2 }
+    'Wind Speed Inst': { name: 'Wind Speed Instantaneous', unit: 'knots', threshold: 0.2 },
+    // Additional OTT sensors
+    'EvapoTranspiration': { name: 'EvapoTranspiration', unit: 'mm', threshold: 0.1 },
+    'Leaf Wetness': { name: 'Leaf Wetness', unit: '%', threshold: 1 },
+    'Soil Moisture (10cm)': { name: 'Soil Moisture (10cm)', unit: '%', threshold: 1 },
+    'Soil Moisture (20cm)': { name: 'Soil Moisture (20cm)', unit: '%', threshold: 1 },
+    'Soil Moisture (30cm)': { name: 'Soil Moisture (30cm)', unit: '%', threshold: 1 },
+    'Soil Temp (15cm)': { name: 'Soil Temperature (15cm)', unit: '°C', threshold: 0.1 },
+    'Solar Radiation': { name: 'Solar Radiation', unit: 'W/m²', threshold: 1 }
   };
   
   const calculateValueChange = (measurements: any[], sensorType: string) => {
@@ -175,7 +273,7 @@
                        changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
           icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
                        changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
-          img: 'dashboard-4/icon/student.png',
+          img: sensorType, // Pass the sensor type instead of URL
           cardclass: "student",
           fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                          changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
@@ -187,21 +285,23 @@
           rateOfChange: `${changes.rateOfChange}${config.unit}`,
           timeDiff: changes.timeDiff,
           trend: changes.trend,
-          unit: config.unit
+          unit: config.unit,
+          sensorType: sensorType
         };
       })
       .filter(Boolean) as CardData[];
   };
   
-  // Watch for station changes
+  // Watch for station changes - no need to fetch data here as it comes from parent
   watch(() => props.selectedStation, (newStationId) => {
     if (newStationId) {
-      fetchStationData(newStationId);
+      // Data is fetched by parent component, just log for debugging
+      console.log('HydrometTempCard: Station changed to:', newStationId);
     }
   }, { immediate: true });
   
   // Watch for measurements changes
-  watch(() => measurements.value, (newMeasurements) => {
+  watch(() => props.measurements, (newMeasurements) => {
     if (!newMeasurements?.length) {
       localOttData.value = [];
       return;

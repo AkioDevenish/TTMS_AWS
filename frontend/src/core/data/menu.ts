@@ -92,9 +92,11 @@ export const menu: MenuItem[] = [
         title: "3D-Paws",
         type: "link"
       },
-  
-   
-
+      {
+        path: "/stations/AWS_Sutron",
+        title: "Sutron",
+        type: "link"
+      },
     ]
   },
   {
@@ -102,6 +104,15 @@ export const menu: MenuItem[] = [
     title: "Create New AWS",
     icon: "stroke-form",
     icon1: "fill-form",
+    type: "link",
+    admin: 1
+  },
+  {
+    path: "/pages/station_management",
+    title: "Station Management",
+    isPinned: false,
+    icon: "stroke-charts",
+    icon1: "fill-charts",
     type: "link",
     admin: 1
   },
@@ -137,14 +148,7 @@ export const menu: MenuItem[] = [
     icon1: "fill-chat",
     type: "link"
   },
-  {
-    path: "/pages/knowledgebase",
-    title: "Documentation",
-    isPinned: false,
-    icon: "stroke-to-do",
-    icon1: "fill-to-do",
-    type: "link"
-  },
+
 
   // system management block
   {

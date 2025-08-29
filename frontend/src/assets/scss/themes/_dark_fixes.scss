@@ -1,0 +1,545 @@
+// Comprehensive Dark Mode Fixes
+// This file contains additional dark mode styles to ensure proper contrast
+
+body.dark-only {
+	// Page body background
+	.page-body {
+		background-color: #1d1e26 !important;
+		
+		// All cards in dark mode
+		.card {
+			background-color: #2a2b36 !important;
+			border-color: #3a3b46 !important;
+			color: white !important;
+			
+			.card-header {
+				background-color: #2a2b36 !important;
+				border-bottom-color: #3a3b46 !important;
+				
+				h1, h2, h3, h4, h5, h6, p, span, div, label {
+					color: white !important;
+				}
+			}
+			
+			.card-body {
+				background-color: #2a2b36 !important;
+				color: white !important;
+				
+				h1, h2, h3, h4, h5, h6, p, span, div, label {
+					color: white !important;
+				}
+			}
+		}
+		
+		// All tables in dark mode
+		.table {
+			background-color: #2a2b36 !important;
+			color: white !important;
+			
+			thead {
+				background-color: #1d1e26 !important;
+				
+				th {
+					background-color: #1d1e26 !important;
+					color: white !important;
+					border-color: #3a3b46 !important;
+				}
+			}
+			
+			tbody {
+				background-color: #2a2b36 !important;
+				
+				td {
+					background-color: #2a2b36 !important;
+					color: white !important;
+					border-color: #3a3b46 !important;
+				}
+				
+				tr:hover {
+					background-color: #1d1e26 !important;
+					
+					td {
+						background-color: #1d1e26 !important;
+					}
+				}
+			}
+		}
+	}
+	
+	// Dashboard specific dark mode fixes
+	.default-dashboard, .dashboard-2, .dashboard-3, .dashboard-4 {
+		.widget-grid {
+			.card {
+				background-color: #2a2b36 !important;
+				border-color: #3a3b46 !important;
+				
+				.card-header, .card-body {
+					background-color: #2a2b36 !important;
+					color: white !important;
+					
+					h1, h2, h3, h4, h5, h6, p, span, div, label {
+						color: white !important;
+					}
+				}
+			}
+		}
+	}
+	
+	// Form elements dark mode fixes
+	.form-control, .form-select, .form-check-input {
+		background-color: #2a2b36 !important;
+		border-color: #3a3b46 !important;
+		color: white !important;
+		
+		&::placeholder {
+			color: rgba(255, 255, 255, 0.6) !important;
+		}
+	}
+	
+	// Status badge dark mode fixes
+	.status-badge, .badge {
+		&.status-active, &.badge-success {
+			background-color: #0DA759 !important;
+			color: white !important;
+			border-color: #0DA759 !important;
+		}
+		
+		&.status-inactive, &.badge-danger {
+			background-color: #dc3545 !important;
+			color: white !important;
+			border-color: #dc3545 !important;
+		}
+		
+		&.status-unknown, &.badge-warning {
+			background-color: #ffc107 !important;
+			color: #212529 !important;
+			border-color: #ffc107 !important;
+		}
+		
+		&.badge-info {
+			background-color: #16C7F9 !important;
+			color: white !important;
+			border-color: #16C7F9 !important;
+		}
+		
+		// Additional status types
+		&.status-not-started, &.badge-secondary {
+			background-color: #6c757d !important;
+			color: white !important;
+			border-color: #6c757d !important;
+		}
+		
+		&.status-running, &.badge-primary {
+			background-color: #007bff !important;
+			color: white !important;
+			border-color: #007bff !important;
+		}
+		
+		&.status-completed, &.badge-success {
+			background-color: #28a745 !important;
+			color: white !important;
+			border-color: #28a745 !important;
+		}
+		
+		&.status-failed, &.badge-danger {
+			background-color: #dc3545 !important;
+			color: white !important;
+			border-color: #dc3545 !important;
+		}
+	}
+	
+	// Button dark mode fixes
+	.btn {
+		&.btn-outline-primary, &.btn-outline-secondary, &.btn-outline-success, &.btn-outline-danger, &.btn-outline-warning, &.btn-outline-info {
+			color: white !important;
+			border-color: currentColor !important;
+			
+			&:hover {
+				background-color: currentColor !important;
+				color: white !important;
+			}
+		}
+		
+		// Solid button fixes
+		&.btn-primary {
+			background-color: #007bff !important;
+			border-color: #007bff !important;
+			color: white !important;
+		}
+		
+		&.btn-secondary {
+			background-color: #6c757d !important;
+			border-color: #6c757d !important;
+			color: white !important;
+		}
+		
+		&.btn-success {
+			background-color: #28a745 !important;
+			border-color: #28a745 !important;
+			color: white !important;
+		}
+		
+		&.btn-danger {
+			background-color: #dc3545 !important;
+			border-color: #dc3545 !important;
+			color: white !important;
+		}
+		
+		&.btn-warning {
+			background-color: #ffc107 !important;
+			border-color: #ffc107 !important;
+			color: #212529 !important;
+		}
+		
+		&.btn-info {
+			background-color: #17a2b8 !important;
+			border-color: #17a2b8 !important;
+			color: white !important;
+		}
+		
+		&.btn-light {
+			background-color: #f8f9fa !important;
+			border-color: #f8f9fa !important;
+			color: #212529 !important;
+		}
+		
+		&.btn-dark {
+			background-color: #343a40 !important;
+			border-color: #343a40 !important;
+			color: white !important;
+		}
+	}
+	
+	// Task status specific fixes
+	.task-status, .execution-status {
+		.status-badge, .badge {
+			&.status-not-started {
+				background-color: #6c757d !important;
+				color: white !important;
+				border-color: #6c757d !important;
+			}
+			
+			&.status-running {
+				background-color: #007bff !important;
+				color: white !important;
+				border-color: #007bff !important;
+			}
+			
+			&.status-completed {
+				background-color: #28a745 !important;
+				color: white !important;
+				border-color: #28a745 !important;
+			}
+			
+			&.status-failed {
+				background-color: #dc3545 !important;
+				color: white !important;
+				border-color: #dc3545 !important;
+			}
+			
+			&.status-pending {
+				background-color: #ffc107 !important;
+				color: #212529 !important;
+				border-color: #ffc107 !important;
+			}
+		}
+	}
+	
+	// Dashboard task panels
+	.scheduled-updates, .task-execution {
+		.card {
+			background-color: #2a2b36 !important;
+			border-color: #3a3b46 !important;
+			
+			.card-header {
+				background-color: #2a2b36 !important;
+				border-bottom-color: #3a3b46 !important;
+				
+				h5, h6, p, span {
+					color: white !important;
+				}
+			}
+			
+			.card-body {
+				background-color: #2a2b36 !important;
+				color: white !important;
+			}
+		}
+		
+		.status-badge, .badge {
+			&.status-not-started {
+				background-color: #6c757d !important;
+				color: white !important;
+				border-color: #6c757d !important;
+			}
+			
+			&.status-running {
+				background-color: #007bff !important;
+				color: white !important;
+				border-color: #007bff !important;
+			}
+			
+			&.status-completed {
+				background-color: #28a745 !important;
+				color: white !important;
+				border-color: #28a745 !important;
+			}
+			
+			&.status-failed {
+				background-color: #dc3545 !important;
+				color: white !important;
+				border-color: #dc3545 !important;
+			}
+		}
+	}
+	
+	// Pagination dark mode fixes
+	.pagination {
+		.page-item {
+			.page-link {
+				background-color: #2a2b36 !important;
+				border-color: #3a3b46 !important;
+				color: white !important;
+				
+				&:hover {
+					background-color: #1d1e26 !important;
+					border-color: #3a3b46 !important;
+				}
+				
+				&.active {
+					background-color: #7A70BA !important;
+					border-color: #7A70BA !important;
+					color: white !important;
+				}
+			}
+		}
+	}
+	
+	// API table specific fixes
+	.api-accounts-overview {
+		.card {
+			background-color: #2a2b36 !important;
+			border-color: #3a3b46 !important;
+			
+			.card-header {
+				background-color: #2a2b36 !important;
+				border-bottom-color: #3a3b46 !important;
+				
+				h5, p {
+					color: white !important;
+				}
+			}
+			
+			.card-body {
+				background-color: #2a2b36 !important;
+				color: white !important;
+			}
+		}
+		
+		.table {
+			background-color: #2a2b36 !important;
+			
+			thead {
+				background-color: #1d1e26 !important;
+				
+				th {
+					background-color: #1d1e26 !important;
+					color: white !important;
+					border-color: #3a3b46 !important;
+				}
+			}
+			
+			tbody {
+				background-color: #2a2b36 !important;
+				
+				td {
+					background-color: #2a2b36 !important;
+					color: white !important;
+					border-color: #3a3b46 !important;
+				}
+				
+				tr:hover {
+					background-color: #1d1e26 !important;
+					
+					td {
+						background-color: #1d1e26 !important;
+					}
+				}
+			}
+		}
+	}
+} 
+
+// Global dark mode fixes for all status badges and buttons
+body.dark-only {
+	// Global status badge fixes
+	.status-badge, .badge {
+		&.status-not-started, &.badge-secondary {
+			background-color: #6c757d !important;
+			color: white !important;
+			border-color: #6c757d !important;
+		}
+		
+		&.status-running, &.badge-primary {
+			background-color: #007bff !important;
+			color: white !important;
+			border-color: #007bff !important;
+		}
+		
+		&.status-completed, &.badge-success {
+			background-color: #28a745 !important;
+			color: white !important;
+			border-color: #28a745 !important;
+		}
+		
+		&.status-failed, &.badge-danger {
+			background-color: #dc3545 !important;
+			color: white !important;
+			border-color: #dc3545 !important;
+		}
+		
+		&.status-pending, &.badge-warning {
+			background-color: #ffc107 !important;
+			color: #212529 !important;
+			border-color: #ffc107 !important;
+		}
+		
+		&.status-active, &.badge-success {
+			background-color: #28a745 !important;
+			color: white !important;
+			border-color: #28a745 !important;
+		}
+		
+		&.status-inactive, &.badge-danger {
+			background-color: #dc3545 !important;
+			color: white !important;
+			border-color: #dc3545 !important;
+		}
+		
+		&.status-unknown, &.badge-info {
+			background-color: #17a2b8 !important;
+			color: white !important;
+			border-color: #17a2b8 !important;
+		}
+	}
+	
+	// Global button fixes
+	.btn {
+		&.btn-outline-primary, &.btn-outline-secondary, &.btn-outline-success, &.btn-outline-danger, &.btn-outline-warning, &.btn-outline-info {
+			color: white !important;
+			border-color: currentColor !important;
+			
+			&:hover {
+				background-color: currentColor !important;
+				color: white !important;
+			}
+		}
+		
+		&.btn-primary {
+			background-color: #007bff !important;
+			border-color: #007bff !important;
+			color: white !important;
+		}
+		
+		&.btn-secondary {
+			background-color: #6c757d !important;
+			border-color: #6c757d !important;
+			color: white !important;
+		}
+		
+		&.btn-success {
+			background-color: #28a745 !important;
+			border-color: #28a745 !important;
+			color: white !important;
+		}
+		
+		&.btn-danger {
+			background-color: #dc3545 !important;
+			border-color: #dc3545 !important;
+			color: white !important;
+		}
+		
+		&.btn-warning {
+			background-color: #ffc107 !important;
+			border-color: #ffc107 !important;
+			color: #212529 !important;
+		}
+		
+		&.btn-info {
+			background-color: #17a2b8 !important;
+			border-color: #17a2b8 !important;
+			color: white !important;
+		}
+		
+		&.btn-light {
+			background-color: #f8f9fa !important;
+			border-color: #f8f9fa !important;
+			color: #212529 !important;
+		}
+		
+		&.btn-dark {
+			background-color: #343a40 !important;
+			border-color: #343a40 !important;
+			color: white !important;
+		}
+	}
+	
+	// Global table fixes
+	.table {
+		background-color: #2a2b36 !important;
+		color: white !important;
+		
+		thead {
+			background-color: #1d1e26 !important;
+			
+			th {
+				background-color: #1d1e26 !important;
+				color: white !important;
+				border-color: #3a3b46 !important;
+			}
+		}
+		
+		tbody {
+			background-color: #2a2b36 !important;
+			
+			td {
+				background-color: #2a2b36 !important;
+				color: white !important;
+				border-color: #3a3b46 !important;
+			}
+			
+			tr:hover {
+				background-color: #1d1e26 !important;
+				
+				td {
+					background-color: #1d1e26 !important;
+				}
+			}
+		}
+	}
+	
+	// Global card fixes
+	.card {
+		background-color: #2a2b36 !important;
+		border-color: #3a3b46 !important;
+		color: white !important;
+		
+		.card-header {
+			background-color: #2a2b36 !important;
+			border-bottom-color: #3a3b46 !important;
+			
+			h1, h2, h3, h4, h5, h6, p, span, div, label {
+				color: white !important;
+			}
+		}
+		
+		.card-body {
+			background-color: #2a2b36 !important;
+			color: white !important;
+			
+			h1, h2, h3, h4, h5, h6, p, span, div, label {
+				color: white !important;
+			}
+		}
+	}
+} 

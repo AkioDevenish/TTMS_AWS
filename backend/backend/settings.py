@@ -140,8 +140,8 @@ CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'database.auth.ApiKeyAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'database.auth.ApiKeyAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -207,7 +207,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Set timezone to Trinidad (UTC-4)
+TIME_ZONE = 'America/Port_of_Spain'
 
 USE_I18N = True
 
@@ -230,19 +231,26 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = 'America/Port_of_Spain'
 
 # Celery Beat Settings
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Add JWT settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Shorter access token for better security
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Longer refresh token
+    'ROTATE_REFRESH_TOKENS': True,                   # Rotate refresh tokens for security
+    'BLACKLIST_AFTER_ROTATION': True,                # Blacklist old refresh tokens
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=15),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 AUTH_USER_MODEL = 'database.User'

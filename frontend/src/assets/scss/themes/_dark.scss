@@ -9371,3 +9371,141 @@ body {
 /**=====================
 	4.1. Dark CSS ends
 ==========================**/
+
+// API Table Dark Mode Styles
+.dark-mode {
+	.api-accounts-overview {
+		.card {
+			background-color: $dark-card-background;
+			border-color: $dark-card-border;
+			
+			.card-header {
+				background-color: $dark-card-background;
+				border-bottom-color: $dark-card-border;
+				
+				h5, p {
+					color: $white;
+				}
+			}
+			
+			.card-body {
+				background-color: $dark-card-background;
+			}
+		}
+		
+		.table {
+			background-color: $dark-card-background;
+			
+			thead {
+				background-color: $dark-body-background;
+				
+				th {
+					background-color: $dark-body-background;
+					color: $white;
+					border-color: $dark-card-border;
+				}
+			}
+			
+			tbody {
+				background-color: $dark-card-background;
+				
+				td {
+					background-color: $dark-card-background;
+					color: $white;
+					border-color: $dark-card-border;
+				}
+				
+				tr:hover {
+					background-color: $dark-body-background;
+					
+					td {
+						background-color: $dark-body-background;
+					}
+				}
+			}
+		}
+		
+		.status-badge {
+			&.status-active {
+				background-color: $success-color;
+				color: $white;
+			}
+			
+			&.status-expired {
+				background-color: $danger-color;
+				color: $white;
+			}
+			
+			&.status-unknown {
+				background-color: $warning-color;
+				color: $white;
+			}
+		}
+		
+		.btn {
+			&.btn-outline-primary {
+				color: $white;
+				border-color: $primary-color;
+				
+				&:hover {
+					background-color: $primary-color;
+					color: $white;
+				}
+			}
+		}
+	}
+	
+	// General table dark mode fixes
+	.table {
+		background-color: $dark-card-background;
+		color: $white;
+		
+		thead {
+			background-color: $dark-body-background;
+			
+			th {
+				background-color: $dark-body-background;
+				color: $white;
+				border-color: $dark-card-border;
+			}
+		}
+		
+		tbody {
+			background-color: $dark-card-background;
+			
+			td {
+				background-color: $dark-card-background;
+				color: $white;
+				border-color: $dark-card-border;
+			}
+			
+			tr:hover {
+				background-color: $dark-body-background;
+				
+				td {
+					background-color: $dark-body-background;
+				}
+			}
+		}
+	}
+	
+	// Card dark mode fixes
+	.card {
+		background-color: $dark-card-background;
+		border-color: $dark-card-border;
+		
+		.card-header {
+			background-color: $dark-card-background;
+			border-bottom-color: $dark-card-border;
+			
+			h5, h6, p, span {
+				color: $white;
+			}
+		}
+		
+		.card-body {
+			background-color: $dark-card-background;
+			color: $white;
+		}
+	}
+}

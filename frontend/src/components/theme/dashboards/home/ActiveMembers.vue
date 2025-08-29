@@ -19,20 +19,27 @@
                     </tr>
                 </tbody>
                 <tbody v-else-if="recentUsers.length">
-                    <tr v-for="(user, index) in recentUsers" :key="index">
+                    <tr v-for="(user, index) in recentUsers" :key="index" class="user-row">
                         <td>
                             <div class="d-flex align-items-center">
+                                <div class="user-avatar me-3">
+                                    <div class="avatar-initial">
+                                        {{ getUserInitials(user) }}
+                                    </div>
+                                </div>
                                 <div class="flex-grow-1">
-                                    <h5 class="mb-0">{{ (user as any).username || `${(user as any).first_name} ${(user as any).last_name}`.trim() }}</h5>
-                                    <span class="text-muted">{{ (user as any).role || ((user as any).is_superuser ? 'Admin' : (user as any).is_staff ? 'Staff' : 'User') }}</span>
+                                    <h6 class="mb-0 user-name">{{ (user as any).username || `${(user as any).first_name} ${(user as any).last_name}`.trim() }}</h6>
+                                    <span class="text-muted user-role">{{ (user as any).role || ((user as any).is_superuser ? 'Admin' : (user as any).is_staff ? 'Staff' : 'User') }}</span>
                                 </div>
                             </div>
                         </td>
-                        <td>{{ (user as any).email }}</td>
                         <td>
-                            <p class="members-box text-center" :class="(user as any).status === 'Active' ? 'bg-light-success' : 'bg-light-danger'">
+                            <span class="user-email">{{ (user as any).email }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="status-badge" :class="getStatusClass((user as any).status)">
                                 {{ (user as any).status }}
-                            </p>
+                            </span>
                         </td>
                     </tr>
                 </tbody>
@@ -64,7 +71,34 @@ const props = defineProps({
   }
 })
 
-const recentUsers = computed(() => props.users.slice(0, 4))
+const recentUsers = computed(() => props.users.slice(0, 8))
+
+const getUserInitials = (user: any) => {
+    if (user.username) {
+        return user.username.charAt(0).toUpperCase()
+    }
+    if (user.first_name && user.last_name) {
+        return (user.first_name.charAt(0) + user.last_name.charAt(0)).toUpperCase()
+    }
+    if (user.first_name) {
+        return user.first_name.charAt(0).toUpperCase()
+    }
+    if (user.email) {
+        return user.email.charAt(0).toUpperCase()
+    }
+    return 'U'
+}
+
+const getStatusClass = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+        'Active': 'status-active',
+        'Inactive': 'status-inactive',
+        'Pending': 'status-pending',
+        'Suspended': 'status-suspended',
+        'default': 'status-default'
+    }
+    return statusMap[status] || statusMap['default']
+}
 
 let refreshInterval: number;
 
@@ -81,18 +115,97 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.members-box {
-    padding: 4px 8px;
-    border-radius: 5px;
-    font-size: 12px;
+.user-row {
+    transition: background-color 0.2s ease;
+}
+
+.user-row:hover {
+    background-color: #f8f9fa;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.avatar-initial {
+    line-height: 1;
+}
+
+.user-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.user-email {
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
     font-weight: 500;
+    text-align: center;
+    min-width: 80px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    margin: 0 auto;
 }
-.bg-light-success {
-    background-color: #e6fff3;
-    color: #51bb25;
+
+/* Ensure the status column content is centered */
+td.text-center {
+    text-align: center !important;
 }
-.bg-light-danger {
-    background-color: #fff5f5;
-    color: #dc3545;
+
+/* Ensure the status column header is also centered */
+th.text-center {
+    text-align: center !important;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffeaa7;
+}
+
+.status-suspended {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.status-default {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border-color: #d6d8db;
 }
 </style>

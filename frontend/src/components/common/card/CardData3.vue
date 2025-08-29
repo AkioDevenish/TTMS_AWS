@@ -3,11 +3,13 @@
         <div class="card" :class="cardClass">
             <div :class="smallClass">
                 <div class="card-header" :class="cardhaderClass" v-if="headerTitle">
+                    <slot name="header">
                     <h5 v-if="titles" :class="titleClass">{{ title }}</h5>
                     <h4 v-else :class="titleClass"><i class="icofont icofont-library me-2" v-if="ico"></i>{{ title }}</h4>
                     <vue-feather v-if="icon" :type="type"></vue-feather>
                     <span v-if="text" v-html="props.desc" />
                     <p :class="preClass" v-if="pre" v-html="props.desc"></p>{{ descs }}
+                    </slot>
                 </div>
                 <div class="card-header" :class="cardhaderClass" v-if="headerTop">
                     <div class="header-top">
@@ -91,3 +93,73 @@ let props = defineProps({
     footertitle: String
 })
 </script>
+
+<style scoped>
+/* Dark mode styles for CardData3 */
+body.dark-only .card {
+    background-color: #2a2b36 !important;
+    border-color: #3a3b46 !important;
+    color: white !important;
+}
+
+body.dark-only .card-header {
+    background-color: #2a2b36 !important;
+    border-bottom-color: #3a3b46 !important;
+}
+
+body.dark-only .card-header h4,
+body.dark-only .card-header h5,
+body.dark-only .card-header p,
+body.dark-only .card-header span {
+    color: white !important;
+}
+
+body.dark-only .card-body {
+    background-color: #2a2b36 !important;
+    color: white !important;
+}
+
+body.dark-only .card-footer {
+    background-color: #2a2b36 !important;
+    border-top-color: #3a3b46 !important;
+    color: white !important;
+}
+
+body.dark-only .card-footer h6 {
+    color: white !important;
+}
+
+/* Additional dark mode overrides */
+:deep(.dark-mode) .card {
+    background-color: #2a2b36 !important;
+    border-color: #3a3b46 !important;
+    color: white !important;
+}
+
+:deep(.dark-mode) .card-header {
+    background-color: #2a2b36 !important;
+    border-bottom-color: #3a3b46 !important;
+}
+
+:deep(.dark-mode) .card-header h4,
+:deep(.dark-mode) .card-header h5,
+:deep(.dark-mode) .card-header p,
+:deep(.dark-mode) .card-header span {
+    color: white !important;
+}
+
+:deep(.dark-mode) .card-body {
+    background-color: #2a2b36 !important;
+    color: white !important;
+}
+
+:deep(.dark-mode) .card-footer {
+    background-color: #2a2b36 !important;
+    border-top-color: #3a3b46 !important;
+    color: white !important;
+}
+
+:deep(.dark-mode) .card-footer h6 {
+    color: white !important;
+}
+</style>

@@ -94,16 +94,26 @@ const availableSensors = computed(() => [
 	'Wind Dir Average',
 	'Wind Dir Inst',
 	'Wind Speed Average',
-	'Wind Speed Inst'
+	'Wind Speed Inst',
+	// Additional OTT sensors found in backend
+	'EvapoTranspiration',
+	'Leaf Wetness',
+	'Soil Moisture (10cm)',
+	'Soil Moisture (20cm)',
+	'Soil Moisture (30cm)',
+	'Soil Temp (15cm)',
+	'Solar Radiation'
 ]);
 
 const fetchStationNames = async () => {
 	try {
 		isLoading.value = true;
 		console.log('Fetching station names...');
-		const response = await axios.get<Station[]>('/stations/');
+		const response = await axios.get<any>('/api/stations/');
 		console.log('All stations response:', response.data);
-		const ottStations = response.data.filter(station => station.brand_name === "OTT");
+		// Fix: Handle paginated response structure
+		const stationsData = response.data.results || response.data;
+		const ottStations = stationsData.filter((station: any) => station.brand_name === "OTT");
 		console.log('Filtered OTT stations:', ottStations);
 		stationNames.value = ottStations;
 
@@ -115,7 +125,7 @@ const fetchStationNames = async () => {
 		const firstSensor = availableSensors.value[0];
 		if (ottStations.length > 0 && firstSensor) {
 			console.log('Fetching initial data for first sensor:', firstSensor);
-			await ottData.fetchStationData(ottStations.map(s => s.id), firstSensor, 12);
+			await ottData.fetchStationData(ottStations.map((s: any) => s.id), firstSensor, 12);
 		} else if (ottStations.length > 0) {
 			console.warn('No sensors available for OTT stations');
 		}
@@ -132,6 +142,7 @@ watch(() => selectedStation.value, async (newVal) => {
 		try {
 			console.log('Selected station changed to:', newVal);
 			console.log('Available sensors:', availableSensors.value);
+			// Fetch data for all available sensors
 			await ottData.fetchStationData(newVal, availableSensors.value.join(','), 12);
 			console.log('Updated measurements:', ottData.measurements.value);
 			console.log('Updated station info:', ottData.stationInfo.value);

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import axios from '../plugins/axios';
 
 export interface HighestRecord {
     station_name: string;
@@ -55,39 +55,77 @@ export const useHighestRecordsStore = defineStore('highestRecords', {
             this.error = null;
             console.log('Store: fetchHighestRecords called with brand:', this.selectedBrand, 'page:', this.currentPage);
             try {
-                const stationsResponse = await axios.get('/stations/');
+                const stationsResponse = await axios.get('/api/stations/');
+                console.log('Store: Stations response:', stationsResponse.data);
+                
                 // Always include these brands as tabs
-                const requiredBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT'];
-                const brandsFromStations = (stationsResponse.data || []).map((station: any) => station.brand || station.brand_name).filter((b: unknown): b is string => typeof b === 'string' && !!b);
+                const requiredBrands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron'];
+                
+                // Handle paginated response - check if data has 'results' property
+                const stationsData = stationsResponse.data.results || stationsResponse.data;
+                console.log('Store: Processed stations data:', stationsData);
+                
+                // Extract brands from stations - try both possible field names
+                const brandsFromStations = (stationsData || []).map((station: any) => {
+                    console.log('Store: Processing station:', station);
+                    // Try both possible field names for brand
+                    if (station.brand && typeof station.brand === 'object' && station.brand.name) {
+                        return station.brand.name;
+                    } else if (station.brand_name) {
+                        return station.brand_name;
+                    } else if (station.brand && typeof station.brand === 'string') {
+                        return station.brand;
+                    }
+                    return null;
+                }).filter((b: unknown): b is string => typeof b === 'string' && !!b);
+                
+                console.log('Store: Extracted brands from stations:', brandsFromStations);
+                
                 let brands = Array.from(new Set([...requiredBrands, ...brandsFromStations]));
                 // Optionally, sort for consistent order
                 brands = requiredBrands.concat(brands.filter(b => !requiredBrands.includes(b)));
                 this.availableBrands = brands;
+                
+                console.log('Store: Final available brands:', brands);
+                
                 if (!this.selectedBrand && brands.length > 0) {
                     this.selectedBrand = brands[0];
+                    console.log('Store: Set default brand to:', this.selectedBrand);
                 }
+                
                 if (!this.selectedBrand) {
+                    console.log('Store: No brand selected, clearing data');
                     this.records = [];
                     this.totalPages = 1;
                     this.isLoading = false;
                     return;
                 }
-                const response = await axios.get('/measurements/highest_by_brand/', {
+                
+                console.log('Store: Fetching highest records for brand:', this.selectedBrand);
+                const response = await axios.get('/api/measurements/highest_by_brand/', {
                     params: {
                         brand: this.selectedBrand
                     },
                     responseType: 'text'
                 });
+                
+                console.log('Store: Highest records response:', response.data);
+                
                 let records: HighestRecord[] = [];
                 try {
                     records = JSON.parse(response.data);
-                } catch {
+                    console.log('Store: Parsed JSON records:', records);
+                } catch (parseError) {
+                    console.log('Store: JSON parse failed, trying XML:', parseError);
                     records = parseXMLRecords(response.data);
+                    console.log('Store: Parsed XML records:', records);
                 }
+                
                 this.records = records;
                 this.totalPages = Math.max(1, Math.ceil(this.records.length / this.pageSize));
                 if (this.currentPage > this.totalPages) this.currentPage = 1;
-                console.log('Store: State updated - records count:', this.records.length, 'availableBrands count:', this.availableBrands.length);
+                
+                console.log('Store: State updated - records count:', this.records.length, 'totalPages:', this.totalPages, 'availableBrands count:', this.availableBrands.length);
             } catch (error: any) {
                 console.error('Store: Error fetching highest records:', error);
                 this.error = error.message || 'Failed to fetch highest records';

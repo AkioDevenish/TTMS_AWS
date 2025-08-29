@@ -83,8 +83,10 @@ const availableSensors = computed(() => Object.keys(sensorCodeMap));
 
 const fetchStationNames = async () => {
 	try {
-		const response = await axios.get<Station[]>('/stations/');
-		const zentraStations = response.data.filter(station => station.brand_name === "Zentra");
+		const response = await axios.get<any>('/api/stations/');
+		// Fix: Handle paginated response structure
+		const stationsData = response.data.results || response.data;
+		const zentraStations = stationsData.filter((station: any) => station.brand_name === "Zentra");
 		stationNames.value = zentraStations;
 
 		if (zentraStations.length > 0 && !selectedStation.value) {

@@ -85,7 +85,7 @@ const fetchAvailableSensors = async () => {
     if (!props.selectedStation) return;
     
     try {
-        const response = await axios.get(`/station-sensors/`, {
+        		const response = await axios.get(`/api/station-sensors/`, {
             params: {
                 station_id: props.selectedStation,
                 brand: 'Zentra'  // Filter for Zentra brand

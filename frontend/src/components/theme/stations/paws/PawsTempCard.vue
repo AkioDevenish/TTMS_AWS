@@ -17,7 +17,7 @@
                             <p class="f-light mb-0">Last updated: {{ item.month }}</p>
                         </div>
                         <div class="flex-shrink-0">
-                            <img :src="getImages(item.img)" alt="" />
+                            <font-awesome-icon :icon="getWeatherIcon(item.sensorType)" style="font-size: 2rem; color: #007bff;" />
                         </div>
                     </div>
                 </Card1>
@@ -47,6 +47,7 @@ interface CardData {
     timeDiff: string;
     trend: string;
     unit: string;
+    sensorType: string;
 }
 
 const props = defineProps({
@@ -65,6 +66,46 @@ const props = defineProps({
 });
 
 const localPawsData = ref<CardData[]>([]);
+
+// Function to handle both local assets and external URLs
+const getImageSource = (imgPath: string): string => {
+  // If it's a full URL (starts with http/https), return it directly
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+    return imgPath;
+  }
+  // Otherwise, treat it as a local asset and use getImages
+  return getImages(imgPath);
+};
+
+// Function to get weather-appropriate icons from Font Awesome
+const getWeatherIcon = (sensorType: string): string[] => {
+  const iconMap: Record<string, string[]> = {
+    // Temperature sensors
+    'bt1': ['fas', 'thermometer-half'],
+    'mt1': ['fas', 'thermometer-half'],
+    
+    // Pressure sensors
+    'bp1': ['fas', 'tachometer'],
+    
+    // Wind sensors
+    'ws': ['fas', 'cloud'],
+    'wd': ['fas', 'compass'],
+    
+    // Precipitation sensors
+    'rg': ['fas', 'cloud'],
+    
+    // Solar sensors
+    'sv1': ['fas', 'sun-o'],
+    'si1': ['fas', 'sun-o'],
+    'su1': ['fas', 'sun-o'],
+    
+    // System sensors
+    'bpc': ['fas', 'battery-three-quarters'],
+    'css': ['fas', 'signal']
+  };
+  
+  return iconMap[sensorType] || ['fas', 'question-circle'];
+};
 
 const dateCache = new Map<string, number>();
 const getDateTime = (date: string, time: string): number => {
@@ -159,7 +200,7 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                              changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
                 icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
                              changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
-                img: 'dashboard-4/icon/student.png',
+                img: sensorType,
                 cardclass: "student",
                 fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                                   changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
@@ -170,7 +211,8 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                 rateOfChange: `${changes.rateOfChange}${config.unit}`,
                 timeDiff: changes.timeDiff,
                 trend: changes.trend,
-                unit: config.unit
+                unit: config.unit,
+                sensorType: sensorType
             };
         })
         .filter(Boolean) as CardData[];

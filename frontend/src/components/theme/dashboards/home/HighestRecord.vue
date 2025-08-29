@@ -19,12 +19,29 @@
             </div>
         </div>
 
+        <!-- Error State -->
+        <div v-else-if="error" class="text-center py-5">
+            <div class="alert alert-danger" role="alert">
+                <VueFeather type="alert-triangle" size="48" class="text-danger mb-3" />
+                <h5>Error Loading Data</h5>
+                <p class="text-danger">{{ error }}</p>
+                <button @click="retryFetch" class="btn btn-primary">Retry</button>
+            </div>
+        </div>
+
         <!-- No Data State -->
         <div v-else-if="!hasData" class="text-center py-5">
             <div class="empty-state">
                 <VueFeather type="alert-circle" size="48" class="text-muted mb-3" />
                 <h5>No Data Available</h5>
                 <p class="text-muted">No highest records found for the selected brand.</p>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Debug Info: Selected Brand: {{ selectedBrand }}, 
+                        Available Brands: {{ uniqueBrands.join(', ') }}, 
+                        Records Count: {{ allData.length }}
+                    </small>
+                </div>
             </div>
         </div>
 
@@ -110,6 +127,7 @@ const totalPages = computed(() => store.totalPages);
 const selectedBrand = computed(() => store.selectedBrand);
 const uniqueBrands = computed(() => store.availableBrands);
 const filterQuery = ref('');
+const error = computed(() => store.error);
 
 const hasData = computed(() => allData.value && allData.value.length > 0);
 
@@ -158,8 +176,20 @@ const selectBrand = (brand: string) => {
     store.setBrand(brand);
 };
 
+const retryFetch = () => {
+    console.log('Component: retryFetch called');
+    store.fetchHighestRecords();
+};
+
 onMounted(() => {
     console.log('Component: onMounted, fetching highest records');
+    console.log('Component: Initial store state:', {
+        selectedBrand: store.selectedBrand,
+        availableBrands: store.availableBrands,
+        records: store.records,
+        isLoading: store.isLoading,
+        error: store.error
+    });
     store.fetchHighestRecords();
 });
 </script>

@@ -82,7 +82,7 @@ const fetchAvailableSensors = async () => {
 		// if (isLoading.value) return;
 		// isLoading.value = true;
 
-		const response = await axios.get(`/station-sensors/`, {
+		const response = await axios.get(`/api/station-sensors/`, {
 			params: {
 				station_id: props.selectedStation,
 				brand: '3D_Paws'

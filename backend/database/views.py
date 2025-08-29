@@ -16,6 +16,8 @@ from .serializers import (
     BillSerializer, ApiKeyUsageLogSerializer
 )
 from django.utils import timezone
+import pytz
+import datetime
 from rest_framework import serializers
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -62,6 +64,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['get'])
     def stations(self, request, pk=None):
@@ -75,24 +78,68 @@ class StationViewSet(viewsets.ModelViewSet):
     queryset = Station.objects.all()
     serializer_class = StationSerializer
     renderer_classes = [JSONRenderer, XMLRenderer, StationCSVRenderer]
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination  # Add pagination
 
-    def list(self, request, *args, **kwargs):
-        """Override list to include additional filtering options."""
-        queryset = self.get_queryset()
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminUser]  # Only admins can create/update/delete
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        """Optimized queryset with proper database optimizations"""
+        # Start with optimized base queryset
+        queryset = Station.objects.select_related('brand').prefetch_related(
+            'station_sensors__sensor',
+            'health_logs'
+        )
         
         # Filter by brand if provided
-        brand = request.query_params.get('brand')
+        brand = self.request.query_params.get('brand')
         if brand:
-            # Try both brand relationship patterns
-            try_brand_relation = queryset.filter(brand__name=brand)
-            if try_brand_relation.exists():
-                queryset = try_brand_relation
-            else:
-                queryset = queryset.filter(brand_name=brand)
+            queryset = queryset.filter(brand__name=brand)
         
-        # No pagination to ensure all stations are returned
-        serializer = self.serializer_class(queryset, many=True)
-        return Response(serializer.data)
+        # Include decommissioned stations only if explicitly requested
+        include_decommissioned = self.request.query_params.get('include_decommissioned', 'false').lower() == 'true'
+        if not include_decommissioned:
+            queryset = queryset.exclude(status='Decommissioned')
+        
+        # Order by name for consistent results
+        queryset = queryset.order_by('name')
+        
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """Override list to use pagination and optimize performance."""
+        from django.core.cache import cache
+        
+        # Create cache key based on query parameters
+        cache_key = f'stations_list_{request.query_params.get("brand", "all")}_{request.query_params.get("include_decommissioned", "false")}'
+        
+        # Try to get cached data first
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data)
+        
+        queryset = self.get_queryset()
+        
+        # Use pagination for better performance
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response_data = self.get_paginated_response(serializer.data)
+            # Cache the response for 5 minutes
+            cache.set(cache_key, response_data.data, timeout=300)
+            return response_data
+        
+        # Fallback to non-paginated response (for small datasets)
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+        # Cache the response for 5 minutes
+        cache.set(cache_key, response_data, timeout=300)
+        return Response(response_data)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -134,6 +181,137 @@ class StationViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({'error': 'No health data available'}, status=404)
 
+    def _clear_station_cache(self, brand_name):
+        """Helper method to clear station-related cache in a compatible way"""
+        from django.core.cache import cache
+        try:
+            # Try to use delete_pattern if available
+            cache.delete_pattern('stations_list_*')
+        except AttributeError:
+            # Fallback for cache backends that don't support delete_pattern
+            # Clear some common cache keys manually
+            for i in range(1, 11):  # Clear first 10 pages
+                cache.delete(f'stations_list_{i}')
+                cache.delete(f'stations_list_page_{i}')
+                cache.delete(f'stations_list_all_false')
+                cache.delete(f'stations_list_all_true')
+                cache.delete(f'stations_list_{brand_name}_false')
+                cache.delete(f'stations_list_{brand_name}_true')
+
+    @action(detail=True, methods=['post'])
+    def decommission(self, request, pk=None):
+        """Decommission a station instead of deleting it"""
+        try:
+            # Get the station directly to avoid queryset filtering issues
+            instance = Station.objects.get(pk=pk)
+            
+            # Check if station is already decommissioned
+            if instance.status == 'Decommissioned':
+                return Response(
+                    {"error": "Station is already decommissioned"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Update station status to decommissioned
+            instance.status = 'Decommissioned'
+            instance.decommissioned_at = timezone.now()
+            instance.save(update_fields=['status', 'decommissioned_at'])
+            
+            # Clear station overview cache to ensure decommissioned stations don't appear
+            from django.core.cache import cache
+            # Clear cache for all possible sensor types and pages for this brand
+            for sensor_type in ['bt1', 'mt1', 'ws', 'wd', 'rg', 'bp1', 'sv1', 'si1', 'su1']:
+                for page in range(1, 6):  # Clear first 5 pages
+                    for page_size in [6, 10, 20]:  # Common page sizes
+                        cache_key = f'station_overview_{instance.brand.name}_{sensor_type}_{page}_{page_size}_True'
+                        cache.delete(cache_key)
+                        cache_key = f'station_overview_{instance.brand.name}_{sensor_type}_{page}_{page_size}_False'
+                        cache.delete(cache_key)
+            
+            # Clear station list cache to ensure fresh data
+            self._clear_station_cache(instance.brand.name)
+            
+            serializer = self.get_serializer(instance)
+            return Response(
+                {"message": "Station decommissioned successfully", "station": serializer.data},
+                status=status.HTTP_200_OK
+            )
+        except Station.DoesNotExist:
+            return Response(
+                {"error": "Station not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=True, methods=['post'])
+    def reactivate(self, request, pk=None):
+        """Reactivate a decommissioned station"""
+        try:
+            # Get the station directly to avoid queryset filtering issues
+            instance = Station.objects.get(pk=pk)
+            
+            # Check if station is decommissioned
+            if instance.status != 'Decommissioned':
+                return Response(
+                    {"error": "Station is not decommissioned"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Reactivate station
+            instance.status = 'Active'
+            instance.decommissioned_at = None
+            instance.save(update_fields=['status', 'decommissioned_at'])
+            
+            # Clear station overview cache to ensure reactivated stations appear
+            from django.core.cache import cache
+            # Clear cache for all possible sensor types and pages for this brand
+            for sensor_type in ['bt1', 'mt1', 'ws', 'wd', 'rg', 'bp1', 'sv1', 'si1', 'su1']:
+                for page in range(1, 6):  # Clear first 5 pages
+                    for page_size in [6, 10, 20]:  # Common page sizes
+                        cache_key = f'station_overview_{instance.brand.name}_{sensor_type}_{page}_{page_size}_True'
+                        cache.delete(cache_key)
+                        cache_key = f'station_overview_{instance.brand.name}_{sensor_type}_{page}_{page_size}_False'
+                        cache.delete(cache_key)
+            
+            # Clear station list cache to ensure fresh data
+            self._clear_station_cache(instance.brand.name)
+            
+            serializer = self.get_serializer(instance)
+            return Response(
+                {"message": "Station reactivated successfully", "station": serializer.data},
+                status=status.HTTP_200_OK
+            )
+        except Station.DoesNotExist:
+            return Response(
+                {"error": "Station not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def update(self, request, *args, **kwargs):
+        """Override update to clear cache when stations are modified."""
+        # Get the instance to access brand name for cache clearing
+        instance = self.get_object()
+        self._clear_station_cache(instance.brand.name)
+        
+        return super().partial_update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Override partial_update to clear cache when stations are modified."""
+        # Get the instance to access brand name for cache clearing
+        instance = self.get_object()
+        self._clear_station_cache(instance.brand.name)
+        
+        return super().update(request, *args, **kwargs)
+
 
 class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
@@ -158,6 +336,14 @@ class MeasurementViewSet(viewsets.ModelViewSet):
     pagination_class = MeasurementPagination
     renderer_classes = [JSONRenderer, XMLRenderer, MeasurementCSVRenderer]
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        """Override permissions for specific actions"""
+        if self.action == 'station_overview':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     @action(detail=False, methods=['get'])
     def by_station(self, request):
@@ -437,7 +623,7 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             # Get parameters
             brand = request.query_params.get('brand')
             sensor_type = request.query_params.get('sensor_type')
-            hours = int(request.query_params.get('hours', 12))
+            hours = int(request.query_params.get('hours', 12))  # Default to 12 hours
             
             if not brand:
                 return Response({"error": "Brand parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -512,25 +698,70 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             if cached_data:
                 return Response(cached_data)
 
-            # Get current time and 12 hours ago
+            # Get current time and determine appropriate time range
             now = timezone.now()
-            yesterday = now - timedelta(hours=12)
+            
+            # Use different time ranges for different brands
+            if brand == 'OTT':
+                # OTT stations may have less frequent data updates, use 7 days
+                time_threshold = now - timedelta(days=7)
+                print(f"Using 7-day time range for {brand} stations")
+            else:
+                # Use 12 hours for other brands to focus on recent data
+                time_threshold = now - timedelta(hours=12)
+                print(f"Using 12-hour time range for {brand} stations")
+            
+            yesterday = time_threshold
             
             # Base queryset with select_related and prefetch_related
+            # Filter out decommissioned stations for dashboard overview
             stations = Station.objects.filter(
-                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
-            ).select_related('brand').prefetch_related(
-                Prefetch(
-                    'measurements',
-                    queryset=Measurement.objects.filter(
-                        sensor__type=sensor_type,
-                        date__gte=yesterday.date()
-                    ).order_by('-date', '-time')
-                )
-            )
+                brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
+            ).exclude(status='Decommissioned').select_related('brand')
 
             if brand:
                 stations = stations.filter(brand__name=brand)
+
+            # Filter stations by sensor type if provided
+            if sensor_type:
+                # Map frontend sensor name to database sensor code
+                mapped_sensor_type = self.get_sensor_mapping(sensor_type)
+                print(f"Filtering stations by sensor type: {sensor_type} -> {mapped_sensor_type}")
+                
+                # Get stations that actually have this sensor type configured
+                stations_with_sensor = Station.objects.filter(
+                    id__in=stations.values_list('id', flat=True),
+                    station_sensors__sensor__type=mapped_sensor_type
+                ).distinct()
+                
+                print(f"Found {stations_with_sensor.count()} stations with sensor type {mapped_sensor_type}")
+                
+                # Special filtering for Allmeteo stations based on sensor type
+                if brand == 'Allmeteo':
+                    wind_sensors = [
+                        'wind_Avg10', 'wind_Max10', 'wind_Min10', 'wind_Stdev10',
+                        'wdir_Avg10', 'wdir_Gust10', 'wdir_Max10', 'wdir_Min10', 'wdir_Stdev10'
+                    ]
+                    if sensor_type in wind_sensors:
+                        # Only show wind stations for wind sensors
+                        stations_with_sensor = stations_with_sensor.filter(
+                            name__icontains='Wind'
+                        )
+                    else:
+                        # Only show helix stations for non-wind sensors
+                        stations_with_sensor = stations_with_sensor.filter(
+                            name__icontains='Helix'
+                        )
+                
+                # Only apply sensor filtering if we found stations with the sensor
+                # Otherwise, show all stations (they might have data from other sources)
+                if stations_with_sensor.exists():
+                    stations = stations_with_sensor
+                    print(f"Applied sensor filtering, showing {stations.count()} stations")
+                else:
+                    print(f"No stations found with sensor type {mapped_sensor_type}, showing all stations")
+                    # Don't filter by sensor type if no stations have it configured
+                    # This allows showing stations that might have data from other sources
 
             # Get total count for pagination
             total_count = stations.count()
@@ -544,7 +775,29 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             # Process stations data
             response_data = []
             for station in stations:
-                latest_measurement = station.measurements.first() if station.measurements.exists() else None
+                # Get the latest measurement for this station and sensor type
+                latest_measurement = None
+                
+                if sensor_type:
+                    # Map frontend sensor name to database sensor code
+                    mapped_sensor_type = self.get_sensor_mapping(sensor_type)
+                    
+                    # Get recent measurements based on the appropriate time range
+                    measurement_query = Measurement.objects.filter(
+                        station_id=station.id,
+                        sensor__type=mapped_sensor_type,
+                        date__gte=yesterday.date()
+                    )
+                    
+                    print(f"Station {station.name}: Looking for measurements with sensor type {mapped_sensor_type} from {yesterday.date()}")
+                    print(f"  Query found {measurement_query.count()} measurements")
+                    
+                    latest_measurement = measurement_query.order_by('-date', '-time').first()
+                    
+                    if latest_measurement:
+                        print(f"  Latest measurement: {latest_measurement.date} {latest_measurement.time} - Value: {latest_measurement.value}")
+                    else:
+                        print(f"  No measurements found for this sensor type")
                 
                 station_data = {
                     'id': station.id,
@@ -555,10 +808,34 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     'latest_measurement': {
                         'value': float(latest_measurement.value) if latest_measurement else None,
                         'date': latest_measurement.date.isoformat() if latest_measurement else None,
-                        'time': latest_measurement.time.isoformat() if latest_measurement else None,
+                        'time': self.convert_time_to_local(latest_measurement.date, latest_measurement.time) if latest_measurement else None,
                         'status': latest_measurement.status if latest_measurement else 'No Data'
-                    } if latest_measurement else None
+                    } if latest_measurement else None,
+                    # Add station health information
+                    'station_health': {
+                        'has_recent_data': latest_measurement is not None,
+                        'has_any_recent_data': False,  # Will be populated below
+                        'last_data_time': latest_measurement.date.isoformat() if latest_measurement else None
+                    }
                 }
+                
+                # Check if station has ANY recent data (not just the specific sensor type)
+                if not latest_measurement:
+                    any_recent_measurement = Measurement.objects.filter(
+                        station_id=station.id,
+                        date__gte=yesterday.date()
+                    ).order_by('-date', '-time').first()
+                    
+                    if any_recent_measurement:
+                        print(f"  Station {station.name}: No {sensor_type} data, but has recent {any_recent_measurement.sensor.type} data")
+                        station_data['station_health']['has_any_recent_data'] = True
+                        station_data['station_health']['last_data_time'] = any_recent_measurement.date.isoformat()
+                    else:
+                        print(f"  Station {station.name}: No recent data of any type")
+                        station_data['station_health']['has_any_recent_data'] = False
+                else:
+                    # Station has data for the requested sensor type
+                    station_data['station_health']['has_any_recent_data'] = True
                 response_data.append(station_data)
 
             result = {
@@ -586,6 +863,153 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                 'error': str(e)
             })
 
+    def convert_time_to_local(self, date, time):
+        """Helper function to format time (data is already in local timezone)"""
+        try:
+            # The data is already stored in Trinidad timezone (UTC-4)
+            # Just format the time as is
+            if time:
+                return time.strftime('%H:%M:%S')
+            return None
+        except Exception as e:
+            print(f"Error formatting time: {e}")
+            return time.isoformat() if time else None
+
+    def get_sensor_mapping(self, sensor_type):
+        """Map frontend sensor names to database sensor codes"""
+        if not sensor_type:
+            return None
+        
+        # 3D Paws sensor mapping (frontend name -> database code)
+        sensor_mapping = {
+            'Temperature 1': 'bt1',
+            'Temperature 2': 'mt1',
+            'Pressure': 'bp1',
+            'Wind Speed': 'ws',
+            'Wind Direction': 'wd',
+            'Precipitation': 'rg',
+            'Downwelling Visible': 'sv1',
+            'Downwelling Infrared': 'si1',
+            'Downwelling Ultraviolet': 'su1',
+            'Battery Percent': 'bpc',
+            'Cell Signal Strength': 'css',
+            'Wind Gust': 'wg',
+            'Wind Gust Direction': 'wgd',
+            'Battery Cell Signal': 'bcs',
+            'Heat Index': 'hth',
+            'Battery Health': 'bh1',
+            'Cloud Fraction': 'cfr',
+            'Heat Temperature': 'ht1',
+            'Heat Humidity': 'hh1',
+            'Wet Bulb Globe Temperature': 'wbgt',
+            'Solar Heat': 'sh1',
+            'Wet Bulb Temperature': 'wbt',
+            'Soil Temperature': 'st1'
+        }
+        
+        # Zentra sensor mapping (frontend name -> database code)
+        zentra_mapping = {
+            'Solar Radiation': 'Solar Radiation',
+            'Precipitation': 'Precipitation',
+            'Lightning Activity': 'Lightning Activity',
+            'Lightning Distance': 'Lightning Distance',
+            'Wind Direction': 'Wind Direction',
+            'Wind Speed': 'Wind Speed',
+            'Gust Speed': 'Gust Speed',
+            'Air Temperature': 'Air Temperature',
+            'Relative Humidity': 'Relative Humidity',
+            'Atmospheric Pressure': 'Atmospheric Pressure',
+            'X-axis Level': 'X-axis Level',
+            'Y-axis Level': 'Y-axis Level',
+            'Max Precipitation Rate': 'Max Precipitation Rate',
+            'RH Sensor Temperature': 'RH Sensor Temperature',
+            'Vapor Pressure Deficit': 'Vapor Pressure Deficit',
+            'Battery Percent': 'Battery Percent',
+            'Battery Voltage': 'Battery Voltage',
+            'Atmospheric Pressure (Reference Pressure)': 'Atmospheric Pressure (Reference Pressure)'
+        }
+        
+        # OTT sensor mapping (frontend name -> database code)
+        ott_mapping = {
+            '5 min rain': '5 min rain',
+            'Air Temperature': 'Air Temperature',
+            'Barometric Pressure': 'Barometric Pressure',
+            'Baro Tendency': 'Baro Tendency',
+            'Battery': 'Battery',
+            'Daily Rain': 'Daily Rain',
+            'Dew Point': 'Dew Point',
+            'Gust Direction': 'Gust Direction',
+            'Gust Speed': 'Gust Speed',
+            'Hours of Sunshine': 'Hours of Sunshine',
+            'Maximum Air Temperature': 'Maximum Air Temperature',
+            'Minimum Air Temperature': 'Minimum Air Temperature',
+            'Relative Humidity': 'Relative Humidity',
+            'Solar Radiation Avg': 'Solar Radiation Avg',
+            'Solar Radiation Total': 'Solar Radiation Total',
+            'Wind Dir Average': 'Wind Dir Average',
+            'Wind Dir Inst': 'Wind Dir Inst',
+            'Wind Speed Average': 'Wind Speed Average',
+            'Wind Speed Inst': 'Wind Speed Inst'
+        }
+        
+        # Sutron sensor mapping (frontend name -> database code)
+        sutron_mapping = {
+            'AT': 'AT',
+            'ATMAX': 'ATMAX',
+            'ATMIN': 'ATMIN',
+            'AT_ADJUSTED': 'AT_ADJUSTED',
+            'BARO': 'BARO',
+            'BATT': 'BATT',
+            'DP': 'DP',
+            'GUST': 'GUST',
+            'GUSTDIR': 'GUSTDIR',
+            'HRSSUN': 'HRSSUN',
+            'LEAF DRY': 'LEAF DRY',
+            'LEAF SLIGHT WET': 'LEAF SLIGHT WET',
+            'LEAF WET': 'LEAF WET',
+            'LEAFW': 'LEAFW',
+            'LWC': 'LWC',
+            'LWTIME': 'LWTIME',
+            'QFE': 'QFE',
+            'QFF': 'QFF',
+            'QNH': 'QNH',
+            'RAIN': 'RAIN',
+            'RAINDAILY': 'RAINDAILY',
+            'RH': 'RH',
+            'SOILCOND': 'SOILCOND',
+            'SOILEC': 'SOILEC',
+            'SOILM': 'SOILM',
+            'SOILPERM': 'SOILPERM',
+            'SOILT': 'SOILT',
+            'SOLARV': 'SOLARV',
+            'SOLARVOLTAGE': 'SOLARVOLTAGE',
+            'SOLRAD': 'SOLRAD',
+            'UNKNOWN': 'UNKNOWN',
+            'WD10': 'WD10',
+            'WDA': 'WDA',
+            'WDI': 'WDI',
+            'WS10': 'WS10',
+            'WSA': 'WSA',
+            'WSI': 'WSI',
+            'BATTERY': 'BATTERY'
+        }
+        
+        # Check if it's a Zentra sensor type first
+        if sensor_type in zentra_mapping:
+            return zentra_mapping[sensor_type]
+        
+        # Check if it's an OTT sensor type
+        if sensor_type in ott_mapping:
+            return ott_mapping[sensor_type]
+        
+        # Check if it's a Sutron sensor type
+        if sensor_type in sutron_mapping:
+            return sutron_mapping[sensor_type]
+        
+        # If the sensor_type is already a database code (like 'bt1'), return it as-is
+        # If it's a frontend name (like 'Temperature 1'), map it to database code
+        return sensor_mapping.get(sensor_type, sensor_type)
+    
     def get_sensor_unit(self, sensor_type):
         """Helper function to get the unit for a sensor type"""
         sensor_units = {
@@ -600,15 +1024,119 @@ class MeasurementViewSet(viewsets.ModelViewSet):
             'su1': 'W/m²',
             'bpc': '%',
             'css': '%',
+            'wg': 'm/s',
+            'wgd': '°',
+            'bcs': '%',
+            'hth': '°C',
+            'bh1': '%',
+            'cfr': '%',
+            'ht1': '°C',
+            'hh1': '%',
+            'wbgt': '°C',
+            'hi': '°C',
+            'sh1': 'W/m²',
+            'wbt': '°C',
+            'st1': '°C',
             'Air Temperature': '°C',
             'Wind Speed': 'm/s',
             'Precipitation': 'mm',
             'Solar Radiation': 'W/m²',
             'Relative Humidity': '%',
             'Atmospheric Pressure': 'kPa',
+            'Lightning Activity': 'count',
+            'Lightning Distance': 'km',
+            'Gust Speed': 'm/s',
+            'X-axis Level': 'mm',
+            'Y-axis Level': 'mm',
+            'Max Precipitation Rate': 'mm/h',
+            'RH Sensor Temperature': '°C',
+            'Vapor Pressure Deficit': 'kPa',
+            'Battery Percent': '%',
+            'Battery Voltage': 'mV',
+            'Atmospheric Pressure (Reference Pressure)': 'kPa',
+            # Sutron sensor units
+            'AT': '°C',
+            'ATMAX': '°C',
+            'ATMIN': '°C',
+            'AT_ADJUSTED': '°C',
+            'BARO': 'hPa',
+            'BATT': 'V',
+            'DP': '°C',
+            'GUST': 'm/s',
+            'GUSTDIR': '°',
+            'HRSSUN': 'hr',
+            'LEAF DRY': 'status',
+            'LEAF SLIGHT WET': 'status',
+            'LEAF WET': 'status',
+            'LEAFW': 'status',
+            'LWC': 'count',
+            'LWTIME': 'min',
+            'QFE': 'hPa',
+            'QFF': 'hPa',
+            'QNH': 'hPa',
+            'RAIN': 'mm',
+            'RAINDAILY': 'mm',
+            'RH': '%',
+            'SOILCOND': 'mS/cm',
+            'SOILEC': 'mS/cm',
+            'SOILM': '%',
+            'SOILPERM': 'dimensionless',
+            'SOILT': '°C',
+            'SOLARV': 'V',
+            'SOLARVOLTAGE': 'V',
+            'SOLRAD': 'W/m²',
+            'UNKNOWN': 'unknown',
+            'WD10': '°',
+            'WDA': '°',
+            'WDI': '°',
+            'WS10': 'm/s',
+            'WSA': 'm/s',
+            'WSI': 'm/s',
+            'BATTERY': 'V',
             'wind_ave10': 'm/s',
+            'wind_Max10': 'm/s',
+            'wind_Min10': 'm/s',
+            'wdir_Max10': '°',
             'dir_ave10': '°',
-            'battery': 'V'
+            'battery': 'V',
+            'humidity': '%',
+            'irradiation': 'W/m²',
+            'irradiation_max': 'W/m²',
+            'pressure': 'hPa',
+            'pressure_raw': 'hPa',
+            'rain': 'mm',
+            'rainfall_rate_max': 'mm/h',
+            'temperature': '°C',
+            'temperature_max': '°C',
+            'temperature_min': '°C',
+            'temperature_wetbulb_stull2011_C': '°C',
+            'wdir_Avg10': '°',
+            'wdir_Gust10': '°',
+            'wdir_Min10': '°',
+            'wdir_Stdev10': '°',
+            'wind_Avg10': 'm/s',
+            'wind_Stdev10': 'm/s',
+            'dewPoint': '°C',
+            # OTT sensor types
+            '5 min rain': 'mm',
+            'Air Temperature': '°C',
+            'Barometric Pressure': 'hPa',
+            'Baro Tendency': 'hPa',
+            'Battery': 'V',
+            'Daily Rain': 'mm',
+            'Dew Point': '°C',
+            'Gust Direction': '°',
+            'Gust Speed': 'knots',
+            'Hours of Sunshine': 'hr',
+            'Maximum Air Temperature': '°C',
+            'Minimum Air Temperature': '°C',
+            'Relative Humidity': '%',
+            'Solar Radiation Avg': 'Wh/m²',
+            'Solar Radiation Total': 'Wh/m²',
+            'Wind Dir Average': '°',
+            'Wind Dir Inst': '°',
+            'Wind Speed Average': 'knots',
+            'Wind Speed Inst': 'knots'
         }
         return sensor_units.get(sensor_type, '')
 
@@ -622,10 +1150,10 @@ class MeasurementViewSet(viewsets.ModelViewSet):
         - hours: Number of hours to look back (default: 12)
         """
         try:
-            print("History endpoint called with params:", request.query_params)
-            station_ids_param = request.query_params.get('station_ids', '')
-            sensor_type_param = request.query_params.get('sensor_type')
-            hours = int(request.query_params.get('hours', 12))
+            print("History endpoint called with params:", request.GET)
+            station_ids_param = request.GET.get('station_ids', '')
+            sensor_type_param = request.GET.get('sensor_type')
+            hours = int(request.GET.get('hours', 12))  # Default to 12 hours
             print(f"Parsed parameters: station_ids={station_ids_param}, sensor_type={sensor_type_param}, hours={hours}")
             if not station_ids_param or not sensor_type_param:
                 print("Missing required parameters")
@@ -650,11 +1178,25 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     {"detail": "At least one sensor_type must be provided"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            # Get the brand name to determine time range
+            station_ids_list = [int(id) for id in station_ids_param.split(',')]
+            stations = Station.objects.filter(id__in=station_ids_list).select_related('brand')
+            
+            # Check if any of the requested stations are 3D Paws
+            paws_stations = stations.filter(brand__name='3D_Paws')
+            has_paws = paws_stations.exists()
+            
+            # Use the requested hours for all brands (focus on recent data)
+            effective_hours = hours
+            print(f"Using time range of {effective_hours} hours for all brands")
+            
             now = timezone.now()
-            time_threshold = now - timedelta(hours=hours)
+            time_threshold = now - timezone.timedelta(hours=effective_hours)
             threshold_date = time_threshold.date()
             threshold_time = time_threshold.time()
             print(f"Time threshold: {threshold_date} {threshold_time}")
+            
             measurements = Measurement.objects.filter(
                 station_id__in=station_ids,
                 sensor__type__in=sensor_types
@@ -670,12 +1212,16 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                     'sensor_type': m.sensor.type,
                     'value': m.value,
                     'date': m.date.strftime('%Y-%m-%d'),
-                    'time': m.time.strftime('%H:%M:%S')
+                    'time': self.convert_time_to_local(m.date, m.time)
                 })
 
+            # Return the measurements data
+            result = {
+                'measurements': result_data
+            }
+            
             # Insert into api_key_usage logs and update Api_Access_Keys
-            print(f"Checking request.auth type: {type(request.auth)}") # Debug print
-            if request.auth and isinstance(request.auth, ApiAccessKey):
+            if hasattr(request, 'auth') and request.auth and isinstance(request.auth, ApiAccessKey):
                 print("API key authenticated, attempting to log usage.") # Debug print
                 try:
                     api_key = request.auth
@@ -690,8 +1236,8 @@ class MeasurementViewSet(viewsets.ModelViewSet):
                         'api_key': api_key,
                         'user': user,
                         'request_path': request.path,
-                        'query_params': dict(request.query_params),
-                        'response_format': request.accepted_renderer.format,
+                        'query_params': dict(request.GET),
+                        'response_format': getattr(request, 'accepted_renderer', None),
                         'status_code': 200,
                         'user_agent': request.META.get('HTTP_USER_AGENT', '')
                     }
@@ -909,6 +1455,16 @@ class StationSensorViewSet(viewsets.ModelViewSet):
 class ApiAccessKeyViewSet(viewsets.ModelViewSet):
     queryset = ApiAccessKey.objects.all()
     serializer_class = ApiAccessKeySerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """Filter queryset based on user permissions"""
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            # Admins can see all API keys
+            return ApiAccessKey.objects.all()
+        else:
+            # Regular users can only see their own API keys
+            return ApiAccessKey.objects.filter(user=self.request.user)
 
 
 class SystemLogViewSet(viewsets.ModelViewSet):
@@ -1220,21 +1776,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         serializer = self.serializer_class(notification)
         return Response(serializer.data)
 
-router = DefaultRouter()
-router.register(r'brands', BrandViewSet)
-router.register(r'sensors', SensorViewSet)
-router.register(r'measurements', MeasurementViewSet)
-router.register(r'stations', StationViewSet)
-router.register(r'station-health-logs', StationHealthLogViewSet)
-router.register(r'station-sensors', StationSensorViewSet)
-router.register(r'api-tokens', ApiAccessKeyViewSet)
-router.register(r'system-logs', SystemLogViewSet)
-router.register(r'users', UserViewSet)
-router.register(r'notifications', NotificationViewSet)
 
-urlpatterns = [
-    path('', include(router.urls)),
-]
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -1673,7 +2215,8 @@ get_task_status = get_task_execution_status
 @permission_classes([AllowAny])
 def get_stations_status(request):
     try:
-        stations = Station.objects.all().select_related('brand')
+        # Get active stations (exclude decommissioned for dashboard purposes)
+        stations = Station.objects.exclude(status='Decommissioned').select_related('brand')
         current_time = timezone.now()
         
         station_statuses = []
@@ -1706,13 +2249,140 @@ def get_stations_status(request):
         return Response({'error': str(e)}, status=500)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
+def get_stations_comprehensive_status(request):
+    """
+    Get comprehensive station status including the three-tier system:
+    - Online: Stations reporting valid data within expected parameters
+    - Offline: Stations not reporting data (no recent transmissions)
+    - Online Erroneous Data: Stations transmitting but data fails validation
+    """
+    try:
+        from django.db.models import Count, Q
+        from datetime import timedelta
+        
+        # Get active stations (exclude decommissioned for dashboard purposes)
+        stations = Station.objects.exclude(status='Decommissioned').select_related('brand')
+        current_time = timezone.now()
+        
+        # Define time thresholds for different statuses
+        online_threshold = timedelta(hours=1)  # 1 hour for online status
+        offline_threshold = timedelta(hours=24)  # 24 hours for offline status
+        
+        station_statuses = []
+        
+        for station in stations:
+            # Get latest health log
+            latest_health = station.health_logs.order_by('-created_at').first()
+            
+            # Get latest measurements (get all first, then slice for display)
+            all_measurements = station.measurements.order_by('-created_at')
+            latest_measurements = all_measurements[:100]  # Last 100 measurements for display
+            
+            # Determine transmission status
+            has_recent_transmission = False
+            if all_measurements.exists():
+                latest_measurement = all_measurements.first()
+                time_since_last = current_time - latest_measurement.created_at
+                has_recent_transmission = time_since_last <= online_threshold
+            
+            # Determine data quality status
+            data_quality_status = 'unknown'
+            invalid_data_count = 0
+            total_data_count = 0
+            
+            if all_measurements.exists():
+                # Count measurements with validation flags (use the full queryset, not the sliced one)
+                invalid_data_count = all_measurements.filter(flag=False).count()
+                total_data_count = all_measurements.count()
+                
+                if total_data_count > 0:
+                    invalid_percentage = (invalid_data_count / total_data_count) * 100
+                    if invalid_percentage > 50:  # More than 50% invalid data
+                        data_quality_status = 'erroneous'
+                    elif invalid_percentage > 10:  # More than 10% invalid data
+                        data_quality_status = 'warning'
+                    else:
+                        data_quality_status = 'good'
+            
+            # Determine overall status based on three-tier system
+            if not has_recent_transmission:
+                overall_status = 'Offline'
+                status_code = 'offline'
+                status_description = 'Station not reporting data (no recent transmissions)'
+                status_color = '#dc3545'  # Red
+            elif data_quality_status == 'erroneous':
+                overall_status = 'Online Erroneous Data'
+                status_code = 'online_erroneous'
+                status_description = 'Station transmitting but data fails validation'
+                status_color = '#ffc107'  # Yellow/Orange
+            else:
+                overall_status = 'Online'
+                status_code = 'online'
+                status_description = 'Station reporting valid data within expected parameters'
+                status_color = '#28a745'  # Green
+            
+            # Calculate additional metrics
+            time_since_last = 0
+            if latest_measurements.exists():
+                time_since_last = (current_time - latest_measurements.first().created_at).total_seconds()
+            
+            # Get brand-specific update interval
+            interval = 3600 if station.brand.name == '3D_Paws' else 60
+            time_until_next = max(0, interval - (time_since_last % interval))
+            progress = min(100, (time_since_last % interval) / interval * 100)
+            
+            station_statuses.append({
+                'id': station.id,
+                'name': station.name,
+                'brand': station.brand.name,
+                'serial_number': station.serial_number,
+                'overall_status': overall_status,
+                'status_code': status_code,
+                'status_description': status_description,
+                'status_color': status_color,
+                'transmission_status': 'Active' if has_recent_transmission else 'Inactive',
+                'data_quality_status': data_quality_status,
+                'data_quality_metrics': {
+                    'total_measurements': total_data_count,
+                    'invalid_measurements': invalid_data_count,
+                    'valid_measurements': total_data_count - invalid_data_count,
+                    'invalid_percentage': round((invalid_data_count / total_data_count) * 100, 2) if total_data_count > 0 else 0
+                },
+                'last_updated': latest_measurements.first().created_at if latest_measurements.exists() else None,
+                'time_since_last_update': time_since_last,
+                'time_until_next_update': time_until_next,
+                'progress': progress,
+                'health_info': {
+                    'battery_status': latest_health.battery_status if latest_health else 'Unknown',
+                    'connectivity_status': latest_health.connectivity_status if latest_health else 'Unknown',
+                    'last_health_check': latest_health.created_at if latest_health else None
+                }
+            })
+        
+        return Response({
+            'stations': station_statuses,
+            'summary': {
+                'total_stations': len(station_statuses),
+                'online': len([s for s in station_statuses if s['status_code'] == 'online']),
+                'offline': len([s for s in station_statuses if s['status_code'] == 'offline']),
+                'online_erroneous': len([s for s in station_statuses if s['status_code'] == 'online_erroneous'])
+            },
+            'timestamp': current_time
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting comprehensive stations status: {str(e)}")
+        return Response({'error': str(e)}, status=500)
+
+@api_view(['GET'])
 def latest_station_health(request):
     # Get timestamp for 1 hour ago
     one_hour_ago = timezone.now() - timedelta(hours=1)
     
-    # Only get weather stations (3D_Paws, Allmeteo, or Zentra)
+    # Only get weather stations (3D_Paws, Allmeteo, Zentra, OTT, or Sutron)
     stations = Station.objects.filter(
-        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra'],
+        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron'],
         health_logs__created_at__gte=one_hour_ago
     ).distinct().annotate(
         latest_battery_status=Subquery(
@@ -1734,7 +2404,7 @@ def station_health_logs(request):
         if cached_response:
             return Response(cached_response)
         # Get parameters
-        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,AWS')
+        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,OTT,Sutron,AWS')
         brand_list = brands.split(',')
 
         # Annotate each station with the latest health log id
@@ -1790,7 +2460,7 @@ def station_temperature_overview(request):
     
     # Get all stations with their latest measurements
     stations = Station.objects.filter(
-        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra']
+        brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
     ).prefetch_related('measurements')
     
     response_data = []
@@ -1820,28 +2490,39 @@ def station_temperature_overview(request):
     return Response(response_data)
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def aws_station_health_logs(request):
-    """Get AWS station health logs in a format compatible with the frontend."""
+    """Get station health logs for all brands (OTT, 3D_Paws, Allmeteo) in a format compatible with the frontend."""
     try:
-        # Get AWS stations data
-        stations = Station.objects.filter(
-            brand__name='AWS'
-        ).select_related('brand')
+        # Get query parameters
+        brand = request.query_params.get('brand')  # Optional brand filter
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 10))
         
-        response_data = {
-            'data': [],
-            'total': stations.count(),
-            'page': 1,
-            'page_size': 100
-        }
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if page_size < 1 or page_size > 100:
+            page_size = 10
+        
+        # Get stations, filtered by brand if provided
+        stations_queryset = Station.objects.filter(
+            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
+        ).exclude(status='Decommissioned').select_related('brand')
+        
+        if brand:
+            stations_queryset = stations_queryset.filter(brand__name=brand)
+        
+        # Get total count for pagination
+        total_stations = stations_queryset.count()
         
         # Get timestamp for 24 hours ago
         twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
         
-        # Get the latest health logs in a single query, only from last 24 hours
+        # Get the latest health logs for ALL stations (not paginated yet)
         station_logs = {}
         latest_logs = StationHealthLog.objects.filter(
-            station_id__in=[s.id for s in stations],
+            station_id__in=[s.id for s in stations_queryset],
             created_at__gte=twenty_four_hours_ago
         ).order_by('-created_at')
         
@@ -1849,55 +2530,124 @@ def aws_station_health_logs(request):
             if log.station_id not in station_logs:
                 station_logs[log.station_id] = log
         
-        # Format the data
-        for station in stations:
+        # Format the data for ALL stations first
+        station_data = []
+        for station in stations_queryset:
             log = station_logs.get(station.id)
             
             # Default status is Offline if no data in last 24 hours
             status = 'Offline'
             connectivity_status = 'No Data'
+            battery_status = 'Unknown'
             created_at = None
             
             if log:
+                battery_status = log.battery_status
                 if log.connectivity_status and log.connectivity_status != 'Unknown' and log.connectivity_status != 'No Data':
                     connectivity_status = log.connectivity_status
-                    # Only mark as online if we have recent data and connectivity is Excellent
-                    if connectivity_status == 'Excellent':
+                    # Mark as online if we have recent data and connectivity is good
+                    if connectivity_status in ['Excellent', 'Good', 'Fair', 'Connected']:
+                        status = 'Online'
+                    elif connectivity_status in ['Poor', 'No Signal']:
+                        status = 'Offline'
+                    else:
+                        status = 'Warning'
+                else:
+                    # For stations without connectivity status (like Allmeteo, Zentra),
+                    # determine status based on battery data and data freshness
+                    if battery_status != 'Unknown' and battery_status != 'No Data':
+                        # If we have battery data, consider the station online
+                        # Check if the data is recent (within last 24 hours)
+                        if log.created_at and (timezone.now() - log.created_at).total_seconds() < 86400:  # 24 hours
+                            status = 'Online'
+                        else:
+                            status = 'Warning'  # Data is old
+                    else:
+                        # Check if we have any recent data at all (even if battery is unknown)
+                        if log.created_at and (timezone.now() - log.created_at).total_seconds() < 86400:  # 24 hours
+                            status = 'Online'  # Has recent data, consider online
+                        else:
+                            status = 'Offline'  # No recent data
+                    
+                    # SPECIAL CASE: If battery status is excellent/good, always mark as online
+                    if battery_status in ['Excellent', 'Good', 'Fair']:
                         status = 'Online'
                 created_at = log.created_at
             
-            # Update station's is_active field based on recent data
-            station.is_active = status == 'Online'
-            station.save(update_fields=['is_active'])
-            
-            response_data['data'].append({
+            station_data.append({
                 'id': station.id,
                 'name': station.name,
+                'battery_status': battery_status,
                 'connectivity_status': connectivity_status,
                 'created_at': created_at,
                 'station': station.id,
-                'brand': 'AWS',
+                'brand': station.brand.name,
                 'status': status
             })
+        
+        # Sort stations by status priority: Offline first, then Warning, then Online
+        # This makes it easier to identify problematic stations
+        status_priority = {
+            'Offline': 1,      # Highest priority (shown first)
+            'Warning': 2,      # Medium priority
+            'Online': 3        # Lowest priority (shown last)
+        }
+        
+        station_data.sort(key=lambda x: (
+            status_priority.get(x['status'], 4),  # Sort by status priority
+            x['name']  # Then alphabetically by name for same status
+        ))
+        
+        # NOW apply pagination to the sorted results
+        start_index = (page - 1) * page_size
+        end_index = start_index + page_size
+        paginated_station_data = station_data[start_index:end_index]
+        
+        # Calculate pagination metadata
+        total_pages = (total_stations + page_size - 1) // page_size
+        has_next = page < total_pages
+        has_previous = page > 1
+        
+        response_data = {
+            'data': paginated_station_data,
+            'pagination': {
+                'page': page,
+                'page_size': page_size,
+                'total': total_stations,
+                'total_pages': total_pages,
+                'has_next': has_next,
+                'has_previous': has_previous,
+                'next_page': page + 1 if has_next else None,
+                'previous_page': page - 1 if has_previous else None
+            }
+        }
         
         return Response(response_data)
     except Exception as e:
         print(f"Error in aws_station_health_logs: {str(e)}")
+        import traceback
         print(traceback.format_exc())
         return Response({
             'data': [],
-            'total': 0,
-            'page': 1,
-            'page_size': 100,
+            'pagination': {
+                'page': 1,
+                'page_size': 10,
+                'total': 0,
+                'total_pages': 0,
+                'has_next': False,
+                'has_previous': False,
+                'next_page': None,
+                'previous_page': None
+            },
             'error': str(e)
-        })
+        }, status=500)
 
 @api_view(['GET'])
 def get_latest_health_logs(request):
     """Get latest health logs for all stations."""
     try:
         # Get parameters
-        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,AWS')
+        brands = request.query_params.get('brands', '3D_Paws,Allmeteo,Zentra,OTT,Sutron,AWS')
         brand_list = brands.split(',')
 
         # Get stations with their latest health log using subquery
@@ -1971,17 +2721,19 @@ class Command(BaseCommand):
 def inactive_sensors(request):
     try:
         now = timezone.now()
-        twenty_four_hours_ago = now - timedelta(hours=24)
+        current_hour_start = now.replace(minute=0, second=0, microsecond=0)
+        one_hour_ago = current_hour_start - timedelta(hours=1)
 
         # Get query parameters
         brand = request.query_params.get('brand')
         page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 5)) # Default to 5 as per frontend component
+        page_size = int(request.query_params.get('page_size', 20)) # Default to 20 as per frontend component
 
         # Get stations, filtered by brand if provided
+        # Exclude decommissioned stations for dashboard purposes
         stations_queryset = Station.objects.filter(
-            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
-        ).select_related('brand')
+            brand__name__in=['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
+        ).exclude(status='Decommissioned').select_related('brand')
 
         if brand:
             stations_queryset = stations_queryset.filter(brand__name=brand)
@@ -1989,11 +2741,12 @@ def inactive_sensors(request):
         # Get all station IDs for the filtered stations
         station_ids = list(stations_queryset.values_list('id', flat=True))
 
-        # Fetch the latest measurement for *each* sensor associated with these stations within the last 24 hours
+        # Fetch the latest measurement for *each* sensor associated with these stations within the last 7 days
         # This uses a Window function to get the latest measurement per sensor
+        seven_days_ago = now - timedelta(days=7)
         latest_measurements_subquery = Measurement.objects.filter(
             station_id__in=station_ids,
-            date__gte=twenty_four_hours_ago.date() # Filter by date for potentially large tables
+            date__gte=seven_days_ago.date() # Filter by date for potentially large tables
         ).annotate(
             row_number=Window(
                 expression=RowNumber(),
@@ -2011,7 +2764,25 @@ def inactive_sensors(request):
         # Collect all potential inactive sensors
         all_inactive_sensors_list = []
         # Always show all brands in the tab list
-        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT']
+        available_brands = ['3D_Paws', 'Allmeteo', 'Zentra', 'OTT', 'Sutron']
+
+        # Get sensors that have had measurements in the last 7 days (to be more lenient about recent activity)
+        # This accounts for potential timezone issues and data fetcher delays
+        recent_sensors = Measurement.objects.filter(
+            station_id__in=station_ids,
+            date__gte=seven_days_ago.date()
+        ).values_list('station_id', 'sensor_id').distinct()
+        
+        # Create a set for faster lookup
+        recent_sensors_set = set(recent_sensors)
+        
+        # Get all sensors that have EVER had measurements for these stations (to avoid checking unconfigured sensors)
+        all_configured_sensors = Measurement.objects.filter(
+            station_id__in=station_ids
+        ).values_list('station_id', 'sensor_id').distinct()
+        
+        # Create a set for faster lookup
+        configured_sensors_set = set(all_configured_sensors)
 
         # Iterate through stations and their sensors to determine inactivity
         # Prefetch sensors to avoid N+1 queries in this loop
@@ -2025,6 +2796,50 @@ def inactive_sensors(request):
                 if not sensor: # Skip if sensor relationship is null
                     continue
 
+                # Check if this sensor has had any measurements in the last 3 days
+                has_recent_data = (station.id, sensor.id) in recent_sensors_set
+                
+                # Check if this sensor has had any historical data
+                has_any_data = (station.id, sensor.id) in configured_sensors_set
+                
+                if not has_any_data:
+                    # Sensor has never had any data - add it to the inactive list with "No Reading"
+                    all_inactive_sensors_list.append({
+                        'station_name': station.name,
+                        'brand_name': station.brand.name,
+                        'sensor_type': sensor.type,
+                        'last_reading': None,
+                        'status': 'No Reading'
+                    })
+                    continue
+                
+                # If no recent data but has historical data, check if the historical data is problematic
+                if not has_recent_data:
+                    # Get the latest measurement to check if it has problematic values
+                    latest = latest_measurements_dict.get((station.id, sensor.id))
+                    if latest:
+                        last_reading_dt = timezone.make_aware(datetime.combine(latest.date, latest.time)) if latest.date and latest.time else None
+                        
+                        # Check for problematic data values
+                        if latest.value is None or latest.value == -999:
+                            status = 'No Reading'
+                        elif last_reading_dt and last_reading_dt < one_hour_ago:
+                            # Sensor has old data and hasn't reported recently - mark as inactive
+                            status = 'No Reading'
+                        else:
+                            # Sensor has valid recent data - skip it
+                            continue
+                        
+                        # Add problematic sensors to the list
+                        all_inactive_sensors_list.append({
+                            'station_name': station.name,
+                            'brand_name': station.brand.name,
+                            'sensor_type': sensor.type,
+                            'last_reading': last_reading_dt.isoformat() if last_reading_dt else None,
+                            'status': status
+                        })
+                    continue
+
                 # Look up the latest measurement from the pre-fetched dictionary
                 latest = latest_measurements_dict.get((station.id, sensor.id))
 
@@ -2034,17 +2849,21 @@ def inactive_sensors(request):
 
                 if latest:
                      last_reading_dt = timezone.make_aware(datetime.combine(latest.date, latest.time)) if latest.date and latest.time else None
-                     # Consider a sensor inactive if its last reading is older than 24 hours or value is invalid
-                     if last_reading_dt < twenty_four_hours_ago:
-                          status = 'Inactive'
-                     elif latest.value is None or latest.value == -999:
-                           status = 'No Reading' # Or another appropriate status for invalid data
-                     # If latest exists and is within 24 hours and value is valid, status remains 'Active'
-                else:
-                    status = 'No Data' # No measurements found at all within the last 24 hours
+                     # Only consider sensors with invalid data values, not old data
+                     if latest.value is None or latest.value == -999:
+                           status = 'No Reading' # Invalid data
 
-                if status != 'Active':
-                     all_inactive_sensors_list.append({
+                     else:
+                           # Sensor has valid recent data - skip it
+                           continue
+                else:
+                    # This shouldn't happen since we already checked has_any_data above
+                    # But just in case, skip this sensor
+                    continue
+
+                # Only add sensors that have no reading
+                if status == 'No Reading':
+                    all_inactive_sensors_list.append({
                         'station_name': station.name,
                         'brand_name': station.brand.name,
                         'sensor_type': sensor.type, # Use sensor.type here
@@ -2059,6 +2878,54 @@ def inactive_sensors(request):
         start = (page - 1) * page_size
         end = start + page_size
         paginated_inactive_sensors = all_inactive_sensors_list[start:end]
+        
+        # Debug: Check paginated results
+        print(f"DEBUG: Paginated results (page {page}):")
+        for i, sensor in enumerate(paginated_inactive_sensors[:5]):
+            print(f"  {i+1}. {sensor['station_name']} -> {sensor['sensor_type']} -> Status: '{sensor['status']}' -> Last: {sensor['last_reading']}")
+
+        # Add debugging information
+        print(f"DEBUG: Total inactive sensors found: {total_count}")
+        print(f"DEBUG: Sensors with recent measurements (7 days): {len(recent_sensors_set)}")
+        print(f"DEBUG: Total configured sensors (ever): {len(configured_sensors_set)}")
+        print(f"DEBUG: Total stations: {stations_queryset.count()}")
+        print(f"DEBUG: Brand filter: {brand}")
+        print(f"DEBUG: Performance improvement: Skipped {len(stations_with_sensors) * len(stations_with_sensors[0].station_sensors.all()) - len(configured_sensors_set)} unconfigured sensor combinations")
+        
+        # Additional debugging for OTT stations
+        if brand == 'OTT' or not brand:
+            ott_stations = [s for s in stations_with_sensors if s.brand.name == 'OTT']
+            for station in ott_stations:
+                station_sensors = station.station_sensors.all()
+                print(f"DEBUG: OTT Station {station.name} has {len(station_sensors)} sensor relationships")
+                for ss in station_sensors[:3]:  # Show first 3 sensors
+                    sensor = ss.sensor
+                    if sensor:
+                        latest_measurement = Measurement.objects.filter(
+                            station=station,
+                            sensor=sensor
+                        ).order_by('-date', '-time').first()
+                        if latest_measurement:
+                            print(f"DEBUG:   Sensor {sensor.type}: Latest measurement {latest_measurement.date} {latest_measurement.time}")
+                        else:
+                            print(f"DEBUG:   Sensor {sensor.type}: No measurements found")
+        
+        # Debug: Show sample of inactive sensors (current hour)
+        if all_inactive_sensors_list:
+            print(f"DEBUG: Sample inactive sensors (current hour):")
+            for i, sensor in enumerate(all_inactive_sensors_list[:10]):
+                print(f"  {i+1}. {sensor['station_name']} -> {sensor['brand_name']} -> {sensor['sensor_type']} -> Status: '{sensor['status']}' -> Last Reading: {sensor['last_reading']}")
+        else:
+            print(f"DEBUG: No inactive sensors found in current hour")
+            
+        # Debug: Check for T10 Paramin specifically
+        t10_sensors = [s for s in all_inactive_sensors_list if 'T10' in s['station_name']]
+        if t10_sensors:
+            print(f"DEBUG: T10 Paramin sensors found: {len(t10_sensors)}")
+            for sensor in t10_sensors:
+                print(f"  - {sensor['station_name']} -> {sensor['sensor_type']} -> {sensor['status']}")
+        else:
+            print(f"DEBUG: No T10 Paramin sensors found in inactive list")
 
         return Response({
             'results': paginated_inactive_sensors,
@@ -2081,6 +2948,8 @@ def inactive_sensors(request):
             'total_pages': 1,
             'error': str(e)
         }, status=500)
+
+
 
 class ApiKeyUsageLogViewSet(viewsets.ModelViewSet):
     queryset = ApiKeyUsageLog.objects.all()

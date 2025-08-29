@@ -9,7 +9,9 @@ from .views import (
     CustomTokenObtainPairView, MessageListCreate, MessageDetail, ConversationList,
     MarkMessageRead, UserList, LoginView, ChatListCreate, ChatDetail, ChatMessages,
     ChatViewSet, MessageViewSet, BillViewSet, HistoricalDataViewSet,
-    ApiKeyUsageLogViewSet, get_user_api_keys
+    ApiKeyUsageLogViewSet, get_user_api_keys, get_task_execution_status, 
+    get_task_status, get_stations_status, get_stations_comprehensive_status, inactive_sensors,
+    aws_station_health_logs
 )
 from django.conf import settings
 from django.conf.urls.static import static
@@ -32,7 +34,18 @@ router.register(r'historical-data', HistoricalDataViewSet, basename='historical-
 router.register(r'api-key-usage-logs', ApiKeyUsageLogViewSet)
 
 urlpatterns = [
+    # Custom endpoints must come BEFORE the router to avoid conflicts
+    path('api/stations/status/', get_stations_status, name='stations-status'),
+    path('api/stations/comprehensive-status/', get_stations_comprehensive_status, name='stations-comprehensive-status'),
+    path('api/stations/aws-health/', aws_station_health_logs, name='aws-station-health'),
+    path('api/measurements/inactive_sensors/', inactive_sensors, name='inactive_sensors'),
+    path('api/task-execution-status/', get_task_execution_status, name='task-execution-status'),
+    path('api/task-status/', get_task_status, name='task-status'),
+    
+    # Router URLs (these come after custom endpoints)
     path('api/', include(router.urls)),
+    
+    # Other endpoints
     path('api/token/', LoginView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/verify/', verify_token, name='verify_token'),

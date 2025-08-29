@@ -48,6 +48,16 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
             return None
             
         try:
+            # First try to validate as JWT token
+            try:
+                from rest_framework_simplejwt.tokens import AccessToken
+                token = AccessToken(api_key)
+                # If we get here, it's a valid JWT token
+                return None  # Let JWT authentication handle it
+            except Exception:
+                # Not a JWT token, continue with API key validation
+                pass
+
             # Find the key in the database
             access_key = ApiAccessKey.objects.get(uuid=api_key)
             
@@ -56,7 +66,6 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
                 raise exceptions.AuthenticationFailed('API key has expired')
                 
             # Store the entire API key object (not just the token string)
-            # This is what the view will check for
             user = access_key.user
             user.auth_token = access_key
             

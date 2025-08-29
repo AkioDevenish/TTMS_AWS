@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import axios from 'axios';
+import axios from '../plugins/axios';
 
 interface StationInfo {
   id: number;
@@ -56,7 +56,7 @@ export function useStationData() {
       };
 
       console.log('Fetching measurements with combined params:', params);
-      const response = await axios.get('/measurements/history/', { params });
+              const response = await axios.get('/api/measurements/history/', { params });
       console.log('Raw API response for combined sensor types:', response.data);
 
       let allMeasurements: Measurement[] = [];
@@ -93,7 +93,7 @@ export function useStationData() {
         console.log('Fetching station info for ID:', id);
         // Check if stationInfo is already populated from a previous fetch
         if (!stationInfo.value || stationInfo.value.id !== id) {
-          const stationResponse = await axios.get(`/stations/${id}/`);
+          const stationResponse = await axios.get(`/api/stations/${id}/`);
           console.log('Station info response:', stationResponse.data);
           stationInfo.value = stationResponse.data;
         }
@@ -180,34 +180,6 @@ export function useStationData() {
     }
   };
 
-  const getStationStatus = async (stationId: number) => {
-    try {
-      const response = await axios.get(
-        `/measurements/by_station/?station_id=${stationId}&limit=1`
-      );
-
-      const latestMeasurement = response.data[0];
-      if (!latestMeasurement) return 'Offline';
-
-      // Check for invalid measurements
-      const hasInvalidValues = Object.values(latestMeasurement)
-        .filter((value): value is number => typeof value === 'number')
-        .every((value) => value <= -1 || value === 0);
-
-      if (hasInvalidValues) return 'Offline';
-
-      // Check measurement time
-      const measurementTime = new Date(`${latestMeasurement.date}T${latestMeasurement.time}`);
-      const timeDiff = Date.now() - measurementTime.getTime();
-      if (timeDiff > 30 * 60 * 1000) return 'Offline'; // 30 minutes
-
-      return latestMeasurement.status === 'Successful' ? 'Online' : 'Offline';
-    } catch (err) {
-      console.error('Error getting station status:', err);
-      return 'Offline';
-    }
-  };
-
   // Add new methods for filtered data fetching
   const fetchFilteredStationData = async (stationId: number, options: {
     sensorType?: string;
@@ -242,8 +214,8 @@ export function useStationData() {
       }
 
       const [stationResponse, measurementsResponse] = await Promise.all([
-        axios.get(`/stations/${stationId}/`),
-        axios.get('/measurements/', {
+        axios.get(`/api/stations/${stationId}/`),
+        axios.get('/api/measurements/', {
           params: {
             station_id: stationId,
             page: 1
@@ -284,7 +256,6 @@ export function useStationData() {
     getLast24HoursMeasurements,
     getLatestMeasurement,
     formatDateTime,
-    getStationStatus,
     fetchFilteredStationData,
     fetchLast24HoursSensorData
   };

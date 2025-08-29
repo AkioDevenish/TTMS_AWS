@@ -16,7 +16,7 @@
               <p class="f-light mb-0">Last updated: {{ item.month }}</p>
             </div>
             <div class="flex-shrink-0">
-              <img :src="getImages(item.img)" alt="" />
+              <font-awesome-icon :icon="getWeatherIcon(item.sensorType)" style="font-size: 2rem; color: #007bff;" />
             </div>
           </div>
         </Card1>
@@ -46,6 +46,16 @@ const props = defineProps({
 const localZentraData = ref<any[]>([]);
 const fallbackImg = 'dashboard-4/icon/student.png';
 
+// Function to handle both local assets and external URLs
+const getImageSource = (imgPath: string): string => {
+  // If it's a full URL (starts with http/https), return it directly
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+    return imgPath;
+  }
+  // Otherwise, treat it as a local asset and use getImages
+  return getImages(imgPath);
+};
+
 interface CardData {
   number: string;
   text: string;
@@ -62,6 +72,7 @@ interface CardData {
   timeDiff: string;
   trend: string;
   unit: string;
+  sensorType: string;
 }
 
 const formatDateTime = {
@@ -93,6 +104,33 @@ const formatDateTime = {
       return 'Invalid Time';
     }
   }
+};
+
+// Function to get weather-appropriate icons from Font Awesome
+const getWeatherIcon = (sensorType: string): string[] => {
+  const iconMap: Record<string, string[]> = {
+    // Temperature sensors
+    'Air Temperature': ['fas', 'thermometer-half'],
+    
+    // Precipitation sensors
+    'Precipitation': ['fas', 'cloud'],
+    
+    // Atmospheric sensors
+    'Relative Humidity': ['fas', 'tint'],
+    'Atmospheric Pressure': ['fas', 'tachometer'],
+    
+    // Wind sensors
+    'Wind Speed': ['fas', 'cloud'],
+    'Wind Direction': ['fas', 'compass'],
+    
+    // Solar sensors
+    'Solar Radiation': ['fas', 'sun-o'],
+    
+    // System sensors
+    'Battery Percent': ['fas', 'battery-three-quarters']
+  };
+  
+  return iconMap[sensorType] || ['fas', 'question-circle'];
 };
 
 // Memoize date parsing to avoid repeated operations
@@ -193,7 +231,7 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
                      changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
         icon: `icon-${changes.trend === 'increasing' ? 'arrow-up font-success' : 
                      changes.trend === 'decreasing' ? 'arrow-down font-danger' : 'minus font-warning'}`,
-        img: 'dashboard-4/icon/student.png',
+                        img: sensorType,
         cardclass: "student",
         fontclass: `font-${changes.trend === 'increasing' ? 'success' : 
                        changes.trend === 'decreasing' ? 'danger' : 'warning'}`,
@@ -205,7 +243,8 @@ const transformMeasurements = (measurements: any[]): CardData[] => {
         rateOfChange: `${changes.rateOfChange}${config.unit}`,
         timeDiff: changes.timeDiff,
         trend: changes.trend,
-        unit: config.unit
+        unit: config.unit,
+        sensorType: sensorType
       };
     })
     .filter(Boolean) as CardData[];

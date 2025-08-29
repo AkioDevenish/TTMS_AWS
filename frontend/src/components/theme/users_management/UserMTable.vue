@@ -19,39 +19,31 @@
                 </tr>
             </tbody>
             <tbody v-else>
-                <tr v-for="user in users" :key="user.id" class="user-row">
-                    <td class="clickable" @click="navigateToProfile(user.id)" colspan="6">
-                        <div class="d-flex">
-                            <div class="user-info">
-                                <div>{{ user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || '-' }}</div>
-                                <div>{{ user.organization || '-' }}</div>
-                                <div>{{ user.email || 'N/A' }}</div>
-                                <div>{{ user.role || 'User' }}</div>
-                                <div>{{ user.package || '-' }}</div>
-                                <div>
+                <tr v-for="user in users" :key="user.id" class="user-row" @click="handleUserClick(user)" :title="`Click to view ${user.name || user.email} details`">
+                    <td class="px-4 py-3 clickable-cell">{{ user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || '-' }}</td>
+                    <td class="px-4 py-3 clickable-cell">{{ user.organization || '-' }}</td>
+                    <td class="px-4 py-3 clickable-cell">{{ user.email || 'Email Not Available' }}</td>
+                    <td class="px-4 py-3 clickable-cell">{{ user.role || 'User' }}</td>
+                    <td class="px-4 py-3 clickable-cell">{{ user.package || '-' }}</td>
+                    <td class="px-4 py-3 clickable-cell">
                                     <span :class="{'text-expired': isExpiringSoon(user.expires_at)}">
                                         {{ formatDate(user.expires_at) }}
                                     </span>
-                                </div>
-                            </div>
-                        </div>
                     </td>
-                    <td class="status-cell px-4 py-3">
-                        <button 
+                    <td class="status-cell px-4 py-3 clickable-cell">
+                        <span 
                             :class="[
-                                'status-btn',
+                                'status-badge',
                                 `status-${(user.status || 'Active').toLowerCase()}`
                             ]"
-                            @click.stop="cycleStatus(user)"
                         >
-                            <span class="status-dot"></span>
                             {{ user.status || 'Active' }}
-                        </button>
+                        </span>
                     </td>
                     <td class="px-4 py-3">
                         <div class="action-buttons">
                             <button 
-                                class="action-btn suspend-btn"
+                                class="suspend-btn"
                                 :class="{ 'suspended': user.status === 'Suspended' }"
                                 @click.stop="handleSuspendUser(user.id)"
                                 :title="user.status === 'Suspended' ? 'Reactivate user account' : 'Suspend user account'"
@@ -59,10 +51,17 @@
                                 <i class="fa" :class="user.status === 'Suspended' ? 'fa-play' : 'fa-ban'"></i>
                             </button>
                             <button 
-                                class="action-btn delete-btn"
+                                class="delete-btn"
                                 @click.stop="handleDeleteUser(user.id)"
                             >
                                 <i class="fa fa-trash"></i>
+                            </button>
+                            <button 
+                                class="view-btn"
+                                @click.stop="handleUserClick(user)"
+                                title="View user profile"
+                            >
+                                <i class="fa fa-eye"></i>
                             </button>
                         </div>
                     </td>
@@ -74,64 +73,25 @@
 
 <script lang="ts" setup>
 import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useAuthStore } from '@/store/auth'
-import { useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 
+const router = useRouter()
 const userStore = useUserStore()
 const users = computed(() => userStore.users)
 const loading = computed(() => userStore.loading)
 
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.currentUser)
-const router = useRouter()
 
 onMounted(async () => {
     if (!currentUser.value?.is_superuser) {
-        router.go(-1)
+        window.history.back()
         return
     }
 })
-
-const cycleStatus = async (user: any) => {
-    const hasVerifiedBills = user.bills?.some((bill: any) => bill.receipt_verified) || false
-    if (!hasVerifiedBills && !user.is_staff && !user.is_superuser) {
-        userStore.error = 'Cannot change status until receipt is verified'
-        return
-    }
-    try {
-        const statusMap = {
-            'Active': 'Inactive',
-            'Inactive': 'Active',
-            'Suspended': 'Active',
-            'Pending': hasVerifiedBills ? 'Active' : 'Pending'
-        } as const
-        const newStatus = statusMap[user.status as keyof typeof statusMap] || 'Active'
-        const success = await userStore.updateUserStatus(user.id, newStatus)
-        if (success) {
-            Swal.fire({
-                title: 'Status Updated',
-                text: `User status changed to ${newStatus}`,
-                icon: 'success',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
-            })
-        }
-    } catch (error) {
-        Swal.fire({
-            title: 'Error',
-            text: userStore.error || 'Failed to update status',
-            icon: 'error',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        })
-    }
-}
 
 const handleDeleteUser = async (userId: number) => {
     try {
@@ -234,6 +194,14 @@ const handleSuspendUser = async (userId: number) => {
     }
 }
 
+const handleUserClick = (user: any) => {
+    // Navigate to user profile page first
+    router.push({
+        path: '/users/profile',
+        query: { id: user.id }
+    })
+}
+
 const formatDate = (dateString: string | null) => {
     if (!dateString) return 'No expiry date'
     // Remove any time component from the date string
@@ -252,42 +220,135 @@ const isExpiringSoon = (dateString: string | null) => {
     const now = new Date()
     return expiryDate < now
 }
-
-const navigateToProfile = (userId: number) => {
-    router.push({
-        path: `/users/profile`,
-        query: { id: userId.toString() }
-    })
-}
 </script>
 
 <style scoped>
 .user-row {
-    cursor: default;
-}
-
-.clickable {
+    transition: background-color 0.2s ease;
     cursor: pointer;
 }
 
-.user-info {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    width: 100%;
-    gap: 1rem;
-    align-items: center;
+.user-row:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.clickable-cell {
+    cursor: pointer;
+}
+
+.clickable-cell:hover {
+    color: #007bff;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    min-width: 80px;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-suspended {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-pending {
+    background-color: #e2e3e5;
+    color: #383d41;
+    border: 1px solid #d6d8db;
 }
 
 .suspend-btn {
     background-color: #dc3545;
     color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .suspend-btn.suspended {
     background-color: #28a745;
 }
 
+.suspend-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.1);
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+    transform: scale(1.1);
+}
+
+.view-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
+.suspend-btn i,
+.delete-btn i {
+    font-size: 14px;
+}
+
 .text-expired {
     color: #dc3545;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
 }
 </style>

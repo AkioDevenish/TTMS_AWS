@@ -115,6 +115,13 @@ class Brand(models.Model):
         return self.name
 
 class Station(models.Model):
+    STATUS_CHOICES = (
+        ('Active', 'Active'),
+        ('Decommissioned', 'Decommissioned'),
+        ('Maintenance', 'Maintenance'),
+        ('Offline', 'Offline'),
+    )
+    
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name="stations")
     name = models.CharField(max_length=255)
     serial_number = models.CharField(max_length=100, unique=True)
@@ -123,11 +130,20 @@ class Station(models.Model):
     latitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
     installation_date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+    decommissioned_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     sensors = models.ManyToManyField('Sensor', through='StationSensor', related_name='stations')
 
     class Meta:
         db_table = 'stations'
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['brand']),
+            models.Index(fields=['name']),
+            models.Index(fields=['installation_date']),
+            models.Index(fields=['status', 'brand']),  # Composite index for common queries
+        ]
 
     def __str__(self):
         return f"{self.name} - {self.serial_number}"
@@ -135,12 +151,14 @@ class Station(models.Model):
 class Sensor(models.Model):
     type = models.CharField(max_length=100)
     unit = models.CharField(max_length=50)
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='sensors')
 
     class Meta:
         db_table = 'sensors'
 
     def __str__(self):
-        return f"{self.type} ({self.unit})"
+        brand_name = f" [{self.brand.name}]" if self.brand else ""
+        return f"{self.type} ({self.unit}){brand_name}"
 
 # Measurement and Monitoring
 class Measurement(models.Model):
@@ -151,6 +169,7 @@ class Measurement(models.Model):
     value = models.FloatField()
     status = models.CharField(max_length=50)
     note = models.TextField(null=True, blank=True)
+    flag = models.BooleanField(default=True, help_text='Data validation flag: True if data is within acceptable range, False if validation failed')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
