@@ -54,3 +54,5 @@ build/
 # Media and static files
 media/
 static/
+
+deploy.sh
