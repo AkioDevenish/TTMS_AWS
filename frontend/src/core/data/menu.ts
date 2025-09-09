@@ -43,126 +43,135 @@ export const menu: MenuItem[] = [
 
   // api key navigation block
   {
-    headTitle1: "General",
-    headTitle2: "",
-    type: "headtitle"
+    headTitle1: 'General',
+    headTitle2: '',
+    type: 'headtitle'
   },
   {
-    path: "/dashboard",
-    title: "Dashboard",
+    path: '/dashboard',
+    title: 'Dashboard',
     isPinned: false,
-    icon: "stroke-home",
-    icon1: "fill-home",
-    type: "link"
+    icon: 'stroke-home',
+    icon1: 'fill-home',
+    type: 'link'
   },
 
   // aws stations block
   {
-    headTitle1: "Stations",
-    headTitle2: "Ready to use apps",
-    type: "headtitle"
+    headTitle1: 'Stations',
+    headTitle2: 'Ready to use apps',
+    type: 'headtitle'
   },
+  // {
+  //   path: '/brands/',
+  //   title: 'Weather Station Brands',
+  //   isPinned: false,
+  //   icon: 'stroke-charts',
+  //   icon1: 'fill-charts',
+  //   type: 'link',
+  //   admin: 1
+  // },
   {
-    title: "Weather Stations",
-    icon: "stroke-charts",
-    icon1: "fill-charts",
-    type: "sub",
-    badgeType: "light-info",
+    title: 'Brands',
+    icon: 'stroke-charts',
+    icon1: 'fill-charts',
+    type: 'sub',
+    badgeType: 'light-info',
     isPinned: false,
     active: false,
     children: [
       {
-        path: "/stations/AWS_OTT_Hyrdomet",
-        title: "OTT-Hydromet",
-        type: "link"
+        path: '/stations/AWS_OTT_Hyrdomet',
+        title: 'OTT-Hydromet',
+        type: 'link'
       },
 
       {
-        path: "/stations/AWS_Barani",
-        title: "Barani",
-        type: "link"
+        path: '/stations/AWS_Barani',
+        title: 'Barani',
+        type: 'link'
       },
       {
-        path: "/stations/AWS_Zentra",
-        title: "Zentra",
-        type: "link"
+        path: '/stations/AWS_Zentra',
+        title: 'Zentra',
+        type: 'link'
       },
       {
-        path: "/stations/AWS_3D_Paws",
-        title: "3D-Paws",
-        type: "link"
+        path: '/stations/AWS_3D_Paws',
+        title: '3D-Paws',
+        type: 'link'
       },
       {
-        path: "/stations/AWS_Sutron",
-        title: "Sutron",
-        type: "link"
+        path: '/stations/AWS_Sutron',
+        title: 'Sutron',
+        type: 'link'
       },
     ]
   },
   {
-    path: "/stations/create",
-    title: "Create New AWS",
-    icon: "stroke-form",
-    icon1: "fill-form",
-    type: "link",
+    path: '/stations/create',
+    title: 'Create New AWS',
+    icon: 'stroke-form',
+    icon1: 'fill-form',
+    type: 'link',
     admin: 1
   },
   {
-    path: "/pages/station_management",
-    title: "Station Management",
+    path: '/stations/manage',
+    title: 'Manage',
     isPinned: false,
-    icon: "stroke-charts",
-    icon1: "fill-charts",
-    type: "link",
+    icon: 'stroke-charts',
+    icon1: 'fill-charts',
+    type: 'link',
     admin: 1
   },
 
   // api key navigation block
   {
-    headTitle1: "API Management",
-    headTitle2: "Ready to use apps",
-    type: "headtitle",
+    headTitle1: 'API Management',
+    headTitle2: 'Ready to use apps',
+    type: 'headtitle',
     admin: 1
   },
   {
-    path: "/pages/api",
-    title: "API Key",
+    path: '/api/keys',
+    title: 'API Keys',
     isPinned: false,
-    icon: "stroke-others",
-    icon1: "fill-others",
-    type: "link",
+    icon: 'stroke-others',
+    icon1: 'fill-others',
+    type: 'link',
     admin: 1
   },
 
   // miscellaneous block
   {
-    headTitle1: "Miscellaneous",
-    headTitle2: "Miscellaneous",
-    type: "headtitle"
+    headTitle1: 'Support',
+    headTitle2: 'Support',
+    type: 'headtitle'
   },
   {
-    path: "/app/private_chat",
-    title: "Chat",
+    path: '/support/chat',
+    title: 'Chat',
     isPinned: false,
-    icon: "stroke-chat",
-    icon1: "fill-chat",
-    type: "link"
+    icon: 'stroke-chat',
+    icon1: 'fill-chat',
+    type: 'link'
   },
 
 
   // system management block
   {
-    headTitle1: "System Management",
-    headTitle2: "System Management",
-    type: "headtitle"
+    headTitle1: 'System Management',
+    headTitle2: 'System Management',
+    type: 'headtitle'
   },
   {
-    path: "/pages/users_management",
-    title: "User Management",
+    path: '/users',
+    title: 'User Management',
     isPinned: false,
-    icon: "stroke-user",
-    icon1: "fill-user",
-    type: "link",
+    icon: 'stroke-user',
+    icon1: 'fill-user',
+    type: 'link',
     admin: 1
   }
-]
+];

@@ -95,7 +95,8 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         name: 'WeatherStationBrands',
-        component: indexBrands,
+        // component: indexBrands,
+        component: indexStationManagement,
         meta: {
           title: 'Weather Station Brands | MDPS',
           requiresAuth: true
@@ -120,7 +121,8 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '',
         name: 'WeatherStations',
-        component: indexWeatherStations,
+        // component: indexWeatherStations,
+        component: indexStationManagement,
         meta: {
           title: 'Weather Stations | MDPS',
           requiresAuth: true
