@@ -1,15 +1,15 @@
 <template>
   <div class="container-fluid dashboard-weather-stations">
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="page-header">
-          <h2 class="page-title">Weather Stations Overview</h2>
-          <p class="page-description">
-            Select a weather station type to view detailed information and data
-          </p>
-        </div>
-      </div>
-    </div>
+    <!--<div class="row mb-4">-->
+    <!--  <div class="col-12">-->
+    <!--    <div class="page-header">-->
+    <!--      <h2 class="page-title">Weather Stations Overview</h2>-->
+    <!--      <p class="page-description">-->
+    <!--        Select a weather station type to view detailed information and data-->
+    <!--      </p>-->
+    <!--    </div>-->
+    <!--  </div>-->
+    <!--</div>-->
 
     <div class="row">
       <div class="col-12">
@@ -167,7 +167,7 @@ const fetchStationCounts = async () => {
     const response = await axios.get('/api/stations/?include_decommissioned=false');
     // Fix: Handle paginated response structure
     const stations = response.data.results || response.data || [];
-    
+
     // Count stations by brand
     stationCounts.value = {
       ott: stations.filter((s: any) => s.brand_name === 'OTT').length,
@@ -350,16 +350,16 @@ onMounted(() => {
   .dashboard-weather-stations {
     padding: 1rem;
   }
-  
+
   .station-types-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .action-buttons {
     flex-direction: column;
   }
-  
+
   .action-buttons .btn {
     width: 100%;
   }
