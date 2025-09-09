@@ -55,4 +55,6 @@ build/
 media/
 static/
 
+fetcher.log
+
 deploy.sh
