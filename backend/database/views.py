@@ -316,6 +316,7 @@ class StationViewSet(viewsets.ModelViewSet):
 class SensorViewSet(viewsets.ModelViewSet):
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
+    permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['get'])
     def stations(self, request, pk=None):
@@ -1471,6 +1472,7 @@ class SystemLogViewSet(viewsets.ModelViewSet):
     queryset = SystemLog.objects.all()
     serializer_class = SystemLogSerializer
     pagination_class = PageNumberPagination
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
     def by_module(self, request):
