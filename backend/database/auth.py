@@ -60,11 +60,12 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
 
             # Find the key in the database
             access_key = ApiAccessKey.objects.get(uuid=api_key)
-            
-            # Check if key has expired
-            if access_key.expires_at and access_key.expires_at < timezone.now():
-                raise exceptions.AuthenticationFailed('API key has expired')
-                
+
+            # Only check expiry date if the key is not perpetual
+            if not access_key.is_perpetual:
+                if access_key.expires_at and access_key.expires_at < timezone.now():
+                    raise exceptions.AuthenticationFailed("API key has expired")
+
             # Store the entire API key object (not just the token string)
             user = access_key.user
             user.auth_token = access_key

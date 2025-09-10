@@ -216,6 +216,7 @@ class ApiAccessKey(models.Model):
     last_used = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_perpetual = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'api_access_keys'

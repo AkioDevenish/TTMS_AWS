@@ -1532,7 +1532,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
-        
+
+        # store is_perpetual in a variable and remove from data object to save user
+        is_perpetual = data.get("is_perpetual", False)
+        if "is_perpetual" in data:
+            del data["is_perpetual"]
+
         # Validate expires_at format
         if 'expires_at' in data and data['expires_at']:
             try:
@@ -1554,8 +1559,10 @@ class UserViewSet(viewsets.ModelViewSet):
             # Generate API key for newly created active users
             if user.status == 'Active':
                 try:
-                    api_key = self.generate_api_key(user)
-                    logger.info(f"API key {api_key.uuid} created for new user {user.email}")
+                    api_key = self.generate_api_key(user, is_perpetual)
+                    logger.info(
+                        f"API key {api_key.uuid} created for new user {user.email}"
+                    )
                 except Exception as e:
                     logger.error(f"Failed to create API key for new user {user.email}: {str(e)}")
             
@@ -1588,7 +1595,7 @@ class UserViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data)
 
-    def generate_api_key(self, user):
+    def generate_api_key(self, user, is_perpetual):
         """Generate a new API key for a user"""
         try:
             # Generate a new UUID for the API key
@@ -1603,7 +1610,8 @@ class UserViewSet(viewsets.ModelViewSet):
                 token_name=f"Default Key for {user.email}",
                 user=user,
                 expires_at=expires_at,
-                note="Automatically generated on account activation"
+                is_perpetual=is_perpetual,
+                note="Automatically generated on account activation",
             )
             
             # Create system log entry

@@ -105,8 +105,17 @@ class ApiAccessKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiAccessKey
         fields = [
-            'id', 'uuid', 'token_name', 'expires_at', 
-            'note', 'last_used', 'created_at', 'updated_at', 'user', 'user_email'
+            "id",
+            "uuid",
+            "token_name",
+            "expires_at",
+            "note",
+            "last_used",
+            "created_at",
+            "updated_at",
+            "user",
+            "user_email",
+            "is_perpetual",
         ]
         read_only_fields = ['created_at', 'updated_at']
 

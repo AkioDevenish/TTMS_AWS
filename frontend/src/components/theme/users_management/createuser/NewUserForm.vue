@@ -107,6 +107,16 @@
         <div class="row">
           <div class="col-sm-6">
             <div class="form-group">
+              <div class=" form-check">
+                <input type="checkbox" class="form-check-input" v-model="formData.is_perpetual" />
+                <label class="form-check-label">Is perpetual subscription *</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group">
               <label class="form-label">Package *</label>
               <select class="form-select" v-model="formData.package" :class="inputClasses.package">
                 <option value="">Select Package</option>
