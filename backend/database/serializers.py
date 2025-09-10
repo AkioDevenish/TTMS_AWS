@@ -30,6 +30,18 @@ class SensorSerializer(serializers.ModelSerializer):
 
 class StationSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source='brand.name', read_only=True)
+    sensors = serializers.SerializerMethodField()
+
+    def get_sensors(self, obj):
+        """Get sensors as array of objects with name and id"""
+        sensors = []
+        for station_sensor in obj.station_sensors.select_related('sensor').all():
+            sensors.append({
+                'id': station_sensor.sensor.id,
+                'name': station_sensor.sensor.type
+            })
+        return sensors
+
     # Remove expensive sensors field to prevent N+1 queries
     # sensors = SensorSerializer(many=True, read_only=True)
     

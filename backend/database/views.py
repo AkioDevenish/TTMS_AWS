@@ -1,3 +1,4 @@
+from .response_utils import APIResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -139,7 +140,32 @@ class StationViewSet(viewsets.ModelViewSet):
         response_data = serializer.data
         # Cache the response for 5 minutes
         cache.set(cache_key, response_data, timeout=300)
-        return Response(response_data)
+                # Convert to object format
+        if 'results' in response_data:
+            # Paginated response
+            object_response = {
+                "success": True,
+                "message": "Stations retrieved successfully",
+                "data": response_data['results'],
+                "pagination": {
+                    "page": response_data.get('page', 1),
+                    "page_size": response_data.get('page_size', 20),
+                    "total_count": response_data.get('count', 0),
+                    "total_pages": response_data.get('total_pages', 1),
+                    "has_next": response_data.get('next') is not None,
+                    "has_previous": response_data.get('previous') is not None
+                },
+                "status_code": 200
+            }
+        else:
+            # Non-paginated response
+            object_response = {
+                "success": True,
+                "message": "Stations retrieved successfully",
+                "data": response_data,
+                "status_code": 200
+            }
+        return Response(object_response)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -2440,7 +2466,32 @@ def station_health_logs(request):
             'page_size': 100
         }
         cache.set(cache_key, response_data, timeout=10)
-        return Response(response_data)
+                # Convert to object format
+        if 'results' in response_data:
+            # Paginated response
+            object_response = {
+                "success": True,
+                "message": "Stations retrieved successfully",
+                "data": response_data['results'],
+                "pagination": {
+                    "page": response_data.get('page', 1),
+                    "page_size": response_data.get('page_size', 20),
+                    "total_count": response_data.get('count', 0),
+                    "total_pages": response_data.get('total_pages', 1),
+                    "has_next": response_data.get('next') is not None,
+                    "has_previous": response_data.get('previous') is not None
+                },
+                "status_code": 200
+            }
+        else:
+            # Non-paginated response
+            object_response = {
+                "success": True,
+                "message": "Stations retrieved successfully",
+                "data": response_data,
+                "status_code": 200
+            }
+        return Response(object_response)
 
     except Exception as e:
         import traceback

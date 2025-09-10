@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from '../plugins/axios'
+import { extractApiData, extractPaginatedData, isApiSuccess, extractApiError } from '../utils/apiResponse'
 
 export const useStationStore = defineStore('station', () => {
   const stations = ref<any[]>([])
@@ -15,17 +16,24 @@ export const useStationStore = defineStore('station', () => {
       // Add timestamp to prevent caching issues
       const timestamp = new Date().getTime()
       const response = await axios.get(`/api/stations/?include_decommissioned=true&_t=${timestamp}`)
-      // Handle both paginated and non-paginated responses
-      if (response.data && response.data.results) {
-        // Paginated response
-        stations.value = response.data.results || []
-      } else {
-        // Non-paginated response (fallback)
-        stations.value = response.data || []
-      }
       
-      // Validate that we have valid station objects
-      stations.value = stations.value.filter(station => station && typeof station === 'object')
+      // Use standardized response handling
+      if (isApiSuccess(response)) {
+        const { data, pagination } = extractPaginatedData(response)
+        stations.value = data.filter(station => station && typeof station === 'object')
+        
+        console.log(`Fetched ${stations.value.length} stations`)
+        
+        // Debug: Log first few stations to check their status
+        if (stations.value.length > 0) {
+          console.log('Sample stations:')
+          stations.value.slice(0, 3).forEach((station, index) => {
+            console.log(`  ${index + 1}. ${station.name}: Status=${station.status}, Decommissioned=${station.decommissioned_at}`)
+          })
+        }
+      } else {
+        throw new Error(extractApiError(response))
+      }
       
       console.log(`Fetched ${stations.value.length} stations`)
       
