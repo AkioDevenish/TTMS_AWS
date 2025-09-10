@@ -32,7 +32,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, defineAsyncComponent, onMounted } from 'vue';
+import { ref, defineAsyncComponent, onMounted, onActivated } from 'vue';
 import { useAuthStore } from '@/store/auth';
 import { useUserStore } from '@/store/user';
 
@@ -48,6 +48,10 @@ const userStore = useUserStore();
 let desc = ref<string>('List Of User Accounts');
 
 onMounted(async () => {
+  await userStore.fetchUsers();
+});
+
+onActivated(async () => {
   await userStore.fetchUsers();
 });
 </script>
