@@ -25,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-l%!0eq!3094viw=^$z85-)mea!kp_8!q8!066tfpsf@_==l4+c'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -262,11 +262,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 FILE_UPLOAD_MAX_MEMORY_SIZE = 60 * 1024 * 1024  # 60MB
 
 # Email settings
-EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')  # Change to your SMTP server
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'akiodevenish1@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'cyey vjbj ulas wyls')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'akiodevenish1@gmail.com')
-SITE_NAME = os.getenv('TTMSAWS', 'TTMSAWS')
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")  # Change to your SMTP server
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "akiodevenish1@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "cyey vjbj ulas wyls")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "akiodevenish1@gmail.com")
+SITE_NAME = os.getenv("SITE_NAME", "TTMSAWS")
