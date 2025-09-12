@@ -14,26 +14,28 @@
             <div class="form-group">
               <label class="form-label">First Name *</label>
               <input
+                  required
                   class="form-control"
                   type="text"
                   :class="inputClasses.first_name"
                   placeholder="Enter first name"
                   v-model="formData.first_name"
                   @input="validateField('first_name')">
-              <div class="invalid-feedback">First name is required</div>
+              <div class="invalid-feedback" v-if="inputClasses.first_name === 'is-invalid'">First name is required</div>
             </div>
           </div>
           <div class="col-sm-12 col-md-6">
             <div class="form-group">
               <label class="form-label">Last Name *</label>
               <input
+                  required
                   class="form-control"
                   type="text"
                   :class="inputClasses.last_name"
                   placeholder="Enter last name"
                   v-model="formData.last_name"
                   @input="validateField('last_name')">
-              <div class="invalid-feedback">Last name is required</div>
+              <div class="invalid-feedback" v-if="inputClasses.last_name === 'is-invalid'">Last name is required</div>
             </div>
           </div>
         </div>
@@ -64,9 +66,15 @@
           <div class="col">
             <div class="form-group">
               <label class="form-label">Email Address *</label>
-              <input class="form-control" type="email" :class="inputClasses.email" placeholder="Enter email address"
-                     v-model="formData.email" @input="validateField('email')">
-              <div class="invalid-feedback">Valid email address is required</div>
+              <input
+                  required
+                  class="form-control"
+                  type="email" :class="inputClasses.email"
+                  placeholder="Enter email address"
+                  v-model="formData.email"
+                  @input="validateField('email')">
+              <div class="invalid-feedback" v-if="inputClasses.email === 'is-invalid'">Valid email address is required
+              </div>
             </div>
           </div>
         </div>
@@ -75,9 +83,15 @@
           <div class="col">
             <div class="form-group">
               <label class="form-label">Password *</label>
-              <input class="form-control" type="password" :class="inputClasses.password" placeholder="Enter password"
-                     v-model="formData.password" @input="validateField('password')">
-              <div class="invalid-feedback">Password is required</div>
+              <input
+                  required
+                  class="form-control"
+                  type="password"
+                  :class="inputClasses.password"
+                  placeholder="Enter password"
+                  v-model="formData.password"
+                  @input="validateField('password')">
+              <div class="invalid-feedback" v-if="inputClasses.password === 'is-invalid'">Password is required</div>
             </div>
           </div>
         </div>
@@ -86,13 +100,18 @@
           <div class="col">
             <div class="form-group">
               <label class="form-label">Role *</label>
-              <select class="form-select" :class="inputClasses.role" v-model="formData.role"
-                      @change="validateField('role')">
+              <select
+                  required
+                  class="form-select"
+                  :class="inputClasses.role"
+                  v-model="formData.role"
+                  @change="validateField('role')">
                 <option value="">Select Role</option>
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
+                <option value="internal-api-service">Internal API Service</option>
               </select>
-              <div class="invalid-feedback">Role selection is required</div>
+              <div class="invalid-feedback" v-if="inputClasses.role === 'is-invalid'">Role selection is required</div>
             </div>
           </div>
         </div>
@@ -109,48 +128,50 @@
             <div class="form-group">
               <div class=" form-check">
                 <input type="checkbox" class="form-check-input" v-model="formData.is_perpetual" />
-                <label class="form-check-label">Is perpetual subscription *</label>
+                <label class="form-check-label">Is perpetual subscription?</label>
               </div>
             </div>
           </div>
         </div>
+        <!--<div class="row" v-if="!formData.is_perpetual">-->
         <div class="row">
           <div class="col-sm-6">
             <div class="form-group">
               <label class="form-label">Package *</label>
-              <select class="form-select" v-model="formData.package" :class="inputClasses.package">
-                <option value="">Select Package</option>
-                <option value="Weekly">Weekly</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Yearly">Yearly</option>
-              </select>
-              <div class="invalid-feedback">Package selection is required</div>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label class="form-label">Price *</label>
               <select
+                  :required="!formData.is_perpetual"
+                  :disabled="formData.is_perpetual"
                   class="form-select"
-                  v-model="formData.subscription_price"
-                  :class="inputClasses.subscription_price">
-                <option value="">Select Price</option>
-                <option :value="1500">$1,500</option>
-                <option :value="3000">$3,000</option>
-                <option :value="6000">$6,000</option>
+                  v-model="formData.package"
+                  :class="inputClasses.package"
+                  @change="onPackageChange">
+                <option>Select Package</option>
+                <option
+                    v-for="plan in subscriptionPlans"
+                    :key="plan.id"
+                    :value="plan.name">
+                  {{ plan.name }} - ${{ plan.price }}
+                </option>
               </select>
-              <div class="invalid-feedback">Price selection is required</div>
+              <div class="invalid-feedback" v-if="inputClasses.package === 'is-invalid'">
+                Package selection is required
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="row">
           <div class="col">
             <div class="form-group">
               <label class="form-label">Expires At</label>
               <input type="text" class="form-control" :value="formData.expires_at" disabled />
-              <small class="form-text text-muted">Automatically calculated based on package selection</small>
+              <small class="form-text text-muted"
+                     v-if="!formData.is_perpetual">Automatically calculated based on package selection</small>
             </div>
+          </div>
+        </div>
+
+        <div class="row" v-if="formData.is_perpetual">
+          <div class="col fw-bold">
+            Note: A perpetual subscription does not have an expiry date.
           </div>
         </div>
       </div>
@@ -217,19 +238,26 @@ import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import axios from 'axios';
+import { toast } from 'vue3-toastify';
 
+const subscriptionPlans = ref<any[]>([]);
 const router = useRouter();
 const authStore = useAuthStore();
 const currentUser = computed(() => authStore.currentUser);
+let packageRequired = ref(true);
 
 const isAdminUser = computed(() => {
   return currentUser.value?.is_superuser === true;
 });
 
+//
+
 onMounted(async () => {
   if (!isAdminUser.value) {
     router.push('/dashboard/default');
   }
+
+  await fetchSubscriptionPlans();
 });
 
 // Form data
@@ -242,19 +270,21 @@ const formData = reactive({
   role: '',
   package: '',
   expires_at: '',
-  subscription_price: 0
+  subscription_price: 0,
+  is_perpetual: false,
 });
 
 // Form state
-const inputClasses = reactive({
+let inputClasses = reactive({
   first_name: '',
   last_name: '',
   email: '',
   password: '',
-  organization: '',
+  // organization: '',
   role: '',
   package: '',
-  subscription_price: ''
+  // subscription_price: '',
+  // is_perpetual: false,
 });
 
 const isSubmitting = ref(false);
@@ -271,6 +301,10 @@ const validateField = (field: string) => {
 };
 
 const validateForm = (): boolean => {
+  // we should reset inputClasses before validating so we don't carry over old invalid states
+  Object.keys(inputClasses).forEach(key => {
+    inputClasses[key as keyof typeof inputClasses] = '';
+  });
   let isValid = true;
 
   // Validate all fields
@@ -278,25 +312,22 @@ const validateForm = (): boolean => {
   validateField('last_name');
   validateField('email');
   validateField('password');
-  validateField('organization');
+  // validateField('organization');
   validateField('role');
+
+  // only require package and price if not perpetual
+  if (!formData.is_perpetual) {
+    validateField('package');
+    // Check if package is selected
+    if (!formData.package || !formData.subscription_price) {
+      isValid = false;
+    }
+  }
 
   // Check if any field is invalid
   Object.values(inputClasses).forEach(className => {
     if (className === 'is-invalid') isValid = false;
   });
-
-  // Check if package is selected
-  if (!formData.package) {
-    isValid = false;
-    errorMessage.value = 'Please select a package';
-  }
-
-  // Check if price is selected
-  if (!formData.subscription_price) {
-    isValid = false;
-    errorMessage.value = 'Please select a price';
-  }
 
   return isValid;
 };
@@ -330,6 +361,10 @@ watch(() => formData.package, (newPackage) => {
   }
 });
 
+watch(() => formData.is_perpetual, (newVal) => {
+  packageRequired.value = !newVal;
+});
+
 // API interaction
 const createUser = async () => {
   try {
@@ -357,6 +392,7 @@ const createUser = async () => {
       status: 'Active',
       expires_at: formData.expires_at || calculateExpiryDate(formData.package),
       subscription_price: formData.subscription_price,
+      is_perpetual: formData.is_perpetual,
     };
 
     console.log('Sending user data:', userData);
@@ -372,7 +408,8 @@ const createUser = async () => {
     successMessage.value = 'User created successfully!';
 
     setTimeout(() => {
-      router.push('/users_management');
+      // router.push('/users_management');
+      router.push('/users');
     }, 1000);
 
   } catch (error: any) {
@@ -409,6 +446,71 @@ const createUser = async () => {
 const cancel = () => {
   router.push('/users');
 };
+
+const fetchSubscriptionPlans = async () => {
+  console.log('Fetching API keys...');
+  try {
+    // isLoading.value = true;
+
+
+    // Get auth token
+    const token = localStorage.getItem('access_token');
+
+    // Make the API request with explicit user_id parameter
+    const response = await axios.get(`/api/plans/`);
+    if (Array.isArray(response.data) && response.data.length > 0) {
+      subscriptionPlans.value = response.data;
+    } else {
+      subscriptionPlans.value = [];
+    }
+
+    console.log('API plans response:', response.data);
+
+    //
+    //
+    // // Filter keys to only show those matching the user's email
+    // let filteredKeys: any[] = [];
+    // if (Array.isArray(response.data) && user?.email) {
+    //   filteredKeys = response.data.filter(key =>
+    //       key.email === user.email ||
+    //       key.user_email === user.email ||
+    //       (key.token_name && key.token_name.includes(user.email))
+    //   );
+    // } else {
+    //   filteredKeys = response.data || [];
+    // }
+    //
+    // // Add user agent information to each key
+    // apiKeys.value = filteredKeys.map(key => ({
+    //   ...key,
+    //   last_user_agent: userAgentMap[key.id]?.user_agent || 'No usage data'
+    // }));
+
+    // console.log('Filtered API keys with user agent info:', apiKeys.value);
+  } catch (error) {
+    console.error('Error fetching API Plans:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Response status:', error.response?.status);
+      console.error('Response data:', error.response?.data);
+    }
+    // apiKeys.value = [];
+    toast.error('Failed to load Plans', {
+      hideProgressBar: true,
+      autoClose: 2000,
+      theme: 'colored'
+    });
+  } finally {
+    // isLoading.value = false;
+  }
+};
+
+const onPackageChange = () => {
+  const selectedPlan = subscriptionPlans.value.find(
+      plan => plan.name === formData.package
+  );
+  formData.subscription_price = selectedPlan ? selectedPlan.price : 0;
+};
+
 </script>
 
 <style scoped>
