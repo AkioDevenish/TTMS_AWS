@@ -1,58 +1,73 @@
 from rest_framework import serializers
 from .models import (
-    Brand, Sensor, Measurement, Station,
-    StationHealthLog, StationSensor, ApiAccessKey,
-    SystemLog, User, Notification, ApiAccessKeyStation,
-    Message, Chat, UserPresence, Bill, ApiKeyUsageLog
+    Brand,
+    Sensor,
+    Measurement,
+    Station,
+    StationHealthLog,
+    StationSensor,
+    ApiAccessKey,
+    SystemLog,
+    User,
+    Notification,
+    ApiAccessKeyStation,
+    Message,
+    Chat,
+    UserPresence,
+    Bill,
+    ApiKeyUsageLog,
+    Plan,
 )
 import urllib3
 import json
 from django.utils import timezone
 from datetime import datetime
 from django.contrib.auth import get_user_model, authenticate
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 User = get_user_model()
 
+
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brand
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SensorSerializer(serializers.ModelSerializer):
-    brand_name = serializers.CharField(source='brand.name', read_only=True)
-    
+    brand_name = serializers.CharField(source="brand.name", read_only=True)
+
     class Meta:
         model = Sensor
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StationSerializer(serializers.ModelSerializer):
-    brand_name = serializers.CharField(source='brand.name', read_only=True)
+    brand_name = serializers.CharField(source="brand.name", read_only=True)
     # Remove expensive sensors field to prevent N+1 queries
     # sensors = SensorSerializer(many=True, read_only=True)
-    
+
     # Add lightweight sensor count instead
     sensor_count = serializers.SerializerMethodField()
-    
+
     def get_sensor_count(self, obj):
         """Get sensor count without expensive queries"""
-        return obj.station_sensors.count() if hasattr(obj, 'station_sensors') else 0
+        return obj.station_sensors.count() if hasattr(obj, "station_sensors") else 0
 
     class Meta:
         model = Station
-        fields = '__all__'
+        fields = "__all__"
 
 
 class MeasurementSerializer(serializers.ModelSerializer):
-    station_name = serializers.CharField(source='station.name', read_only=True)
-    sensor_type = serializers.CharField(source='sensor.type', read_only=True)
+    station_name = serializers.CharField(source="station.name", read_only=True)
+    sensor_type = serializers.CharField(source="sensor.type", read_only=True)
 
     def __init__(self, *args, **kwargs):
         # Don't pass the 'fields' arg up to the superclass
-        fields = kwargs.pop('fields', None)
-        
+        fields = kwargs.pop("fields", None)
+
         # Instantiate the superclass normally
         super().__init__(*args, **kwargs)
 
@@ -65,30 +80,30 @@ class MeasurementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Measurement
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StationHealthLogSerializer(serializers.ModelSerializer):
-    station_name = serializers.CharField(source='station.name', read_only=True)
+    station_name = serializers.CharField(source="station.name", read_only=True)
 
     class Meta:
         model = StationHealthLog
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StationSensorSerializer(serializers.ModelSerializer):
-    station_name = serializers.CharField(source='station.name', read_only=True)
-    sensor_type = serializers.CharField(source='sensor.type', read_only=True)
+    station_name = serializers.CharField(source="station.name", read_only=True)
+    sensor_type = serializers.CharField(source="sensor.type", read_only=True)
 
     class Meta:
         model = StationSensor
-        fields = '__all__'
+        fields = "__all__"
 
 
 class SystemLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemLog
-        fields = '__all__'
+        fields = "__all__"
 
 
 class DateTimeToDateField(serializers.DateField):
@@ -101,7 +116,8 @@ class DateTimeToDateField(serializers.DateField):
 
 
 class ApiAccessKeySerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+
     class Meta:
         model = ApiAccessKey
         fields = [
@@ -117,85 +133,114 @@ class ApiAccessKeySerializer(serializers.ModelSerializer):
             "user_email",
             "is_perpetual",
         ]
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ["created_at", "updated_at"]
 
 
 class UserSerializer(serializers.ModelSerializer):
     api_keys = ApiAccessKeySerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'first_name', 'last_name', 'username', 
-            'role', 'organization', 'package', 'subscription_price', 
-            'status', 'expires_at', 'created_at', 'updated_at', 'api_keys'
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "username",
+            "role",
+            "organization",
+            "package",
+            "subscription_price",
+            "status",
+            "expires_at",
+            "created_at",
+            "updated_at",
+            "api_keys",
         ]
-        read_only_fields = ['created_at', 'updated_at', 'api_keys']
+        read_only_fields = ["created_at", "updated_at", "api_keys"]
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    is_perpetual = serializers.BooleanField(required=False)
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
     role = serializers.CharField(required=True)
-    status = serializers.CharField(required=False, default='Active')
+    status = serializers.CharField(required=False, default="Active")
     username = serializers.CharField(required=False, read_only=True)
-    package = serializers.CharField(required=True)
-    subscription_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+    package = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    subscription_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False, allow_null=True
+    )
 
     class Meta:
         model = User
         fields = [
-            'id', 
-            'username',
-            'email', 
-            'password',
-            'first_name',
-            'last_name', 
-            'organization', 
-            'package', 
-            'expires_at',
-            'role',
-            'status',
-            'subscription_price'
+            "id",
+            "username",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "organization",
+            "package",
+            "expires_at",
+            "role",
+            "status",
+            "subscription_price",
+            "is_perpetual",
         ]
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {"password": {"write_only": True}}
 
     def validate(self, data):
-        if not data.get('first_name') or not data.get('last_name'):
-            raise serializers.ValidationError({
-                'error': 'First name and last name are required'
-            })
-        
+        is_perpetual = data.get("is_perpetual", False)
+
+        if not is_perpetual:
+            if not data.get("package"):
+                raise serializers.ValidationError(
+                    {
+                        "package": "The Package field is required when the subscription is not perpetual."
+                    }
+                )
+            if not data.get("subscription_price"):
+                raise serializers.ValidationError(
+                    {
+                        "subscription_price": "The Package field is required when the subscription is not perpetual."
+                    }
+                )
+
+        if not data.get("first_name") or not data.get("last_name"):
+            raise serializers.ValidationError(
+                {"error": "First name and last name are required"}
+            )
+
         # Validate role
-        valid_roles = ['admin', 'user']
-        if data.get('role') and data['role'].lower() not in valid_roles:
-            raise serializers.ValidationError({
-                'error': 'Invalid role. Must be either "admin" or "user"'
-            })
-            
+        valid_roles = ["admin", "user", "internal-api-service"]
+        if data.get("role") and data["role"].lower() not in valid_roles:
+            raise serializers.ValidationError(
+                {"error": 'Invalid role. Must be either "admin" or "user"'}
+            )
+
         # Validate status
-        valid_statuses = ['Active', 'Inactive', 'Suspended', 'Pending']
-        if data.get('status') and data['status'] not in valid_statuses:
-            raise serializers.ValidationError({
-                'error': 'Invalid status'
-            })
+        valid_statuses = ["Active", "Inactive", "Suspended", "Pending"]
+        if data.get("status") and data["status"] not in valid_statuses:
+            raise serializers.ValidationError({"error": "Invalid status"})
 
         return data
 
     def create(self, validated_data):
         user = User.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data.get('username', ''),
-            password=validated_data['password'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-            organization=validated_data.get('organization', ''),
-            package=validated_data['package'],
-            role=validated_data['role'],
-            status=validated_data.get('status', 'Active'),
-            expires_at=validated_data.get('expires_at'),
-            subscription_price=validated_data['subscription_price']
+            email=validated_data["email"],
+            username=validated_data.get("username", ""),
+            password=validated_data["password"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            organization=validated_data.get("organization", ""),
+            package=validated_data["package"],
+            role=validated_data["role"],
+            status=validated_data.get("status", "Active"),
+            expires_at=validated_data.get("expires_at"),
+            subscription_price=validated_data["subscription_price"],
         )
         return user
 
@@ -203,7 +248,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LoginSerializer(serializers.Serializer):
@@ -211,30 +256,30 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField()
 
     def validate(self, data):
-        email = data.get('email')
-        password = data.get('password')
+        email = data.get("email")
+        password = data.get("password")
 
         if email and password:
             user = authenticate(email=email, password=password)
             if user:
-                if user.status == 'Suspended':
+                if user.status == "Suspended":
                     raise serializers.ValidationError(
-                        'Your account has been suspended. Please contact support.'
+                        "Your account has been suspended. Please contact support."
                     )
-                elif user.status == 'Inactive':
+                elif user.status == "Inactive":
                     raise serializers.ValidationError(
-                        'Your account has expired. Please renew your subscription.'
+                        "Your account has expired. Please renew your subscription."
                     )
-                data['user'] = user
+                data["user"] = user
                 return data
-            raise serializers.ValidationError('Invalid credentials.')
+            raise serializers.ValidationError("Invalid credentials.")
         raise serializers.ValidationError('Must include "email" and "password".')
 
 
 class ApiAccessKeyStationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiAccessKeyStation
-        fields = ['api_access_key', 'station']
+        fields = ["api_access_key", "station"]
 
 
 def process_and_save_data(raw_data):
@@ -273,30 +318,38 @@ def process_and_save_data(raw_data):
 class MessageSenderSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 
-                 'role', 'is_superuser', 'is_staff']
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "is_superuser",
+            "is_staff",
+        ]
 
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = MessageSenderSerializer(read_only=True)
-    time = serializers.TimeField(format='%I:%M %p', required=False)
+    time = serializers.TimeField(format="%I:%M %p", required=False)
 
     class Meta:
         model = Message
-        fields = ['id', 'content', 'chat', 'sender', 'created_at', 'read_at', 'time']
-        read_only_fields = ['sender', 'created_at', 'read_at', 'time']
+        fields = ["id", "content", "chat", "sender", "created_at", "read_at", "time"]
+        read_only_fields = ["sender", "created_at", "read_at", "time"]
 
     def create(self, validated_data):
-        user = self.context['request'].user
-        chat = validated_data.get('chat')
-        
+        user = self.context["request"].user
+        chat = validated_data.get("chat")
+
         current_time = timezone.now()
         message = Message.objects.create(
-            content=validated_data.get('content'),
+            content=validated_data.get("content"),
             chat=chat,
             sender=user,
             time=current_time.time(),
-            created_at=current_time
+            created_at=current_time,
         )
         return message
 
@@ -304,79 +357,126 @@ class MessageSerializer(serializers.ModelSerializer):
 class ChatSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
     participants = UserSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Chat
-        fields = ['id', 'name', 'user', 'support_chat', 'created_at', 'messages', 'participants']
-        read_only_fields = ['created_at', 'user']
+        fields = [
+            "id",
+            "name",
+            "user",
+            "support_chat",
+            "created_at",
+            "messages",
+            "participants",
+        ]
+        read_only_fields = ["created_at", "user"]
 
     def create(self, validated_data):
-        user = self.context['request'].user
+        user = self.context["request"].user
         chat = Chat.objects.create(
             user=user,
-            name=validated_data.get('name'),
-            support_chat=validated_data.get('support_chat', False)
+            name=validated_data.get("name"),
+            support_chat=validated_data.get("support_chat", False),
         )
         return chat
 
 
 class UserPresenceSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(source='user.id')
-    
+    user_id = serializers.IntegerField(source="user.id")
+
     class Meta:
         model = UserPresence
-        fields = ['user_id', 'is_online', 'last_seen']
+        fields = ["user_id", "is_online", "last_seen"]
 
 
 class BillSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_email = serializers.EmailField(source="user.email", read_only=True)
     verification_status = serializers.SerializerMethodField()
-    
+
     def get_verification_status(self, obj):
         if obj.receipt_verified:
-            return 'Verified'
+            return "Verified"
         elif obj.receipt_upload:
-            return 'Pending Verification'
-        return 'Pending Upload'
-    
+            return "Pending Verification"
+        return "Pending Upload"
+
     class Meta:
         model = Bill
-        fields = ['id', 'user_id', 'user_email', 'bill_num', 'total', 'package', 
-                 'created_at', 'updated_at', 'receipt_num', 'receipt_upload', 
-                 'receipt_createat', 'receipt_verified', 'receipt_verifiedby',
-                 'verification_status', 'receipt_verified_at']
-        read_only_fields = ('bill_num', 'user_id', 'user_email', 'receipt_verified', 
-                          'receipt_verifiedby', 'created_at', 'updated_at', 'receipt_verified_at')
+        fields = [
+            "id",
+            "user_id",
+            "user_email",
+            "bill_num",
+            "total",
+            "package",
+            "created_at",
+            "updated_at",
+            "receipt_num",
+            "receipt_upload",
+            "receipt_createat",
+            "receipt_verified",
+            "receipt_verifiedby",
+            "verification_status",
+            "receipt_verified_at",
+        ]
+        read_only_fields = (
+            "bill_num",
+            "user_id",
+            "user_email",
+            "receipt_verified",
+            "receipt_verifiedby",
+            "created_at",
+            "updated_at",
+            "receipt_verified_at",
+        )
 
 
 class BillCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bill
-        fields = ('total', 'package', 'receipt_upload')
+        fields = ("total", "package", "receipt_upload")
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email']
+        fields = ["email"]
+
 
 class SimpleApiAccessKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = ApiAccessKey
-        fields = ['uuid']
+        fields = ["uuid"]
+
 
 class ApiKeyUsageLogSerializer(serializers.ModelSerializer):
     user = SimpleUserSerializer(read_only=True)
     api_key = SimpleApiAccessKeySerializer(read_only=True)
-    
-    api_key_name = serializers.CharField(source='api_key.token_name', read_only=True)
-    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    api_key_name = serializers.CharField(source="api_key.token_name", read_only=True)
+    user_email = serializers.CharField(source="user.email", read_only=True)
 
     class Meta:
         model = ApiKeyUsageLog
         fields = [
-            'id', 'api_key', 'api_key_name', 'user', 'user_email',
-            'request_path', 'query_params', 'response_format',
-            'status_code', 'user_agent', 'created_at'
+            "id",
+            "api_key",
+            "api_key_name",
+            "user",
+            "user_email",
+            "request_path",
+            "query_params",
+            "response_format",
+            "status_code",
+            "user_agent",
+            "created_at",
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ["created_at"]
+
+
+class PlanSerializer(serializers.ModelSerializer):
+    # brand_name = serializers.CharField(source="brand.name", read_only=True)
+
+    class Meta:
+        model = Plan
+        fields = "__all__"

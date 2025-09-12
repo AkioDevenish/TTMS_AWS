@@ -8,11 +8,12 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+
 # User Management
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('Email is required')
+            raise ValueError("Email is required")
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -20,59 +21,52 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("role", "admin")
         return self.create_user(email, password, **extra_fields)
+
 
 def generate_username():
     return f"user_{uuid.uuid4().hex[:8]}"
 
+
 class User(AbstractUser):
     STATUS_CHOICES = (
-        ('Active', 'Active'),
-        ('Inactive', 'Inactive'),
-        ('Suspended', 'Suspended'),
-        ('Pending', 'Pending'),
+        ("Active", "Active"),
+        ("Inactive", "Inactive"),
+        ("Suspended", "Suspended"),
+        ("Pending", "Pending"),
     )
-    
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='Active'
-    )
-    username = models.CharField(
-        max_length=150,
-        unique=True,
-        default=generate_username
-    )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
+    username = models.CharField(max_length=150, unique=True, default=generate_username)
     email = models.EmailField(unique=True)
     organization = models.CharField(max_length=255, null=True, blank=True)
-    PACKAGE_PRICES = {
-        'Weekly': 1500,
-        'Monthly': 3000,
-        'Yearly': 6000
-    }
+    # PACKAGE_PRICES = {"Weekly": 1500, "Monthly": 3000, "Yearly": 6000}
 
-    package = models.CharField(max_length=10, choices=[
-        ('Weekly', 'Weekly'),
-        ('Monthly', 'Monthly'),
-        ('Yearly', 'Yearly')
-    ], default='Monthly')
-    
-    subscription_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    role = models.CharField(max_length=50, default='user')
+    package = models.CharField(
+        max_length=10,
+        # choices=[("Weekly", "Weekly"), ("Monthly", "Monthly"), ("Yearly", "Yearly")],
+        null=True,
+        blank=True,
+    )
+
+    subscription_price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.00, null=True, blank=True
+    )
+    role = models.CharField(max_length=50, default="user")
     expires_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["first_name", "last_name"]
     objects = UserManager()
 
     class Meta:
-        db_table = 'users'
-        swappable = 'AUTH_USER_MODEL'
+        db_table = "users"
+        swappable = "AUTH_USER_MODEL"
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"
@@ -80,7 +74,7 @@ class User(AbstractUser):
     def clean(self):
         super().clean()
         if not self.first_name or not self.last_name:
-            raise ValidationError('First name and last name are required')
+            raise ValidationError("First name and last name are required")
 
     def save(self, *args, **kwargs):
         if not self.username or (self.first_name and self.last_name):
@@ -94,124 +88,163 @@ class User(AbstractUser):
             self.username = username
         super().save(*args, **kwargs)
 
+
 @receiver(post_save, sender=User)
 def create_initial_bill(sender, instance, created, **kwargs):
     if created:
         Bill.objects.create(
             user=instance,
-            total=instance.subscription_price,  
+            total=instance.subscription_price,
             package=instance.package,
-            bill_num=f"{int(timezone.now().timestamp())}{instance.id}"
+            bill_num=f"{int(timezone.now().timestamp())}{instance.id}",
         )
+
 
 # Core Models
 class Brand(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
-        db_table = 'brands'
+        db_table = "brands"
 
     def __str__(self):
         return self.name
 
+
 class Station(models.Model):
     STATUS_CHOICES = (
-        ('Active', 'Active'),
-        ('Decommissioned', 'Decommissioned'),
-        ('Maintenance', 'Maintenance'),
-        ('Offline', 'Offline'),
+        ("Active", "Active"),
+        ("Decommissioned", "Decommissioned"),
+        ("Maintenance", "Maintenance"),
+        ("Offline", "Offline"),
     )
-    
+
     brand = models.ForeignKey(Brand, on_delete=models.CASCADE, related_name="stations")
     name = models.CharField(max_length=255)
     serial_number = models.CharField(max_length=100, unique=True)
     last_updated_at = models.DateTimeField()
     address = models.TextField()
-    latitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=6, null=True, blank=True
+    )
+    longitude = models.DecimalField(
+        max_digits=10, decimal_places=6, null=True, blank=True
+    )
     installation_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Active")
     decommissioned_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    sensors = models.ManyToManyField('Sensor', through='StationSensor', related_name='stations')
+    sensors = models.ManyToManyField(
+        "Sensor", through="StationSensor", related_name="stations"
+    )
 
     class Meta:
-        db_table = 'stations'
+        db_table = "stations"
         indexes = [
-            models.Index(fields=['status']),
-            models.Index(fields=['brand']),
-            models.Index(fields=['name']),
-            models.Index(fields=['installation_date']),
-            models.Index(fields=['status', 'brand']),  # Composite index for common queries
+            models.Index(fields=["status"]),
+            models.Index(fields=["brand"]),
+            models.Index(fields=["name"]),
+            models.Index(fields=["installation_date"]),
+            models.Index(
+                fields=["status", "brand"]
+            ),  # Composite index for common queries
         ]
 
     def __str__(self):
         return f"{self.name} - {self.serial_number}"
 
+
 class Sensor(models.Model):
     type = models.CharField(max_length=100)
     unit = models.CharField(max_length=50)
-    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='sensors')
+    brand = models.ForeignKey(
+        Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name="sensors"
+    )
 
     class Meta:
-        db_table = 'sensors'
+        db_table = "sensors"
 
     def __str__(self):
         brand_name = f" [{self.brand.name}]" if self.brand else ""
         return f"{self.type} ({self.unit}){brand_name}"
 
+
 # Measurement and Monitoring
 class Measurement(models.Model):
-    station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name='measurements')
-    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE, related_name='measurements', null=True, blank=True)
+    station = models.ForeignKey(
+        Station, on_delete=models.CASCADE, related_name="measurements"
+    )
+    sensor = models.ForeignKey(
+        Sensor,
+        on_delete=models.CASCADE,
+        related_name="measurements",
+        null=True,
+        blank=True,
+    )
     date = models.DateField()
     time = models.TimeField()
     value = models.FloatField()
     status = models.CharField(max_length=50)
     note = models.TextField(null=True, blank=True)
-    flag = models.BooleanField(default=True, help_text='Data validation flag: True if data is within acceptable range, False if validation failed')
+    flag = models.BooleanField(
+        default=True,
+        help_text="Data validation flag: True if data is within acceptable range, False if validation failed",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'measurements'
+        db_table = "measurements"
 
     def __str__(self):
         return f"{self.station} - {self.sensor} - {self.date} {self.time}"
 
+
 class StationHealthLog(models.Model):
-    station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name='health_logs')
-    battery_status = models.CharField(max_length=50, default='Unknown')
-    connectivity_status = models.CharField(max_length=50, default='No Data')
+    station = models.ForeignKey(
+        Station, on_delete=models.CASCADE, related_name="health_logs"
+    )
+    battery_status = models.CharField(max_length=50, default="Unknown")
+    connectivity_status = models.CharField(max_length=50, default="No Data")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'station_health_logs'
+        db_table = "station_health_logs"
         indexes = [
-            models.Index(fields=['station_id', '-created_at'], name='idx_station_health_created'),
-            models.Index(fields=['connectivity_status'], name='idx_connectivity_status')
+            models.Index(
+                fields=["station_id", "-created_at"], name="idx_station_health_created"
+            ),
+            models.Index(
+                fields=["connectivity_status"], name="idx_connectivity_status"
+            ),
         ]
 
     def __str__(self):
         return f"{self.station.name} - {self.created_at}"
 
+
 # Relationships and Access Control
 class StationSensor(models.Model):
-    station = models.ForeignKey(Station, on_delete=models.CASCADE, related_name='station_sensors')
-    sensor = models.ForeignKey(Sensor, on_delete=models.CASCADE, related_name='station_sensors')
+    station = models.ForeignKey(
+        Station, on_delete=models.CASCADE, related_name="station_sensors"
+    )
+    sensor = models.ForeignKey(
+        Sensor, on_delete=models.CASCADE, related_name="station_sensors"
+    )
 
     class Meta:
-        db_table = 'station_sensors'
-        unique_together = ('station', 'sensor')
+        db_table = "station_sensors"
+        unique_together = ("station", "sensor")
 
     def __str__(self):
         return f"{self.station} - {self.sensor}"
 
+
 class ApiAccessKey(models.Model):
     uuid = models.UUIDField(unique=True)
     token_name = models.CharField(max_length=255)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
-    stations = models.ManyToManyField(Station, through='ApiAccessKeyStation')
-    expires_at = models.DateTimeField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="api_keys")
+    stations = models.ManyToManyField(Station, through="ApiAccessKeyStation")
+    expires_at = models.DateTimeField(null=True, blank=True)
     note = models.TextField(null=True, blank=True)
     last_used = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -219,18 +252,20 @@ class ApiAccessKey(models.Model):
     is_perpetual = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'api_access_keys'
+        db_table = "api_access_keys"
 
     def __str__(self):
         return f"{self.token_name} ({self.uuid})"
+
 
 class ApiAccessKeyStation(models.Model):
     api_access_key = models.ForeignKey(ApiAccessKey, on_delete=models.CASCADE)
     station = models.ForeignKey(Station, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'api_access_key_stations'
-        unique_together = ('api_access_key', 'station')
+        db_table = "api_access_key_stations"
+        unique_together = ("api_access_key", "station")
+
 
 # System and Communication
 class SystemLog(models.Model):
@@ -241,10 +276,11 @@ class SystemLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'system_logs'
+        db_table = "system_logs"
 
     def __str__(self):
         return f"{self.module} - {self.type} - {self.created_at}"
+
 
 class Notification(models.Model):
     uuid = models.UUIDField(primary_key=True)
@@ -256,35 +292,38 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'notifications'
+        db_table = "notifications"
 
     def __str__(self):
         return f"{self.type} - {self.notifiable_type} - {self.created_at}"
 
+
 class Chat(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_chats')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_chats"
+    )
     support_chat = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     participants = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, 
-        related_name='participated_chats'
+        settings.AUTH_USER_MODEL, related_name="participated_chats"
     )
 
     class Meta:
-        db_table = 'chats'
-        ordering = ['-created_at']
+        db_table = "chats"
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['user', '-created_at']),
-            models.Index(fields=['support_chat']),
+            models.Index(fields=["user", "-created_at"]),
+            models.Index(fields=["support_chat"]),
         ]
 
     def __str__(self):
         return f"Chat with {self.user.get_full_name()} ({'Support' if self.support_chat else 'Regular'})"
 
+
 class Message(models.Model):
     content = models.TextField()
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='messages')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="messages")
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True)
@@ -296,26 +335,30 @@ class Message(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        db_table = 'messages'
-        ordering = ['created_at']
+        db_table = "messages"
+        ordering = ["created_at"]
         indexes = [
-            models.Index(fields=['chat', 'created_at']),
+            models.Index(fields=["chat", "created_at"]),
         ]
 
     def __str__(self):
         return f"Message from {self.sender} at {self.created_at}"
 
+
 class UserPresence(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='presence')
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="presence"
+    )
     is_online = models.BooleanField(default=False)
     last_seen = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'user_presences'
-        verbose_name_plural = 'User presences'
+        db_table = "user_presences"
+        verbose_name_plural = "User presences"
 
     def __str__(self):
         return f"{self.user.username}'s presence - {'Online' if self.is_online else 'Offline'}"
+
 
 def process_and_save_data(raw_data):
     if isinstance(raw_data, str):
@@ -332,22 +375,27 @@ def process_and_save_data(raw_data):
             continue
         # Existing processing logic...
 
+
 class Bill(models.Model):
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='bills')
+    user = models.ForeignKey("User", on_delete=models.CASCADE, related_name="bills")
     bill_num = models.CharField(max_length=255, unique=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     package = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     receipt_num = models.CharField(max_length=255, null=True, blank=True)
-    receipt_upload = models.FileField(upload_to='receipts/%Y/%m/%d/', null=True, blank=True)
+    receipt_upload = models.FileField(
+        upload_to="receipts/%Y/%m/%d/", null=True, blank=True
+    )
     receipt_createat = models.DateTimeField(null=True, blank=True)
     receipt_verified = models.BooleanField(default=False)
-    receipt_verifiedby = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='verified_bills')
+    receipt_verifiedby = models.ForeignKey(
+        "User", on_delete=models.SET_NULL, null=True, related_name="verified_bills"
+    )
     receipt_verified_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = 'bills'
+        db_table = "bills"
 
     def save(self, *args, **kwargs):
         if not self.bill_num:
@@ -355,40 +403,54 @@ class Bill(models.Model):
             self.bill_num = f"{timestamp}{self.user_id}"
         super().save(*args, **kwargs)
 
+
 class TaskExecution(models.Model):
     task_name = models.CharField(max_length=100)
     last_run = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=20, default='success')
+    status = models.CharField(max_length=20, default="success")
     interval = models.IntegerField(default=60)  # seconds
 
     class Meta:
-        get_latest_by = 'last_run'
+        get_latest_by = "last_run"
+
 
 class ApiKeyUsageLog(models.Model):
-    api_key = models.ForeignKey('ApiAccessKey', on_delete=models.CASCADE, related_name='usage_logs')
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='api_usage_logs')
+    api_key = models.ForeignKey(
+        "ApiAccessKey", on_delete=models.CASCADE, related_name="usage_logs"
+    )
+    user = models.ForeignKey(
+        "User", on_delete=models.CASCADE, related_name="api_usage_logs"
+    )
     request_path = models.CharField(max_length=255)
     query_params = models.JSONField(null=True, blank=True)
     response_format = models.CharField(
         max_length=10,
-        choices=[
-            ('json', 'JSON'),
-            ('csv', 'CSV'),
-            ('xml', 'XML')
-        ],
-        default='json'
+        choices=[("json", "JSON"), ("csv", "CSV"), ("xml", "XML")],
+        default="json",
     )
     status_code = models.IntegerField()
     user_agent = models.CharField(max_length=512, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'api_key_usage_logs'
-        ordering = ['-created_at']
+        db_table = "api_key_usage_logs"
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['api_key', '-created_at']),
-            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=["api_key", "-created_at"]),
+            models.Index(fields=["user", "-created_at"]),
         ]
 
     def __str__(self):
         return f"{self.api_key} - {self.request_path} - {self.created_at}"
+
+
+class Plan(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_days = models.IntegerField()
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "plans"

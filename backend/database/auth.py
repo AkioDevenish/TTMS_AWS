@@ -7,50 +7,54 @@ from .models import ApiAccessKey, ApiKeyUsageLog
 
 User = get_user_model()
 
+
 class CustomAuthBackend(ModelBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):
         try:
             user = User.objects.get(email=email)
             if user.check_password(password):
                 # Check if user is suspended or inactive before allowing authentication
-                if user.status in ['Suspended', 'Inactive']:
+                if user.status in ["Suspended", "Inactive"]:
                     return None  # Return None to prevent login
                 return user
         except User.DoesNotExist:
             return None
-        
+
     def get_user(self, user_id):
         try:
             user = User.objects.get(pk=user_id)
             # Also check status when getting user from session
-            if user.status in ['Suspended', 'Inactive']:
+            if user.status in ["Suspended", "Inactive"]:
                 return None
             return user
         except User.DoesNotExist:
-            return None 
+            return None
+
 
 class ApiKeyAuthentication(authentication.BaseAuthentication):
     """
     Custom authentication class for API key based authentication
     """
+
     def authenticate(self, request):
         # Try getting API key from X-API-Key header
-        api_key = request.META.get('HTTP_X_API_KEY')
-        
+        api_key = request.META.get("HTTP_X_API_KEY")
+
         # If not found, try Authorization: Bearer header
-        if not api_key and 'HTTP_AUTHORIZATION' in request.META:
-            auth = request.META['HTTP_AUTHORIZATION'].split()
-            if len(auth) == 2 and auth[0].lower() == 'bearer':
+        if not api_key and "HTTP_AUTHORIZATION" in request.META:
+            auth = request.META["HTTP_AUTHORIZATION"].split()
+            if len(auth) == 2 and auth[0].lower() == "bearer":
                 api_key = auth[1]
-        
+
         # If no API key provided, don't attempt to authenticate
         if not api_key:
             return None
-            
+
         try:
             # First try to validate as JWT token
             try:
                 from rest_framework_simplejwt.tokens import AccessToken
+
                 token = AccessToken(api_key)
                 # If we get here, it's a valid JWT token
                 return None  # Let JWT authentication handle it
@@ -69,10 +73,10 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
             # Store the entire API key object (not just the token string)
             user = access_key.user
             user.auth_token = access_key
-            
+
             # Return user and token for authentication
             return (user, access_key)
-            
+
         except ApiAccessKey.DoesNotExist:
             # If the key doesn't exist, authentication failed for API key, return None
             return None
@@ -82,4 +86,4 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
         except Exception as e:
             # For any other exception during API key processing, treat as API key failure and return None
             print(f"Error during API key authentication: {str(e)}")
-            return None 
+            return None
